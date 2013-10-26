@@ -1,0 +1,95 @@
+%        File: doc.tex
+%     Created: Sat Oct 26 03:00 AM 2013 E
+% Last Change: Sat Oct 26 03:00 AM 2013 E
+%
+\documentclass[a4paper,12pt]{report}
+\usepackage[margin=3cm]{geometry}
+\usepackage[finnish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[pdftex]{graphicx}
+\usepackage{setspace}
+\onehalfspacing
+\DeclareGraphicsRule{*}{mps}{*}{}
+\title{tsoha\\Kalenterisovellus}
+\author{Samuli Thomasson}
+\begin{document}
+
+% CryptoJS !
+
+\maketitle
+\tableofcontents
+\chapter{Johdanto}
+Tämä kalenterijärjestelmä mahdollistaa käyttäjille kalenterien ylläpidon
+selain\-käyttö\-liittymästä.  Sovelluksen käyttäjä pystyy katsomaan, lisäämään
+ja muokkaamaan (kalenteri)merkintöjä omissa kalentereissaan.  Kalenteri koostuu
+joukosta merkintöjä, kuten tapahtumia ja muistutuksia.  Järjestelmä mahdollistaa
+merkintöjen asettamisen julkisesti nähtäville. Myös kokonaisista kalentereista
+voi tehdä julkisia. Julkisesta kalenterista voi myös tehdä vapaasti muokattavan,
+jolloin kuka tahansa voi ehdottaa merkintöjä kalenteriin. Vapaasti muokattavassa
+kalenterissa lopullinen määräysvalta on kalenterin omistajalla -- omistajan omia
+tai hyväksymiä merkintöjä voi poistaa vain omistaja.
+
+Järjestelmän toteutetuskieli on Haskell ja kehyksenä toimii \emph{Yesod}.
+Järjestelmä on yksinkertaisuudessaan ohjelma, joka kuuntelee jossain portissa
+web-palvelimena. Sitä voi siis ajaa itsenäisenä web-palvelimena suoraan portissa
+80. Yleensä samankaltaiset sovellukset kuitenkin ajetaan paikallisessa portissa
+ja välitetään dedikoidun web-palvelimen (Nginx ja vastaavat) kautta.
+
+Järjestelmän alustajärjestelmältä vaaditaan, että lähdekoodi voidaan kääntää
+sille. Staattisten kirjastojen ansoista ei käyttöönotto vaadi alustalta kuin
+käännetyn ohjelman ajamisen, staattiset verkkosivuresurssit (JavaScript ja CSS)
+sekä tuetun tietokannan. Ohjelma pitää ajaa omassa portissaan, eli ohjelman
+käyttö vaatii joko ainoan web-palvelimen aseman ulkoisessa portissa, tai
+(parempi) käänteisproxyä ymmärtävän web-palvelimen alustalta.
+
+Järjestelmä suunnitellaan PostgreSQL-kannalle; vaihdon edellytyksiä on että
+persistent tukee sitä, ja että tekijä ei ole käyttänyt liian erikoisia
+SQL-konstruktioita.  Itse järjestelmän ominaisuuksien käyttöön asiakasohjelmassa
+ei tarvitse JavaScriptiä. JavaScriptiä voidaan kuitenkiin käyttää
+käyttökokemuksen parantamiseksi.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Järjestelmä}
+
+\section{Yleiskuva järjestelmästä}
+Käyttäjät toimivat aina selainkäyttöliittymän kautta. Käyttätapauskaaviossa
+(\ref{graph_usecases}) on esitelty ohjelman päätoiminnot. Ne on jaettu kolmeen
+pääryhmään: käyttäjien autentikointi, operaatiot omassa kalenterissa ja
+operaatiot jonkun muun kalenterissa.
+
+\begin{figure}[h]
+   \centering \includegraphics{usecases.1}
+   \caption{Kalenterijärjestelmän käyttötapauskaavio.}
+   \label{graph_usecases}
+\end{figure}
+
+Järjestelmän käyttäjiä on kahdenlaisia: vierailijoita ja varsinaisia käyttäjiä:
+\begin{description}
+   \item[Vierailijoita] ovat kaikki jotka eivät ole kirjautunu sisään.
+   \item[Käyttäjiä] ovat kaikki sisäänkirjautuneet.
+\end{description}
+
+\section{Käyttötapaukset}
+\subsection{Autentikointi}
+\subsection{Oma kalenteri}
+\subsection{Vieras kalenteri}
+\section{Järjestelmän tietosisältö} <++>
+\section{Relaatiotietokantakaavio} <++>
+\section{Järjestelmän yleisrakenne} <++>
+\section{Järjestelmän komponentit} <++>
+\section{Käyttöliittymä} <++>
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Käyttö}
+\section{Asennustiedot} <++>
+\section{Käynnistys- / käyttöohje} <++>
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat} <++>
+
+jatko: ryhmiä, icalendar,
+\bibliography{refs.bib}
+
+\end{document}
+
+
