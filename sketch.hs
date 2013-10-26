@@ -16,7 +16,7 @@ Hello
 
 data HelloWorld = HelloWorld ConnectionPool
 mkYesod "HelloWorld" [parseRoutes|
-/ HomeR GET POST
+/ HomeR GET POST OPTIONS
 |]
 instance Yesod HelloWorld
 instance YesodPersist HelloWorld where
@@ -43,6 +43,9 @@ postHomeR = do
 
     liftIO $ mapM_ print $ per ++ esq ++ raw
     redirect HomeR
+
+optionsHomeR :: Handler Html
+optionsHomeR = undefined
 
 main :: IO ()
 main = withPostgresqlPool "host=localhost port=5432 user=tikaha dbname=tikaha" 20 $ \pool -> do
