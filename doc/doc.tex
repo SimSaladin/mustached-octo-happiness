@@ -68,9 +68,10 @@ käyttäjiä:
 \section{Käyttötapaukset}
 Tässä luvussa esitellään sovelluksen eri käyttötapaukset.  Ellei toisin mainita,
 niin esiteltävät käyttö\-tapaukset ovat vain varsinaisten käyttäjien saatavissa.
-Käyttö\-tapaukset on jaettu kolmeen joukkoon: autentikointi, kalenterit ja
-vieraskalenterit.  Käyttö\-tapaus\-kaavio (\ref{graph_usecases}) havainnollistaa
-tapauksia; eri kategoriat on siinä jaettu visaalisesti lohkoihin.
+Käyttö\-tapaukset on jaettu kolmeen joukkoon: autentikointi, kalenterit
+kohteineen ja vieraskalenterit.  Käyttö\-tapaus\-kaavio (\ref{graph_usecases})
+havainnollistaa käyttötapauksiatapauksia; eri kategoriat on siinä jaettu
+visaalisiin lohkoihin.
 \begin{figure}[ht]
    \centering \includegraphics{usecases.1}
    \caption{Kalenterijärjestelmän käyttötapauskaavio.}
@@ -99,17 +100,17 @@ tapauksia; eri kategoriat on siinä jaettu visaalisesti lohkoihin.
 \subsection{Kalenterit}\label{oma_kalenteri}
 Käyttäjällä voi olla usea kalenteri järjestelmässä.  Käyttäjän luomaa kalenteria
 kutsutaan \emph{käyttäjän omistamaksi} kalenteriksi.  Olemassaolevan kalenterin
-omistajaa ei voi vaihtaa.
-
-Kalenterioperaatiot:
+omistajaa ei voi vaihtaa.  Kalenterioperaatiot:
 \begin{description}
-   \item[Uusi kalenteri] Kalenterin luominen on ensimmäinen asia jonka uusi
+   \item[Luonti] \hfill\\
+      Kalenterin luominen on ensimmäinen asia jonka uusi
       käyttäjä tekee, ja se on helppoa: häneltä kysytään heti ensimmäisen
       sisäänkirjautumisen jälkeen nimeä kalenterille tekstikentällä.
       Kalenterille voi halutessaan asettaa jonkin toisen väriattribuutin kuin
       oletuksen.  Lisää attribuutteja voi varsinaisesti säätää myöhemmin, kun
       kalenteri on luotu.
-   \item[Kalenterinäkymä]
+
+   \item[Tarkastelu {\it (kalenterinäkymä)}] \hfill\\
       Kalenterien tarkastelu on koko järjestelmän tärkein ja laajin
       käyttötapaus.  Sen voisi esittää myös useana pienempänä käyttötapauksena.
 
@@ -127,9 +128,9 @@ Kalenterioperaatiot:
       Näkymässä on esillä keinoja kalenterikohteiden operointiin.  Näkyvistä
       kalenterikohteista näytetään lyhyet yhteenvedot sekä keinot niiden
       muokkaukseen.
-   \item[Kalenteritietojen muokkaus] Kalenterit ovat vain kohteita kokoavia
-      \textbf{---insert-a-very-intelligent-word-here---}, mutta niillä on silti
-      muutama muokattava attribuutti, jotka vaikuttavat niiden toimintaan. Näitä
+   \item[Muokkaus {\it (Kalenterin metadata)}] \hfill\\
+      Kalenterit ovat vain kohteita kokoavia entiteettejä, mutta niillä on silti
+      muutama muokattava attribuutti jotka vaikuttavat niiden toimintaan. Näitä
       ovat:
       \begin{description}
          \item[Nimi]  Kalenterin muista identifioiva tunniste.
@@ -144,25 +145,59 @@ Kalenterioperaatiot:
 
       Kaikkia attribuutteja voi muokata muokkaus\-näkymässä, jossa näkyvät myös
       nykyiset arvot.
-   \item[Poisto]  Kalenterin voi myös poistaa, ja sekin tapahtuu
-      muokkausnäkymässä.  Poistoon kysytään varmistus mikäli kalenteri sisältää
-      kohteita.
+   \item[Poisto] \hfill\\
+      Kalenterin voi myös poistaa, ja sekin tapahtuu muokkausnäkymässä.
+      Poistoon kysytään varmistus mikäli kalenteri sisältää kohteita, sillä
+      kohteet poistuvat myös.
 \end{description}
 
-
-\subsubsection{Kohteet}
+\subsection{Kalenterikohteet}
 Kalenterit koostuvat erilaisista (kalenteri)kohteista.  Kaikille erilaisista
-kohteista tarjotaan CRUD-rajapinnat, joissa keskinäiset erot muodostuvat
-kohteiden eroavista tietokentistä.  Yhteisiä ominaisuuksia, kuten päivämääriä ja
-toistuvuuksia, operoidaan samoin kohdevariantista riippumatta.
+kohteista on samantapaiset käyttöliittymät, joissa keskinäiset erot muodostuvat
+kohdetyyppien erilaisista tietokentistä.  Yhteisiä ominaisuuksia, kuten
+päivämääriä operoidaan samoin kohdetyypistä riippumatta.  Lisäksi jokaisesta
+kohteesta tallennetaan metadataa, kuten luonti- ja muokkauspäivämääriä.
 
 Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
 \begin{description}
-   \item[Luonti] lisays.
-   \item[Tarkastelu]
-   \item[Muokkaus]
-   \item[Poisto]
-   \item[Jako]
+   \item[Luonti]\hfill\\
+      Kalenterikohteita lisätään valitsemalla haluttu kohdetyyppi
+      kalenteri\-näky\-mäs\-sä. Kalenterinäkymässä voi kohteen lisäykseen edetä joko
+      tietylle ajalle aikanäkymässä (viikkonäkymässä), tai aikanäkymän
+      ulkopuolelta.
+   \item[Tarkastelu]\hfill\\
+      Kalenterikohteita tarkastellaan kalenterinäkymässä, ja kohteiden
+      yksityiskohtia valitsemalla kohteen kalenterinäkymässä.
+   \item[Muokkaus]\hfill\\
+      Kohteen muokkaukseen edetään sen yksityiskohtaisesta näkymästä.
+      Muokattavia attribuutteja on useita ja ne riippuvat kohdetyypistä.
+      Yleisesti kohteista voi muokata seuraavia attribuutteja:
+      \begin{description}
+         \item[Hälytysajat]
+      \end{description}
+
+      Kohdetyypeille ominaiset muokattavat attribuutit:
+      \begin{description}
+         \item[Tapahtuma (VEVENT)]
+         \item[Muistiinpano (VJOURNAL)]
+         \item[To-do (VTODO)]
+      \end{description}
+   \item[Kopiointi]\hfill\\
+      Kohteista voi luoda kopioita, tai tarkemmin olemassa\-olevaa kohdetta voi
+      läh\-teä muokkaamaan ja tallentaa muokattu versio uutena kohteena. Tämäkin
+      tapahtuu yksityiskohtaisesta näkymästä.
+   \item[Poisto]\hfill\\
+      Kohteen poisto tapahtuu myös sen yksityiskohtaisesta näkymästä.  Poistoon
+      kysytään aina varmistus.  Toistuvien kohteiden kohdalla kysytään,
+      halutaanko poistaa kaikki toistot vai ainoastaan valittu toisto.
+   \item[Jako]\hfill\\
+      Yksittäisiä kohteita voi jakaa muille käyttäjille, ja myös viedä
+      tekstimuotoon esimerkiksi liitettäväksi sähköpostiin.  Jakamiseen edetään
+      yksityiskohtaisesta näkymästä. 
+
+      Toiselle käyttäjälle kohdistuvalle jaolle annetaan käyttäjäjoukko, jotka
+      saavat heille jaetusta kohteesta ilmoituksen.  He päättävät haluavatko
+      lisätä kohteen johonkin omaan kalenteriin.
 \end{description}
 
 \subsection{Vieraskalenterit}
@@ -173,19 +208,30 @@ mutta \emph{ei} muutoksia kalenteriin tai siinä oleviin muiden omistamiin
 kalenterikohteisiin.  Näiden käyttötapausten oletus on, että kohteena olevan
 kalenterin omistaja on sallinut julkiset toiminnot.  Käyttötapaukset:
 \begin{description}
-   \item[Tarkastelu] Vieraskalenteria voi tarkastella samalla tavalla kuin
+   \item[Tarkastelu]\hfill\\
+      \textit{Kaikille} Vieraskalenteria voi tarkastella samalla tavalla kuin
       omaakin kalenteria (ks.~\ref{oma_kalenteri}).
-   \item[Kohteen lisäys]  Vieraskalenteriin voi lisätä kohteita jos kalenterin
+   \item[Kohteen luonti]\hfill\\
+      \textit{Kaikille}. Vieraskalenteriin voi lisätä kohteita jos kalenterin
       omistaja on sen sallinut.  Lisäys tapahtuu samalla tavalla kuin oman
       kalenterin tapauksessa. 
 
       Vieraalta saatetaan vaatia kuvavarmennus.
 \end{description}
 
-%\section{Järjestelmän tietosisältö} <++>
-%\section{Relaatiotietokantakaavio} <++>
-%\section{Järjestelmän yleisrakenne} <++>
-%\section{Järjestelmän komponentit} <++>
+\section{Järjestelmän tietosisältö} <++>
+\section{Relaatiotietokantakaavio} <++>
+\section{Järjestelmän yleisrakenne} <++>
+\section{Järjestelmän komponentit}
+Toistuvuus (sketching):
+\begin{verbatim}
+data ObjectRepeat = RForever [RepeatEvery]
+                  | RFromUntil [RepeatEvery] Date Date
+data RepeatEvery = Yearly  DaysOfYear
+                 | Monthly DaysOfMonth
+                 | Weekly  DaysOfWeek
+                 | EveryNth Int RepeatEvery
+\end{verbatim}
 %\section{Käyttöliittymä} <++>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
