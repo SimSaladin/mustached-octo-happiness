@@ -3,24 +3,24 @@
 % Last Change: Sat Oct 26 03:00 AM 2013 E
 %
 \documentclass[a4paper,12pt]{report}
-\usepackage[margin=3cm]{geometry}
+\usepackage[left=3cm,right=3cm,top=2cm,bottom=2cm]{geometry}
 \usepackage[finnish]{babel}
 \usepackage[utf8]{inputenc}
+\usepackage{setspace}\onehalfspacing
 \usepackage[pdftex]{graphicx}
-\usepackage{setspace}
-\onehalfspacing
-\DeclareGraphicsRule{*}{mps}{*}{}
+\DeclareGraphicsRule{*}{mps}{*}{} % meta-uml
+
 \title{tsoha\\Kalenterisovellus}
 \author{Samuli Thomasson}
 \begin{document}
 
-% CryptoJS !
+% Extra!! CryptoJS?
 
 \maketitle
 \tableofcontents
 \chapter{Johdanto}
-Tämä kalenterijärjestelmä mahdollistaa käyttäjille kalenterien ylläpidon
-selain\-käyttö\-liittymästä.  Sovelluksen käyttäjä pystyy katsomaan, lisäämään
+Tämä kalenterijärjestelmä mahdollistaa käyttäjille kalenterien yllä\-pidon
+selaimesta.  Sovelluksen käyttäjä pystyy katsomaan, lisäämään
 ja muokkaamaan (kalenteri)merkintöjä omissa kalentereissaan.  Kalenteri koostuu
 joukosta merkintöjä, kuten tapahtumia ja muistutuksia.  Järjestelmä mahdollistaa
 merkintöjen asettamisen julkisesti nähtäville. Myös kokonaisista kalentereista
@@ -57,37 +57,146 @@ Käyttäjät toimivat aina selainkäyttöliittymän kautta. Käyttätapauskaavio
 pääryhmään: käyttäjien autentikointi, operaatiot omassa kalenterissa ja
 operaatiot jonkun muun kalenterissa.
 
-\begin{figure}[h]
+Järjestelmän käyttäjiä on kahdenlaisia: vierailijoita ja varsinaisia
+käyttäjiä:
+\begin{description}
+   \item[Vierailijoita] ovat kaikki jotka eivät ole kirjautuneet sisään,
+      riippumatta siitä onko heillä tunnisteita järjestelmässä vai ei.
+   \item[Käyttäjiä] ovat kaikki sisäänkirjautuneet.
+\end{description}
+
+\section{Käyttötapaukset}
+Tässä luvussa esitellään sovelluksen eri käyttötapaukset.  Ellei toisin mainita,
+niin esiteltävät käyttö\-tapaukset ovat vain varsinaisten käyttäjien saatavissa.
+Käyttö\-tapaukset on jaettu kolmeen joukkoon: autentikointi, kalenterit ja
+vieraskalenterit.  Käyttö\-tapaus\-kaavio (\ref{graph_usecases}) havainnollistaa
+tapauksia; eri kategoriat on siinä jaettu visaalisesti lohkoihin.
+\begin{figure}[ht]
    \centering \includegraphics{usecases.1}
    \caption{Kalenterijärjestelmän käyttötapauskaavio.}
    \label{graph_usecases}
 \end{figure}
 
-Järjestelmän käyttäjiä on kahdenlaisia: vierailijoita ja varsinaisia käyttäjiä:
+\subsection{Autentikointi}
 \begin{description}
-   \item[Vierailijoita] ovat kaikki jotka eivät ole kirjautunu sisään.
-   \item[Käyttäjiä] ovat kaikki sisäänkirjautuneet.
+   \item[Rekisteröityminen]  \emph{Vain vieraille}. Ensimmäinen asia jonka uuden
+      tulevan käyt\-täjän täytyy valitettavasti tehdä, on rekisteröidä joitain
+      tunnisteita itsestään järjes-telmään.  Näihin tietoihin täytyy lukeutua
+      jotain, millä käyttäjä voi todentaa itsensä myöhemmin olevan sama
+      käyttäjä.
+
+      Rekisteröitymiseen tarjotaan monia vaihtoehtoja. Perinteinen käyttäjänimen
+      ja salasanan tallennus palvelimelle on vakiovaihtoehto, mutta myös
+      moderneja metodeja on tarjolla: BrowserId, OpenId ja Gmail. 
+
+   \item[Sisäänkirjautuminen]  \emph{Vain vieraille}. Käyttäjien täytyy pystyä
+      autentikoimaan itsensä rekiste\-röityneeksi käyttäjäksi (mahdollisesti
+      itsekseen), eli korottamaan itsensä vieraasta käyttäjäksi järjestelmän
+      kontekstissa.  Sisäänkirjautumiseen käy\-tetään samaa metodia jota
+      käyttäjä käytti rekisteröitymiseen.
 \end{description}
 
-\section{Käyttötapaukset}
-\subsection{Autentikointi}
-\subsection{Oma kalenteri}
-\subsection{Vieras kalenteri}
-\section{Järjestelmän tietosisältö} <++>
-\section{Relaatiotietokantakaavio} <++>
-\section{Järjestelmän yleisrakenne} <++>
-\section{Järjestelmän komponentit} <++>
-\section{Käyttöliittymä} <++>
+\subsection{Kalenterit}\label{oma_kalenteri}
+Käyttäjällä voi olla usea kalenteri järjestelmässä.  Käyttäjän luomaa kalenteria
+kutsutaan \emph{käyttäjän omistamaksi} kalenteriksi.  Olemassaolevan kalenterin
+omistajaa ei voi vaihtaa.
+
+Kalenterioperaatiot:
+\begin{description}
+   \item[Uusi kalenteri] Kalenterin luominen on ensimmäinen asia jonka uusi
+      käyttäjä tekee, ja se on helppoa: häneltä kysytään heti ensimmäisen
+      sisäänkirjautumisen jälkeen nimeä kalenterille tekstikentällä.
+      Kalenterille voi halutessaan asettaa jonkin toisen väriattribuutin kuin
+      oletuksen.  Lisää attribuutteja voi varsinaisesti säätää myöhemmin, kun
+      kalenteri on luotu.
+   \item[Kalenterinäkymä]
+      Kalenterien tarkastelu on koko järjestelmän tärkein ja laajin
+      käyttötapaus.  Sen voisi esittää myös useana pienempänä käyttötapauksena.
+
+      Kalentereita ei pääasiassa tarkastella yksitellen, vaan useita
+      päällekkäin.  Tarkastelu tapahtuu nk.  \emph{kalenterinäkymässä}.
+      Kalenterinäkymässä näytetään kerrallaan yhden viikon tapahtumat
+      kalentereista\footnote{%
+         Jos aikaa riittää niin näytettävä sisältö on paremmin säädettävissä
+         (kuukausi, päivä, tai muita näkymiä).
+      }.  Näkyvää viikkoa voi vaihtaa seuraavaan, edelliseen, senhetkiseen
+      viikkoon tai johonkin tiettyyn viikkoon.
+
+      Näkymässä näkyvät kalenterit voi valita.
+
+      Näkymässä on esillä keinoja kalenterikohteiden operointiin.  Näkyvistä
+      kalenterikohteista näytetään lyhyet yhteenvedot sekä keinot niiden
+      muokkaukseen.
+   \item[Kalenteritietojen muokkaus] Kalenterit ovat vain kohteita kokoavia
+      \textbf{---insert-a-very-intelligent-word-here---}, mutta niillä on silti
+      muutama muokattava attribuutti, jotka vaikuttavat niiden toimintaan. Näitä
+      ovat:
+      \begin{description}
+         \item[Nimi]  Kalenterin muista identifioiva tunniste.
+         \item[Väri]  Minkä värisinä kalenterin kohteet näkyvät
+            kalenterinäkymässä.
+         \item[Julkinen]  Voiko kalenterin kohteita tarkastella kuka vain
+            (käyttäjä tai vieras).
+         \item[Yhteinen]  Voiko kuka vain lisätä kalenteriin omia kohteita.
+            Selvästi tämä attribuutti on järkevä vain kun kalenteri on
+            julkinen.  
+      \end{description}
+
+      Kaikkia attribuutteja voi muokata muokkaus\-näkymässä, jossa näkyvät myös
+      nykyiset arvot.
+   \item[Poisto]  Kalenterin voi myös poistaa, ja sekin tapahtuu
+      muokkausnäkymässä.  Poistoon kysytään varmistus mikäli kalenteri sisältää
+      kohteita.
+\end{description}
+
+
+\subsubsection{Kohteet}
+Kalenterit koostuvat erilaisista (kalenteri)kohteista.  Kaikille erilaisista
+kohteista tarjotaan CRUD-rajapinnat, joissa keskinäiset erot muodostuvat
+kohteiden eroavista tietokentistä.  Yhteisiä ominaisuuksia, kuten päivämääriä ja
+toistuvuuksia, operoidaan samoin kohdevariantista riippumatta.
+
+Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
+\begin{description}
+   \item[Luonti] lisays.
+   \item[Tarkastelu]
+   \item[Muokkaus]
+   \item[Poisto]
+   \item[Jako]
+\end{description}
+
+\subsection{Vieraskalenterit}
+Vieraskalenteri-käyttötapaukset koskevat käyttäjiä, vieraita ja niitä
+kalentereita jotka eivät ole heidän omistamia.  Vieraskalenteria pystyy
+tarkastelemaan ja mahdollisesti (omistajan niin asettaessa) tekemään lisäyksiä,
+mutta \emph{ei} muutoksia kalenteriin tai siinä oleviin muiden omistamiin
+kalenterikohteisiin.  Näiden käyttötapausten oletus on, että kohteena olevan
+kalenterin omistaja on sallinut julkiset toiminnot.  Käyttötapaukset:
+\begin{description}
+   \item[Tarkastelu] Vieraskalenteria voi tarkastella samalla tavalla kuin
+      omaakin kalenteria (ks.~\ref{oma_kalenteri}).
+   \item[Kohteen lisäys]  Vieraskalenteriin voi lisätä kohteita jos kalenterin
+      omistaja on sen sallinut.  Lisäys tapahtuu samalla tavalla kuin oman
+      kalenterin tapauksessa. 
+
+      Vieraalta saatetaan vaatia kuvavarmennus.
+\end{description}
+
+%\section{Järjestelmän tietosisältö} <++>
+%\section{Relaatiotietokantakaavio} <++>
+%\section{Järjestelmän yleisrakenne} <++>
+%\section{Järjestelmän komponentit} <++>
+%\section{Käyttöliittymä} <++>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Käyttö}
-\section{Asennustiedot} <++>
-\section{Käynnistys- / käyttöohje} <++>
+%\chapter{Käyttö}
+%\section{Asennustiedot} <++>
+%\section{Käynnistys- / käyttöohje} <++>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat} <++>
+%\chapter{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat} <++>
 
-jatko: ryhmiä, icalendar,
+% jatko: ryhmiä, icalendar,
 \bibliography{refs.bib}
 
 \end{document}
