@@ -171,14 +171,21 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
    \item[Muokkaus]\hfill\\
       Kohteen muokkaukseen edetään sen yksityiskohtaisesta näkymästä.
       Muokattavia attribuutteja on useita ja ne riippuvat kohdetyypistä.
-      Yleisesti kohteista voi muokata seuraavia attribuutteja:
+      Kaikista kohteista muokattavat attribuutit:
       \begin{description}
-         \item[Hälytysajat]
+         \item[Paikka]  Kohteeseen liittyvä maantieteellinen sijainti.
+         \item[Hälytysajat]  Kun kohteesta halutaan muistutus. Esimerkiksi
+            tietty aika ennen tapahtuman alkamisajankohtaa tai to-do:n
+            deadlinea.
       \end{description}
 
       Kohdetyypeille ominaiset muokattavat attribuutit:
       \begin{description}
          \item[Tapahtuma (VEVENT)]
+            \begin{description}
+               \item[Alkamisajankohta]
+               \item[Kesto]
+            \end{description}
          \item[Muistiinpano (VJOURNAL)]
          \item[To-do (VTODO)]
       \end{description}
