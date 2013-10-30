@@ -1,0 +1,24 @@
+Default: &defaults
+  user: mustached-octo-happiness
+  password: mustached-octo-happiness
+  host: localhost
+  port: 5432
+  database: mustached-octo-happiness
+  poolsize: 10
+
+Development:
+  <<: *defaults
+
+Testing:
+  database: mustached-octo-happiness_test
+  <<: *defaults
+
+Staging:
+  database: mustached-octo-happiness_staging
+  poolsize: 100
+  <<: *defaults
+
+Production:
+  database: mustached-octo-happiness_production
+  poolsize: 100
+  <<: *defaults

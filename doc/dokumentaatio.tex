@@ -3,15 +3,31 @@
 % Last Change: Sat Oct 26 03:00 AM 2013 E
 %
 \documentclass[a4paper,12pt]{report}
-\usepackage[left=3cm,right=3cm,top=2cm,bottom=2cm]{geometry}
+\usepackage[left=2.9cm,right=2.9cm,top=2cm,bottom=2cm]{geometry}
 \usepackage[finnish]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{setspace}\onehalfspacing
 \usepackage[pdftex]{graphicx}
+\usepackage{color}
 \DeclareGraphicsRule{*}{mps}{*}{} % meta-uml
-
-\title{tsoha\\Kalenterisovellus}
-\author{Samuli Thomasson}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\title{%
+   \vspace{3cm}
+   \textsc{\large Aineopintojen harjoitustyö: Tietokantasovellus \\ 2013/2\\}
+   \HRule\\
+   \textbf{\huge Kalenterijärjestelmä \\}
+   \texttt{\large mustached-octo-happiness \\}
+   \HRule
+}
+\author{%
+   \begin{minipage}{0.95\textwidth}
+      \begin{flushright}
+         \large \emph{Tekijä}\\
+         \large \textsc{Samuli Thomasson}
+      \end{flushright}
+   \end{minipage}
+}
+\date{\vfill \today}
 \begin{document}
 
 % Extra!! CryptoJS?
@@ -67,40 +83,46 @@ käyttäjiä:
 
 \section{Käyttötapaukset}
 Tässä luvussa esitellään sovelluksen eri käyttötapaukset.  Ellei toisin mainita,
-niin esiteltävät käyttö\-tapaukset ovat vain varsinaisten käyttäjien saatavissa.
+niin esiteltävät käyttö\-tapaukset ovat vain varsinaisille käyttäjille.
 Käyttö\-tapaukset on jaettu kolmeen joukkoon: autentikointi, kalenterit
 kohteineen ja vieraskalenterit.  Käyttö\-tapaus\-kaavio (\ref{graph_usecases})
 havainnollistaa käyttötapauksiatapauksia; eri kategoriat on siinä jaettu
 visaalisiin lohkoihin.
 \begin{figure}[ht]
    \centering \includegraphics{usecases.1}
-   \caption{Kalenterijärjestelmän käyttötapauskaavio.}
+   \caption{Kalenterijärjestelmän käyttötapauskaavio.
+      \textcolor[rgb]{0.5,0.5,0}{Keltaisessa} laatikossa on autentikointi,
+      \textcolor[rgb]{0,0.5,0.5}{turkoosissa} kalenterien ja kohteiden
+      käyttötapaukset, ja
+      \textcolor[rgb]{0.5,0,0.5}{violetissa} laatikossa on julkisten kalenterien
+      käyttötapaukset.
+   }
    \label{graph_usecases}
 \end{figure}
 
 \subsection{Autentikointi}
 \begin{description}
    \item[Rekisteröityminen]  \emph{Vain vieraille}. Ensimmäinen asia jonka uuden
-      tulevan käyt\-täjän täytyy valitettavasti tehdä, on rekisteröidä joitain
-      tunnisteita itsestään järjes-telmään.  Näihin tietoihin täytyy lukeutua
-      jotain, millä käyttäjä voi todentaa itsensä myöhemmin olevan sama
-      käyttäjä.
+      tulevan käyt\-täjän täytyy valitettavasti tehdä, on rekisteröidä jokin
+      tunniste itsestään järjes-telmään.  Tunniste on esimerkiksi
+      sähköpostiosoite, jolla käyttäjä voi todentaa itsensä.
 
       Rekisteröitymiseen tarjotaan monia vaihtoehtoja. Perinteinen käyttäjänimen
-      ja salasanan tallennus palvelimelle on vakiovaihtoehto, mutta myös
-      moderneja metodeja on tarjolla: BrowserId, OpenId ja Gmail. 
+      (sähköpostiosoitteen) ja salasanan tallennus palvelimelle on
+      vakiovaihtoehto, mutta myös modernempia metodeja tarjotaan: BrowserId,
+      OpenId ja Gmail, mahdollisesti muitakin.
 
    \item[Sisäänkirjautuminen]  \emph{Vain vieraille}. Käyttäjien täytyy pystyä
-      autentikoimaan itsensä rekiste\-röityneeksi käyttäjäksi (mahdollisesti
-      itsekseen), eli korottamaan itsensä vieraasta käyttäjäksi järjestelmän
-      kontekstissa.  Sisäänkirjautumiseen käy\-tetään samaa metodia jota
-      käyttäjä käytti rekisteröitymiseen.
+      autentikoimaan itsensä aiemmin ekiste\-röityneeksi käyttäjäksi
+      (mahdollisesti itsekseen), eli järjes\-telmän kontekstissa korottamaan
+      itsensä vieraasta käyttäjäksi.  Sisään\-kirjautumiseen käy\-tetään samaa
+      metodia jota käyttäjä käytti rekisteröityessään.
 \end{description}
 
 \subsection{Kalenterit}\label{oma_kalenteri}
 Käyttäjällä voi olla usea kalenteri järjestelmässä.  Käyttäjän luomaa kalenteria
 kutsutaan \emph{käyttäjän omistamaksi} kalenteriksi.  Olemassaolevan kalenterin
-omistajaa ei voi vaihtaa.  Kalenterioperaatiot:
+omistajaa ei voi vaihtaa.  Omaan kalenteriin liittyvät toiminnot:
 \begin{description}
    \item[Luonti] \hfill\\
       Kalenterin luominen on ensimmäinen asia jonka uusi
@@ -108,19 +130,19 @@ omistajaa ei voi vaihtaa.  Kalenterioperaatiot:
       sisäänkirjautumisen jälkeen nimeä kalenterille tekstikentällä.
       Kalenterille voi halutessaan asettaa jonkin toisen väriattribuutin kuin
       oletuksen.  Lisää attribuutteja voi varsinaisesti säätää myöhemmin, kun
-      kalenteri on luotu.
+      kalenteri on luotu (ks.\ kohta Muokkaus).
 
    \item[Tarkastelu {\it (kalenterinäkymä)}] \hfill\\
       Kalenterien tarkastelu on koko järjestelmän tärkein ja laajin
       käyttötapaus.  Sen voisi esittää myös useana pienempänä käyttötapauksena.
 
       Kalentereita ei pääasiassa tarkastella yksitellen, vaan useita
-      päällekkäin.  Tarkastelu tapahtuu nk.  \emph{kalenterinäkymässä}.
+      päällekkäin.  Tarkastelu tapahtuu \emph{kalenterinäkymässä}.
       Kalenterinäkymässä näytetään kerrallaan yhden viikon tapahtumat
-      kalentereista\footnote{%
+      kalentereista.\footnote{%
          Jos aikaa riittää niin näytettävä sisältö on paremmin säädettävissä
          (kuukausi, päivä, tai muita näkymiä).
-      }.  Näkyvää viikkoa voi vaihtaa seuraavaan, edelliseen, senhetkiseen
+      }  Näkyvää viikkoa voi vaihtaa seuraavaan, edelliseen, senhetkiseen
       viikkoon tai johonkin tiettyyn viikkoon.
 
       Näkymässä näkyvät kalenterit voi valita.
@@ -128,7 +150,7 @@ omistajaa ei voi vaihtaa.  Kalenterioperaatiot:
       Näkymässä on esillä keinoja kalenterikohteiden operointiin.  Näkyvistä
       kalenterikohteista näytetään lyhyet yhteenvedot sekä keinot niiden
       muokkaukseen.
-   \item[Muokkaus {\it (Kalenterin metadata)}] \hfill\\
+   \item[Muokkaus {\it (kalenterin ominaisuudet)}] \hfill\\
       Kalenterit ovat vain kohteita kokoavia entiteettejä, mutta niillä on silti
       muutama muokattava attribuutti jotka vaikuttavat niiden toimintaan. Näitä
       ovat:
@@ -165,42 +187,77 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
       kalenteri\-näky\-mäs\-sä. Kalenterinäkymässä voi kohteen lisäykseen edetä joko
       tietylle ajalle aikanäkymässä (viikkonäkymässä), tai aikanäkymän
       ulkopuolelta.
+
    \item[Tarkastelu]\hfill\\
       Kalenterikohteita tarkastellaan kalenterinäkymässä, ja kohteiden
       yksityiskohtia valitsemalla kohteen kalenterinäkymässä.
+
    \item[Muokkaus]\hfill\\
       Kohteen muokkaukseen edetään sen yksityiskohtaisesta näkymästä.
       Muokattavia attribuutteja on useita ja ne riippuvat kohdetyypistä.
       Kaikista kohteista muokattavat attribuutit:
       \begin{description}
+         \item[Kuvaus]  Tärkein attribuutti on kuvaus kohteesta.
          \item[Paikka]  Kohteeseen liittyvä maantieteellinen sijainti.
+         \item[Kommentti]  Sivuhuomautus kohteesta.
+         \item[Osallistujat] Henkilöt, joita kohde koskee.
+         \item[Tärkeys]  Kuinka tärkeä kohde on (jollain asteikolla).
          \item[Hälytysajat]  Kun kohteesta halutaan muistutus. Esimerkiksi
             tietty aika ennen tapahtuman alkamisajankohtaa tai to-do:n
             deadlinea.
       \end{description}
 
-      Kohdetyypeille ominaiset muokattavat attribuutit:
+      Kohteiden metadata (luodaan implisiittisesti):
       \begin{description}
-         \item[Tapahtuma (VEVENT)]
-            \begin{description}
-               \item[Alkamisajankohta]
-               \item[Kesto]
-            \end{description}
-         \item[Muistiinpano (VJOURNAL)]
-         \item[To-do (VTODO)]
+         \item[Luontipäivämäärä]  Jotta voidaan tarkistaa koska kohde lisättiin
+            kalenteriin.
+         \item[Viimeinen muokkaus]  Koska edellinen muokkaus tehtiin?
       \end{description}
+
+      Kohdetyypeille ominaiset muokattavat attribuutit:
+      \\(Nämä muistuttavat (hyvin löyhästi) iCalendar-määrittelyä)
+      \begin{description}
+         \item[Tapahtuma (VEVENT)] \hfill\\
+            Kalenterien tyypillinen ominaisuus on tapahtumien muistaminen ja
+            niistä muistuttaminen. Tärkeimmät attribuutit:
+            \begin{description}
+               \item[Alkamisajankohta]  Koska tapahtuma alkaa?
+               \item[Kesto]  Kauanko tapahtuma kestää?
+               \item[Toistuvuus] Kuinka usein ja milloin tapahtuma toistuu (jos
+                  toistuu)?
+            \end{description}
+
+         \item[Muistiinpano (VJOURNAL)] \hfill\\
+            Muistiinpanot ovat yleiskäyttöisiä
+            kohteita.  Niitä voi käyttää esimerkiksi päiväkirjana tai
+            mikroblogina. Attribuutit:
+            \begin{description}
+               \item[Sisältö] Yleisen kohteen kuvauksesta eroava, rikkaampi
+                  kenttä. Sisältö voi olla esimerkiksi HTML:ää tai Markdown:ia.
+            \end{description}
+
+         \item[To-do (VTODO)] \hfill\\
+            To-do:n voi tehdä mistä tahansa tehtävästä. Attribuutit:
+            \begin{description}
+               \item[Valmis] Onko \texttt{todo} valmistunut?
+               \item[Toistuvuus] Toistuuko tehtävä säännöllisesti, milloin?
+            \end{description}
+      \end{description}
+
    \item[Kopiointi]\hfill\\
       Kohteista voi luoda kopioita, tai tarkemmin olemassa\-olevaa kohdetta voi
       läh\-teä muokkaamaan ja tallentaa muokattu versio uutena kohteena. Tämäkin
       tapahtuu yksityiskohtaisesta näkymästä.
+
    \item[Poisto]\hfill\\
       Kohteen poisto tapahtuu myös sen yksityiskohtaisesta näkymästä.  Poistoon
       kysytään aina varmistus.  Toistuvien kohteiden kohdalla kysytään,
       halutaanko poistaa kaikki toistot vai ainoastaan valittu toisto.
+
    \item[Jako]\hfill\\
-      Yksittäisiä kohteita voi jakaa muille käyttäjille, ja myös viedä
-      tekstimuotoon esimerkiksi liitettäväksi sähköpostiin.  Jakamiseen edetään
-      yksityiskohtaisesta näkymästä. 
+      Yksittäisiä kohteita voi jakaa sellaisenaan muille järjestelmän
+      käyttäjille, ja myös viedä tekstimuotoon esimerkiksi liitettäväksi
+      sähköpostiin.  Jakamiseen edetään yksityiskohtaisesta näkymästä. 
 
       Toiselle käyttäjälle kohdistuvalle jaolle annetaan käyttäjäjoukko, jotka
       saavat heille jaetusta kohteesta ilmoituksen.  He päättävät haluavatko
@@ -223,22 +280,22 @@ kalenterin omistaja on sallinut julkiset toiminnot.  Käyttötapaukset:
       omistaja on sen sallinut.  Lisäys tapahtuu samalla tavalla kuin oman
       kalenterin tapauksessa. 
 
-      Vieraalta saatetaan vaatia kuvavarmennus.
+      Vieraalta saatetaan vaatia kuva- tai muu varmennus (captcha).
 \end{description}
 
-\section{Järjestelmän tietosisältö} <++>
-\section{Relaatiotietokantakaavio} <++>
-\section{Järjestelmän yleisrakenne} <++>
-\section{Järjestelmän komponentit}
-Toistuvuus (sketching):
-\begin{verbatim}
-data ObjectRepeat = RForever [RepeatEvery]
-                  | RFromUntil [RepeatEvery] Date Date
-data RepeatEvery = Yearly  DaysOfYear
-                 | Monthly DaysOfMonth
-                 | Weekly  DaysOfWeek
-                 | EveryNth Int RepeatEvery
-\end{verbatim}
+%\section{Järjestelmän tietosisältö} <++>
+%\section{Relaatiotietokantakaavio} <++>
+%\section{Järjestelmän yleisrakenne} <++>
+%\section{Järjestelmän komponentit}
+%Toistuvuus (sketching):
+%\begin{verbatim}
+%data ObjectRepeat = RForever [RepeatEvery]
+%                  | RFromUntil [RepeatEvery] Date Date
+%data RepeatEvery = Yearly  DaysOfYear
+%                 | Monthly DaysOfMonth
+%                 | Weekly  DaysOfWeek
+%                 | EveryNth Int RepeatEvery
+%\end{verbatim}
 %\section{Käyttöliittymä} <++>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
