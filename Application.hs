@@ -20,20 +20,17 @@ import Control.Monad.Logger (runLoggingT)
 import System.IO (stdout)
 import System.Log.FastLogger (mkLogger)
 
--- Import all relevant handler modules here.
--- Don't forget to add new modules to your cabal file!
+import Data.HashMap.Strict as H
+import Data.Aeson.Types as AT
+#ifndef DEVELOPMENT
+import qualified Web.Heroku
+#endif
+
 import Handler.Fay
 import Handler.Home
 
--- This line actually creates our YesodDispatch instance. It is the second half
--- of the call to mkYesodData which occurs in Foundation.hs. Please see the
--- comments there for more details.
 mkYesodDispatch "App" resourcesApp
 
--- This function allocates resources (such as a database connection pool),
--- performs initialization and creates a WAI application. This is also the
--- place to put your migrate statements to have automatic database
--- migrations handled by Yesod.
 makeApplication :: AppConfig DefaultEnv Extra -> IO Application
 makeApplication conf = do
     foundation <- makeFoundation conf
@@ -51,25 +48,23 @@ makeApplication conf = do
     app <- toWaiAppPlain foundation
     return $ logWare app
 
--- | Loads up any necessary settings, creates your foundation datatype, and
--- performs some initialization.
-makeFoundation :: AppConfig DefaultEnv Extra -> IO App
-makeFoundation conf = do
-    manager <- newManager def
-    s <- staticSite
-    dbconf <- withYamlEnvironment "config/postgresql.yml" (appEnv conf)
-              Database.Persist.loadConfig >>=
-              Database.Persist.applyEnv
-    p <- Database.Persist.createPoolConfig (dbconf :: Settings.PersistConf)
-    logger <- mkLogger True stdout
-    let foundation = App conf s p manager dbconf onCommand logger
-
-    -- Perform database migration using our application's logging settings.
-    runLoggingT
-        (Database.Persist.runPool dbconf (runMigration migrateAll) p)
-        (messageLoggerSource foundation logger)
-
-    return foundation
+-- makeFoundation :: AppConfig DefaultEnv Extra -> IO App
+-- makeFoundation conf = do
+--     manager <- newManager def
+--     s <- staticSite
+--     dbconf <- withYamlEnvironment "config/postgresql.yml" (appEnv conf)
+--               Database.Persist.loadConfig >>=
+--               Database.Persist.applyEnv
+--     p <- Database.Persist.createPoolConfig (dbconf :: Settings.PersistConf)
+--     logger <- mkLogger True stdout
+--     let foundation = App conf s p manager dbconf onCommand logger
+-- 
+--     -- Perform database migration using our application's logging settings.
+--     runLoggingT
+--         (Database.Persist.runPool dbconf (runMigration migrateAll) p)
+--         (messageLoggerSource foundation logger)
+-- 
+--     return foundation
 
 -- for yesod devel
 getApplicationDev :: IO (Int, Application)
@@ -79,3 +74,36 @@ getApplicationDev =
     loader = Yesod.Default.Config.loadConfig (configSettings Development)
         { csParseExtra = parseExtra
         }
+
+makeFoundation :: AppConfig DefaultEnv Extra -> Logger -> IO App
+makeFoundation conf setLogger = do
+    manager <- newManager def
+    s <- staticSite
+    hconfig <- loadHerokuConfig
+    dbconf <- withYamlEnvironment "config/postgresql.yml" (appEnv conf)
+              (Database.Persist.Store.loadConfig . combineMappings hconfig) >>=
+              Database.Persist.Store.applyEnv
+    p <- Database.Persist.Store.createPoolConfig (dbconf :: Settings.PersistConfig)
+    Database.Persist.Store.runPool dbconf (runMigration migrateAll) p
+    return $ App conf setLogger s p manager dbconf
+
+#ifndef DEVELOPMENT
+canonicalizeKey :: (Text, val) -> (Text, val)
+canonicalizeKey ("dbname", val) = ("database", val)
+canonicalizeKey pair = pair
+
+toMapping :: [(Text, Text)] -> AT.Value
+toMapping xs = AT.Object $ M.fromList $ map (\(key, val) -> (key, AT.String val)) xs
+#endif
+
+combineMappings :: AT.Value -> AT.Value -> AT.Value
+combineMappings (AT.Object m1) (AT.Object m2) = AT.Object $ m1 `M.union` m2
+combineMappings _ _ = error "Data.Object is not a Mapping."
+
+loadHerokuConfig :: IO AT.Value
+loadHerokuConfig = do
+#ifdef DEVELOPMENT
+    return $ AT.Object M.empty
+#else
+    Web.Heroku.dbConnParams >>= return . toMapping . map canonicalizeKey
+#endif

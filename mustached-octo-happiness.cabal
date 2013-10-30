@@ -75,6 +75,9 @@ library
                  , monad-logger                  >= 0.3
                  , fast-logger                   >= 0.3
                  , esqueleto
+                 , heroku
+                 , aeson
+                 , unordered-containers
 
 executable         mustached-octo-happiness
     if flag(library-only)
