@@ -53,7 +53,6 @@ Group.own_cal
       , delete_cal, delete_obj
       , view_cal, view_obj);
 
-
 % - Collab. & view -----------------
 topToBottom(10)(view_other_cal, suggest_other_obj);
 Group.col_cal(view_other_cal, suggest_other_obj);
@@ -96,9 +95,9 @@ link(association)
       (pathStepY(user.s, col_cal.s, -70));
 
 % - stranger ----------
-clink(association)(stranger.human, register);
+clink(association)(stranger.n, register.s);
 clink(association)(stranger.human, login);
-clink(association)(stranger.human, col_cal);
+link(association)(stranger.s -- col_cal.n);
 
 endfig;
 end
