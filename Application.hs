@@ -52,9 +52,10 @@ makeFoundation :: AppConfig DefaultEnv Extra -> IO App
 makeFoundation conf = do
     manager <- newManager def
     s <- staticSite
-    hconfig <- loadHerokuConfig
+--    hconfig <- loadHerokuConfig
     dbconf <- withYamlEnvironment "config/postgresql.yml" (appEnv conf)
-              (Database.Persist.loadConfig . combineMappings hconfig) >>=
+--              (Database.Persist.loadConfig . combineMappings hconfig) >>=
+              Database.Persist.loadConfig >>=
               Database.Persist.applyEnv
     p <- Database.Persist.createPoolConfig (dbconf :: Settings.PersistConf)
     logger <- mkLogger True stdout
