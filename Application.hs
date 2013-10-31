@@ -20,12 +20,6 @@ import Control.Monad.Logger (runLoggingT)
 import System.IO (stdout)
 import System.Log.FastLogger (mkLogger)
 
-import qualified Data.HashMap.Strict as H
-import Data.Aeson.Types as AT
-#ifndef DEVELOPMENT
-import qualified Web.Heroku
-#endif
-
 import Handler.Fay
 import Handler.FrontPage
 import Handler.Calendar
