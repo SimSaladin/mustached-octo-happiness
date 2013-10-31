@@ -5,4 +5,11 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ HomeR GET POST
+/ FrontPageR GET
+
+/calendar            CalendarR         GET
+/settings/calendars  CalendarSettingsR GET POST
+/obj/#ObjectType     ObjectR           GET POST
+/obj/view/#ObjectUID ObjectThisR       GET POST
+/obj/text/#ObjectUID ObjectTextR       GET
+/obj/send/#ObjectUID ObjectSendR           POST

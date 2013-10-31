@@ -27,7 +27,8 @@ import qualified Web.Heroku
 #endif
 
 import Handler.Fay
-import Handler.Home
+import Handler.FrontPage
+import Handler.Calendar
 
 mkYesodDispatch "App" resourcesApp
 
@@ -76,24 +77,3 @@ getApplicationDev =
     loader = Yesod.Default.Config.loadConfig (configSettings Development)
         { csParseExtra = parseExtra
         }
-
-#ifndef DEVELOPMENT
-canonicalizeKey :: (Text, val) -> (Text, val)
-canonicalizeKey ("dbname", val) = ("database", val)
-canonicalizeKey pair = pair
-
-toMapping :: [(Text, Text)] -> AT.Value
-toMapping xs = AT.Object $ H.fromList $ map (\(key, val) -> (key, AT.String val)) xs
-#endif
-
-combineMappings :: AT.Value -> AT.Value -> AT.Value
-combineMappings (AT.Object m1) (AT.Object m2) = AT.Object $ m1 `H.union` m2
-combineMappings _ _ = error "Data.Object is not a Mapping."
-
-loadHerokuConfig :: IO AT.Value
-loadHerokuConfig = do
-#ifdef DEVELOPMENT
-    return $ AT.Object M.empty
-#else
-    Web.Heroku.dbConnParams >>= return . toMapping . map canonicalizeKey
-#endif

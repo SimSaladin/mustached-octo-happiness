@@ -22,7 +22,8 @@ library
                      Settings.Development
                      SharedTypes
                      Handler.Fay
-                     Handler.Home
+                     Handler.FrontPage
+                     Handler.Calendar
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -53,7 +54,6 @@ library
                  , yesod-form                    >= 1.3        && < 1.4
                  , yesod-fay                     >= 0.4
                  , fay                           >= 0.16
-                 , fay-base
                  , bytestring                    >= 0.9        && < 0.11
                  , text                          >= 0.11       && < 0.12
                  , persistent                    >= 1.2        && < 1.3

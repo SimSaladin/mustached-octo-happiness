@@ -15,5 +15,5 @@ Staging:
   <<: *defaults
 
 Production:
-   approot: "http://mustached-octo-happiness.herokuapp.com"
+  approot: "http://mustached-octo-happiness.herokuapp.com"
   <<: *defaults

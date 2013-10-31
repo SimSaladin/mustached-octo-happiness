@@ -17,3 +17,7 @@ Staging:
   database: mustached-octo-happiness_staging
   poolsize: 100
   <<: *defaults
+
+Production:
+  database: mustached-octo-happiness_production
+  <<: *defaults
