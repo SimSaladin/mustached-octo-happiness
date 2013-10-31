@@ -1,3 +1,4 @@
+% NOTE that this file is latin1-encoded, to work around metauml to output ä/ö.
 input metauml;
 beginfig(1);
 
@@ -95,7 +96,7 @@ link(association)
       (pathStepY(user.s, col_cal.s, -70));
 
 % - stranger ----------
-clink(association)(stranger.n, register.s);
+clink(association)(stranger.human, register);
 clink(association)(stranger.human, login);
 link(association)(stranger.s -- col_cal.n);
 
