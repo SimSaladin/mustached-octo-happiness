@@ -1,3 +1,6 @@
-$maybe msg <- mmsg
-    <div #message>#{msg}
-^{widget}
+<div #content>
+   <div #navigation>^{navigation}
+   <div #main>
+      $maybe msg <- mmsg
+         <div #message>#{msg}
+      ^{widget}

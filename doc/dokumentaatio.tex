@@ -66,7 +66,6 @@ käyttökokemuksen parantamiseksi.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Järjestelmä}
-
 \section{Yleiskuva järjestelmästä}
 Käyttäjät toimivat aina selainkäyttöliittymän kautta. Käyttätapauskaaviossa
 (\ref{graph_usecases}) on esitelty ohjelman päätoiminnot. Ne on jaettu kolmeen
@@ -283,9 +282,28 @@ kalenterin omistaja on sallinut julkiset toiminnot.  Käyttötapaukset:
       Vieraalta saatetaan vaatia kuva- tai muu varmennus (captcha).
 \end{description}
 
-%\section{Järjestelmän tietosisältö} <++>
-%\section{Relaatiotietokantakaavio} <++>
-%\section{Järjestelmän yleisrakenne} <++>
+\section{Järjestelmän tietosisältö}
+Tietokohteet\ldots
+\begin{figure}[ht]
+   \centering \includegraphics{class.1}
+   \caption{Käsitekaavio. Harmaaseen laatikkoon osoittavat relaatiot liittyvät
+   jokaiseen kohteeseen laatikossa.}
+   \label{graph_ui}
+\end{figure}
+
+\section{Relaatiotietokantakaavio}
+<++>
+
+\section{Järjestelmän yleisrakenne}
+Jrjestelmän pääkomponentit on sijoiteltu hakemistoihin ja tiedostoihin
+seuraavasti.
+\begin{description}
+   \item[Handler/]      Kontrollerit
+   \item[templates/]    Näkymät
+   \item[config/models] Mallit
+   \item[config/]       Muut asetukset
+\end{description}
+
 %\section{Järjestelmän komponentit}
 %Toistuvuus (sketching):
 %\begin{verbatim}
@@ -306,12 +324,12 @@ kalenterin omistaja on sallinut julkiset toiminnot.  Käyttötapaukset:
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\chapter{Käyttö}
-%\section{Asennustiedot} <++>
-%\section{Käynnistys- / käyttöohje} <++>
+\chapter{Käyttö}
+\section{Asennustiedot} <++>
+\section{Käynnistys- / käyttöohje} <++>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\chapter{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat} <++>
+\chapter{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat} <++>
 
 % jatko: ryhmiä, icalendar,
 \bibliography{refs.bib}

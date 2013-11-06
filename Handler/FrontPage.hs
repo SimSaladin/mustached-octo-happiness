@@ -1,14 +1,15 @@
 module Handler.FrontPage where
 
 import Import
-import Language.Haskell.TH ( Exp(..) )
+import Text.Hamlet (hamletFile)
+import Yesod.Auth (Route(LoginR))
 
 getFrontPageR :: Handler Html
 getFrontPageR = do
-    defaultLayout $ do
+    master <- getYesod
+    mmsg <- getMessage
+    pc <- widgetToPageContent $ do
         setTitle "Welcome to Mustached-Octo-Happiness!"
+        $(combineStylesheets 'StaticR [ css_kube_min_css ])
         $(widgetFile "frontpage")
-
-        -- TODO fay fay fay fay..
-        let handlerName = "getFrontPageR" :: Text
-        $(fayFile' (ConE 'StaticR) "Home")
+    giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")

@@ -1,2 +1,14 @@
 <h1>Mustached-Octo-Happiness
-<p>login, register..
+
+<div .units-row>
+  <div .unit-centered .unit-40>
+      <p>Rekisteröidy
+
+<div .units-row>
+   <div .unit-centered .unit-40>
+      <a href=@{AuthR LoginR}>Kirjaudu sisään
+
+<hr>
+<i>testisivut:
+   <li>
+      <a href=@{CalendarR}>Kalenterinäkymä
