@@ -22,18 +22,20 @@ Target
     name Text
     desc Text Maybe
     place Text Maybe
-    attendees [Text] Maybe
     urgency Urgency
+    attendees [Text]
 
+-- many-to-many
 UserAttendee
     target TargetId
     user UserId
     UniqueTargetAttend target user
-CalObj
+CalTarget
     calendar CalendarId
     target TargetId
-    UniqueCalObj calendar target
+    UniqueCalTarget calendar target
 
+-- different targets
 Todo
     target TargetId
     done Bool
@@ -41,7 +43,13 @@ Todo
     end UTCTime
     repeat Repeat
     alarm Alarm
-Event
-    target TargetId
 Note
     target TargetId
+    content Text
+Event
+    target TargetId
+    begin UTCTime
+    end UTCTime
+    length DiffTime
+    repeat Repeat
+    alarm Alarm

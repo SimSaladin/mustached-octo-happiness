@@ -3,14 +3,24 @@
 % Last Change: Sat Oct 26 03:00 AM 2013 E
 %
 \documentclass[a4paper,12pt]{report}
-\usepackage[left=2.9cm,right=2.9cm,top=2cm,bottom=2cm]{geometry}
-\usepackage[finnish]{babel}
+
+% dot2tex
+\usepackage[x11names, rgb]{xcolor}
+%\usepackage{tikz}
+%\usetikzlibrary{snakes,arrows,shapes}
 \usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage[pdf]{pstricks}
+\usepackage{amsmath}
+
+\usepackage[left=2.9cm,right=2.9cm,top=2cm,bottom=2cm]{geometry}
+\usepackage[english,finnish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{setspace}\onehalfspacing
-\usepackage[pdftex]{graphicx}
-\usepackage{color}
 \usepackage{tabu}
 \DeclareGraphicsRule{*}{mps}{*}{} % meta-uml
+
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 \title{%
    \vspace{3cm}
@@ -380,11 +390,10 @@ markdownia.\footnote{Riippuen aikataulusta}
 
 \section{Relaatiotietokanta}
 Järjestelmän tietokanta on kuvattu kuvassa~\ref{graph_database}. Kuvassa on
-selkeyden vuoksi käytetty\ldots
 
 \begin{figure}[ht]
-   \centering \includegraphics[width=\textwidth]{database.1}
-   \caption{Järjestelmän relaatiotietokannan kaavio.  }
+   \centering\input{relationships.tex}
+   \caption{Järjestelmän relaatiotietokannan kaavio.}
    \label{graph_database}
 \end{figure}
 

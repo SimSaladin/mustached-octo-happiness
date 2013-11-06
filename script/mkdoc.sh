@@ -6,5 +6,5 @@ mpost usecases.mp \
    && mpost ui.mp \
    && mpost class.mp \
    && mpost database.mp \
-   && pdflatex dokumentaatio \
-   && pdflatex dokumentaatio
+   && pdflatex --shell-escape dokumentaatio \
+   && pdflatex --shell-escape dokumentaatio
