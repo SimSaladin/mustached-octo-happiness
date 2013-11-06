@@ -9,6 +9,7 @@
 \usepackage{setspace}\onehalfspacing
 \usepackage[pdftex]{graphicx}
 \usepackage{color}
+\usepackage{tabu}
 \DeclareGraphicsRule{*}{mps}{*}{} % meta-uml
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 \title{%
@@ -88,7 +89,7 @@ kohteineen ja vieraskalenterit.  Käyttö\-tapaus\-kaavio (\ref{graph_usecases})
 havainnollistaa käyttötapauksiatapauksia; eri kategoriat on siinä jaettu
 visaalisiin lohkoihin.
 \begin{figure}[ht]
-   \centering \includegraphics{usecases.1}
+   \centering \includegraphics[width=\textwidth]{usecases.1}
    \caption{Kalenterijärjestelmän käyttötapauskaavio.
       \textcolor[rgb]{0.5,0.5,0}{Keltaisessa} laatikossa on autentikointi,
       \textcolor[rgb]{0,0.5,0.5}{turkoosissa} kalenterien ja kohteiden
@@ -283,16 +284,110 @@ kalenterin omistaja on sallinut julkiset toiminnot.  Käyttötapaukset:
 \end{description}
 
 \section{Järjestelmän tietosisältö}
-Tietokohteet\ldots
+Järjestelmän tietokohteet on esitetty pääpiirteittäin
+kaaviossa~\ref{graph_class}. Tietosisällöt on kuvattu yksityiskohtaisemmin
+alaluvuissa. Taulukoissa on esitetty kunkin tietokohteet attribuuttien nimet,
+arvojoukot ja kuvaukset. Attribuutti on pakollinen ellei arvojoukkoon ole
+merkattu (V). Listattujen attribuuttien lisäksi myös metatiedot (koska luotu,
+koska viimeksi muokattu) tallennetaan.
+
 \begin{figure}[ht]
-   \centering \includegraphics{class.1}
-   \caption{Käsitekaavio. Harmaaseen laatikkoon osoittavat relaatiot liittyvät
-   jokaiseen kohteeseen laatikossa.}
-   \label{graph_ui}
+   \centering \includegraphics[width=\textwidth]{class.1}
+   \caption{Käsitekaavio järjestelmän tietokohteista. Harmaaseen laatikkoon
+   osoittavat relaatiot liittyvät jokaiseen kohteeseen laatikossa.}
+   \label{graph_class}
 \end{figure}
 
-\section{Relaatiotietokantakaavio}
-<++>
+\subsection{Tietokohde: Kalenteri}
+\begin{tabu}{l|l|l}
+   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
+   Nimi                       & Merkkijono & Nimi ja samalla tunniste kalenterille. \\\hline
+   Kuvaus                     & Merkkijono (V) & Lisätietoa kalenterista. \\\hline
+   Väri                       & Merkkijono (RGB) & Tunnisteväri kalenterin kohteille. \\\hline
+   Omistaja                   & Käyttäjä   & Kuka loi ja omistaa kalenterin. \\\hline
+   Onko julkinen              & Totuusarvo & Voiko kalenteria katsoa kuka vain? \\\hline
+   Onko julkisesti muokattava & Totuusarvo & Voiko kohteita lisätä kuka vain? \\\hline
+\end{tabu}
+\\[0.4cm]
+
+Kalenteriin kuuluu useita kalenterikohteita. Kalenteri kuuluu yhdelle
+käyttäjälle, omistajalle.
+
+\subsection{Tietokohde: Kalenterikohteet}\label{kohteet_kohde}
+
+\begin{tabu}{l|l|l}
+   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
+   Nimi        & Merkkijono       & Nimike kohteelle. \\\hline
+   Kuvaus      & Merkkijono (V)   & Huomautus kohteesta. \\\hline
+   Tärkeysaste & \textit{Tärkeys} & Kuinka kriittinen kohde on. \\\hline
+   Paikka      & Merkkijono (V)   & Kohteeseen liittyvä sijainti. \\\hline
+   Osallistujat& \textit{Henkilöt} (V)& Kohteeseen liittyvät henkilöt. \\\hline
+   Omistaja    & Käyttäjä         & Kohteen luoja ja omistaja. \\\hline
+\end{tabu}
+\\[0.4cm]
+
+Taulukon esittämä ``kohde'' ei ole varsinainen kohde, vaan ne attribuutit jotka
+sisältyvät kalenterikohteisiin (alla).  Jokainen kalenterikohde on yhden
+käyttäjän omistuksessa, mutta voi olla useassa, myös toisen käyttäjän
+kalenterissa. Kohteet kuuluvat aina vähintään yhteen kalenteriin, eli
+\textbf{kalenterikohde ei voi olla orpo}.
+
+\textit{Tärkeys} ilmaistaan neliportaisella asteikolla: joutava, normaali,
+tärkeä tai kriittinen.
+\textit{Henkilöt} voivat viitata niin järjestelmän käyttäjiin kuin ulkopuolisiin
+kontakteihin (nimi, sähköposti jne.); käytännössä merkkijonoja.
+
+\subsubsection{Tietokohde: To-do}
+\begin{tabu}{l|l|l}
+   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
+   \multicolumn{3}{c}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
+
+   Valmis     & Totuusarvo      & Onko to-do jo tehty? \\\hline
+   AlkuPvm    & Päivämäärä      & Mistä alkaen kohde on relevantti? \\\hline
+   ViimPvm    & Päivämäärä      & Mistä alkaen kohde on vanhentunut? \\\hline
+   Toistuvuus & \textit{Toisto} & Sama tehtävä tulee säännöllisesti vastaan. \\\hline
+   Hälytys    & Aikaero         & Halutaanko ennen deadlinea hälytys?  \\\hline
+\end{tabu}
+\\[0.4cm]
+
+\textit{Toisto} kertoo ajankohdan jolloin tehtävän on oltava tehty (deadline),
+ja mahdollisesti myös kuinka useasti (päivittäin, viikoittain, kuukausittain,
+\ldots) kohde toistuu ja mihin asti toisto jatkuu.
+
+\subsubsection{Tietokohde: Muistiinpano}
+\begin{tabu}{l|l|l}
+   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
+   \multicolumn{3}{c}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
+   Sisältö & \textit{Rikas teksti} & Muistiinpanon sisältö. \\\hline
+\end{tabu}
+\\[0.4cm]
+\textit{Rikas teksti} on joko paljasta tekstiä, tai
+markdownia.\footnote{Riippuen aikataulusta}
+
+\subsubsection{Tietokohde: Tapahtuma}
+\begin{tabu}{l|l|l}
+   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
+   \multicolumn{3}{c}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
+
+   AlkuPvm     & Päivämäärä  & Mistä alkaen kohde on relevantti? \\\hline
+   ViimPvm     & Päivämäärä  & Mistä alkaen kohde on vanhentunut? \\\hline
+   Kesto       & Aikaero     & Tapahtuman kesto alkamisajankohdasta. \\\hline
+   Toistuvuus  & Toisto      & Mihin aikaan tapahtuma on, ja mahdollisesti toistuu? \\\hline
+   Hälytys     & Aikaero (V) & Halutaanko ennen tapahtumaa hälytys?
+   \\\hline
+\end{tabu}
+\\[0.4cm]
+
+\section{Relaatiotietokanta}
+Järjestelmän tietokanta on kuvattu kuvassa~\ref{graph_database}. Kuvassa on
+selkeyden vuoksi käytetty\ldots
+
+\begin{figure}[ht]
+   \centering \includegraphics[width=\textwidth]{database.1}
+   \caption{Järjestelmän relaatiotietokannan kaavio.  }
+   \label{graph_database}
+\end{figure}
+
 
 \section{Järjestelmän yleisrakenne}
 Jrjestelmän pääkomponentit on sijoiteltu hakemistoihin ja tiedostoihin
@@ -317,7 +412,7 @@ seuraavasti.
 
 \section{Käyttöliittymä}
 \begin{figure}[ht]
-   \centering \includegraphics{ui.1}
+   \centering \includegraphics[width=0.8\textwidth]{ui.1}
    \caption{Käyttöliittymäkaavio.
    }
    \label{graph_ui}

@@ -5,16 +5,8 @@ import Yesod
 import Data.Text (Text)
 import Database.Persist.Quasi
 import Data.Typeable (Typeable)
-
-type ObjectUID = Text
-
-data ObjectType = ObjectTask
-                | ObjectEvent
-                | ObjectJournal
-                deriving (Show, Eq, Read)
-
-instance PathPiece ObjectType where
-
+import Data.Time
+import CalendarTypes
 
 -- You can define all of your database entities in the entities file.
 -- You can find more information on persistent and how to declare entities

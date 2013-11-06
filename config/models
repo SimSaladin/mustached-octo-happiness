@@ -9,4 +9,39 @@ Email
     verkey Text Maybe
     UniqueEmail email
 
- -- By default this file is used in Model.hs (which is imported by Foundation.hs)
+Calendar
+    owner UserId
+    name Text
+    desc Text Maybe
+    color Text
+    public Bool
+    publicedit Bool
+    UniqueCalendar owner name
+Target
+    owner UserId
+    name Text
+    desc Text Maybe
+    place Text Maybe
+    attendees [Text] Maybe
+    urgency Urgency
+
+UserAttendee
+    target TargetId
+    user UserId
+    UniqueTargetAttend target user
+CalObj
+    calendar CalendarId
+    target TargetId
+    UniqueCalObj calendar target
+
+Todo
+    target TargetId
+    done Bool
+    begin UTCTime
+    end UTCTime
+    repeat Repeat
+    alarm Alarm
+Event
+    target TargetId
+Note
+    target TargetId

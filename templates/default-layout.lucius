@@ -1,0 +1,14 @@
+#content {
+   position:relative;
+   padding-left:110px;
+}
+
+#navigation {
+   width:100px;
+   margin-left:-110px;
+   padding:20px 0;
+   position:fixed;
+   top:0;
+   bottom:0;
+   overflow:auto;
+}

@@ -16,21 +16,21 @@ getCalendarSettingsR = undefined
 postCalendarSettingsR :: Handler Html
 postCalendarSettingsR = undefined
 
--- * Objects
+-- * Targets
 
-getObjectR :: ObjectType -> Handler Html
-getObjectR = undefined
+getTargetR :: TargetType -> Handler Html
+getTargetR = undefined
 
-postObjectR :: ObjectType -> Handler Html
-postObjectR = undefined
+postTargetR :: TargetType -> Handler Html
+postTargetR = undefined
 
--- ** Particular object
+-- ** Particular Target
 
-getObjectThisR :: ObjectUID -> Handler Html
-getObjectThisR = undefined
+getTargetThisR :: TargetUID -> Handler Html
+getTargetThisR = undefined
 
-postObjectThisR :: ObjectUID -> Handler Html
-postObjectThisR = undefined
+postTargetThisR :: TargetUID -> Handler Html
+postTargetThisR = undefined
 
 -- ** Generic
 
@@ -38,8 +38,8 @@ postObjectThisR = undefined
 
 -- ** Export
 
-getObjectTextR :: ObjectUID -> Handler Html
-getObjectTextR = undefined
+getTargetTextR :: TargetUID -> Handler Html
+getTargetTextR = undefined
 
-postObjectSendR :: ObjectUID -> Handler Html
-postObjectSendR = undefined
+postTargetSendR :: TargetUID -> Handler Html
+postTargetSendR = undefined

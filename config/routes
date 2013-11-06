@@ -9,7 +9,7 @@
 
 /calendar            CalendarR         GET
 /settings/calendars  CalendarSettingsR GET POST
-/obj/#ObjectType     ObjectR           GET POST
-/obj/view/#ObjectUID ObjectThisR       GET POST
-/obj/text/#ObjectUID ObjectTextR       GET
-/obj/send/#ObjectUID ObjectSendR           POST
+/obj/#TargetType     TargetR           GET POST
+/obj/view/#TargetUID TargetThisR       GET POST
+/obj/text/#TargetUID TargetTextR       GET
+/obj/send/#TargetUID TargetSendR           POST

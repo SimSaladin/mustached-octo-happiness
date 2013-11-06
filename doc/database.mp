@@ -11,11 +11,13 @@ iAssoc.right:=6;
 iAssoc.top:=6;
 iAssoc.bottom:=6;
 
-Class.U("Käyttäjä")()();
-Class.C("Kalenteri")()();
-Class.E("Tapahtuma")()();
-Class.T("To-do")()();
-Class.J("Muistiinpano")()();
+Class.U("User")()();
+Class.C("Calendar")()();
+Class.E("Event")()();
+Class.T("Todo")()();
+Class.J("Note")
+      ()
+      ();
 
 leftToRight(30)(E,T,J);
 Group.objects(E,T,J);

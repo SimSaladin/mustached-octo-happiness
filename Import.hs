@@ -28,3 +28,5 @@ infixr 5 <>
 (<>) :: Monoid m => m -> m -> m
 (<>) = mappend
 #endif
+
+import           CalendarTypes        as Import

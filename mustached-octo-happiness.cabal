@@ -21,6 +21,7 @@ library
                      Settings.StaticFiles
                      Settings.Development
                      SharedTypes
+                     CalendarTypes
                      Handler.Fay
                      Handler.FrontPage
                      Handler.Calendar
@@ -79,6 +80,7 @@ library
                  , heroku
                  , aeson
                  , unordered-containers
+                 , time
 
 executable         mustached-octo-happiness
     if flag(library-only)

@@ -1,0 +1,8 @@
+#navigation ul {
+   list-style:none;
+}
+
+#navigation {
+   background:#222;
+   color:#EEE;
+}
