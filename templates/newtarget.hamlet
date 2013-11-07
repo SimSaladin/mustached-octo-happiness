@@ -1,4 +1,4 @@
-<h1>Uusi #{ttype}
+<h1>Uusi #{what}
 
 <form type=post enctype=#{enctype}>
    ^{formw}

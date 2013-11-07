@@ -1,17 +1,12 @@
 $newline never
-\<!doctype html>
-\<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
-\<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
-\<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
-\<!--[if gt IE 8]><!-->
-<html class="no-js" lang="en"> <!--<![endif]-->
+$doctype 5
+<html class="no-js" lang="en">
     <head>
         <meta charset="UTF-8">
 
         <title>#{pageTitle pc}
-        <meta name="description" content="">
-        <meta name="author" content="">
-
+        <meta name="description" content="mustached-octo-happiness, kalenterijärjestelmä">
+        <meta name="author" content="Samuli">
         <meta name="viewport" content="width=device-width,initial-scale=1">
 
         ^{pageHead pc}
@@ -24,10 +19,3 @@ $newline never
           document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/,'js');
     <body>
         ^{pageBody pc}
-
-        \<!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.  chromium.org/developers/how-tos/chrome-frame-getting-started -->
-        \<!--[if lt IE 7 ]>
-            <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js">
-            <script>
-                window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})
-        \<![endif]-->

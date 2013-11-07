@@ -1,12 +1,24 @@
-<h1>Kalenteri(pohja)
+<h1>Kalenteri
+<aside>Koska yhteenkään tauluun ei voida lisätä mitään ilman avainta
+   user-tauluun, niin dummy testi puuttuu koska se olisi joko a) erittäin tylsä
+   tai b) turhan monimutkainen dummyksi.
 
-<table>
-   <tr>
-      <th>&nbsp;
-      $forall day <- days
-         <th>#{day}
-   <tr>
-      <th>
-         $forall time <- times
-            #{time}
-            <br>
+<section #events>
+   <table>
+      <tr>
+         <th>&nbsp;
+         $forall day <- days
+            <th>#{day}
+      <tr>
+         <th>
+            $forall time <- times
+               #{time}
+               <br>
+
+<section>
+   <h2>Muistiinpanot
+   ...
+
+<section>
+   <h2>To-do
+   ...

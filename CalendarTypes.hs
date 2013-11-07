@@ -14,16 +14,15 @@ import Database.Persist.Sql
 -- FIXME should be an UUID for partability
 type TargetUID = Int
 
-data TargetType = TargetTask
+data TargetType = TargetTodo
                 | TargetEvent
                 | TargetNote
                 deriving (Show, Eq, Read)
 instance PathPiece TargetType where
-        toPathPiece TargetTask = "task"
+        toPathPiece TargetTodo  = "todo"
         toPathPiece TargetEvent = "event"
-        toPathPiece TargetNote = "note"
-
-        fromPathPiece "task"  = Just TargetTask
+        toPathPiece TargetNote  = "note"
+        fromPathPiece "task"  = Just TargetTodo
         fromPathPiece "event" = Just TargetEvent
         fromPathPiece "note"  = Just TargetNote
         fromPathPiece     _   = Nothing

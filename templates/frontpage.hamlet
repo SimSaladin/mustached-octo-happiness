@@ -1,16 +1,21 @@
-<h1>Mustached-Octo-Happiness
+<div #front-main>
+   <h1>Mustached Octo Happiness
+   <aside>Kalenterijärjestelmä
 
-<div .units-row>
-  <div .unit-centered .unit-40>
-      <p>Rekisteröidy
+   $maybe msg <- mmsg
+      <div>#{msg}
 
-<div .units-row>
-   <div .unit-centered .unit-40>
-      <a href=@{AuthR LoginR}>Kirjaudu sisään
+   <p>
+      <a href=@{AuthR LoginR}>Sisään
 
-<hr>
-<i>testisivut:
-   <li>
-      <a href=@{CalendarR}>Kalenterinäkymä
-   <li>
-      <a href=@{TargetR TargetNote}>Muistiinpanoformi
+   <hr>
+   <i>testisivut:
+   <ul>
+      <li>
+         <a href=@{CalendarR}>Kalenterinäkymä
+      <li>
+         <a href=@{TargetR TargetNote}>Muistiinpanoformi
+      <li>
+         <a href=@{TargetR TargetEvent}>Event..
+      <li>
+         <a href=@{TargetR TargetTodo}>Todo..

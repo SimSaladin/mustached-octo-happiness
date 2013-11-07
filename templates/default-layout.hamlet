@@ -1,5 +1,6 @@
-<div #content>
-   <div #navigation>^{navigation}
+<div #wrap-main>
+   <nav #nav-main>
+      ^{navigation}
    <div #main>
       $maybe msg <- mmsg
          <div #message>#{msg}

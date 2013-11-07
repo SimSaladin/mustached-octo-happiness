@@ -20,22 +20,36 @@ getCalendarSettingsR = undefined
 postCalendarSettingsR :: Handler Html
 postCalendarSettingsR = undefined
 
--- * Target create
+-- * Targets
+
+-- ** Create
 
 getTargetR :: TargetType -> Handler Html
 getTargetR TargetNote = do
-        let ttype = "muistiinpano" :: Text -- could be i18ned
-        (formw, enctype) <- generateFormPost $ noteForm undefined Nothing
-        defaultLayout $ do
-            setTitle "Uusi muistiipano"
-            $(widgetFile "newtarget")
+    form <- generateFormPost $ noteForm undefined Nothing
+    targetLayout "muistiinpano" form
 
-getTargetR _ = undefined
+getTargetR TargetEvent = do
+    form <- generateFormPost $ eventForm undefined Nothing
+    targetLayout "tapahtuma" form
 
+getTargetR TargetTodo = do
+    form <- generateFormPost $ todoForm undefined Nothing
+    targetLayout "to-do" form
+
+targetLayout :: Html -> (Widget, Enctype) -> Handler Html
+targetLayout what (formw, enctype) = 
+    defaultLayout $ do
+        setTitle $ "Uusi " <> what
+        $(widgetFile "newtarget")
+
+-- ** Update, Delete
+
+-- | Create or update a target.
 postTargetR :: TargetType -> Handler Html
 postTargetR = undefined
 
--- ** Particular Target
+-- ** Read
 
 getTargetThisR :: TargetUID -> Handler Html
 getTargetThisR = undefined
@@ -43,23 +57,25 @@ getTargetThisR = undefined
 postTargetThisR :: TargetUID -> Handler Html
 postTargetThisR = undefined
 
+-- ** Export
+
+getTargetTextR :: TargetUID -> Handler Html
+getTargetTextR = undefined
+
+postTargetSendR :: TargetUID -> Handler Html
+postTargetSendR = undefined
+
 -- * Forms
 
 type CalForm a = UserId -> Maybe a -> Form (Target, TargetId -> a)
 
-calForm :: UserId -> TargetId
-        -> AForm Handler (TargetId -> a)
-        -> Form (Target, TargetId -> a)
-calForm uid tid e = renderDivs $ (,) <$> targetForm uid Nothing
-                                     <*> e
-
-noteForm :: UserId -> Maybe Note -> Form (Target, TargetId -> Note)
+noteForm :: CalForm Note
 noteForm uid x = renderDivs $ (\target -> (,) target . Note)
     <$> targetForm uid (noteTarget <$> x)
     <*> areq textareaField "Sisältö" Nothing
 
-eventForm :: UserId -> Form (Target, TargetId -> Event)
-eventForm uid = renderDivs $ (,)
+eventForm :: CalForm Event
+eventForm uid me = renderDivs $ (,)
     <$> targetForm uid Nothing <*> event
   where
       event = Event
@@ -74,6 +90,12 @@ eventForm uid = renderDivs $ (,)
 
 todoForm :: CalForm Todo
 todoForm uid mtodo = undefined
+
+calForm :: UserId -> TargetId
+        -> AForm Handler (TargetId -> a)
+        -> Form (Target, TargetId -> a)
+calForm uid tid e = renderDivs $ (,) <$> targetForm uid Nothing
+                                     <*> e
 
 -- ** Fields
 
@@ -90,20 +112,12 @@ urgencyField = radioFieldList
     , ("Kriittinen", Urgency 4) ]
 
 timedateField :: Field Handler UTCTime
-timedateField = undefined
+timedateField = error "undefined: `timedateField`"
 
 repeatField :: Field Handler Repeat
-repeatField = undefined
+repeatField = error "undefined: `repeatField`"
 
 alarmField :: Field Handler Alarm
 alarmField  = error "undefined: `alarmField' in Handler/Calendar.hs"
-
--- ** Export
-
-getTargetTextR :: TargetUID -> Handler Html
-getTargetTextR = undefined
-
-postTargetSendR :: TargetUID -> Handler Html
-postTargetSendR = undefined
 
 

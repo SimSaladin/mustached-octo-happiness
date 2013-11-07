@@ -13,7 +13,6 @@ import Yesod.Default.Main
 import Yesod.Default.Handlers
 import Network.Wai.Middleware.RequestLogger
 import qualified Database.Persist
-import Database.Persist.Sql (runMigration)
 import Network.HTTP.Conduit (newManager, def)
 import Yesod.Fay (getFaySite)
 import Control.Monad.Logger (runLoggingT)
