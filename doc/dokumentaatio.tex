@@ -13,6 +13,8 @@
 \usepackage[pdf]{pstricks}
 \usepackage{amsmath}
 
+\usepackage{pdfpages}
+
 \usepackage[left=2.9cm,right=2.9cm,top=2cm,bottom=2cm]{geometry}
 \usepackage[english,finnish]{babel}
 \usepackage[T1]{fontenc}
@@ -308,122 +310,160 @@ koska viimeksi muokattu) tallennetaan.
    \label{graph_class}
 \end{figure}
 
-\subsection{Tietokohde: Kalenteri}
-\begin{tabu}{l|l|l}
-   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
-   Nimi                       & Merkkijono & Nimi ja samalla tunniste kalenterille. \\\hline
-   Kuvaus                     & Merkkijono (V) & Lisätietoa kalenterista. \\\hline
-   Väri                       & Merkkijono (RGB) & Tunnisteväri kalenterin kohteille. \\\hline
-   Omistaja                   & Käyttäjä   & Kuka loi ja omistaa kalenterin. \\\hline
-   Onko julkinen              & Totuusarvo & Voiko kalenteria katsoa kuka vain? \\\hline
-   Onko julkisesti muokattava & Totuusarvo & Voiko kohteita lisätä kuka vain? \\\hline
-\end{tabu}
-\\[0.4cm]
+\newenvironment{tietokohde}
+   {\medskip\noindent\begin{tabu}to\linewidth%
+         {|X[-1,l]|X[-1,l]|X[-1,l]<{\strut}|}
+         \hline
+         \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\
+         \hline
+   }
+   {\end{tabu}\medskip}
 
+\subsection{Tietokohde: Kalenteri}
+
+\begin{tietokohde}
+   Omistaja              & Käyttäjä   & Kuka loi ja omistaa kalenterin. \\\hline
+   Nimi                  & Merkkijono & Nimi ja samalla tunniste kalenterille. \\\hline
+   Kuvaus                & Merkkijono (V) & Lisätietoa kalenterista. \\\hline
+   Väri                  & Merkkijono (RGB) & Tunnisteväri kalenterin kohteille. \\\hline
+   Onko julkinen         & Totuusarvo & Voiko kalenteria katsoa kuka vain? \\\hline
+   Julkisesti muokattava & Totuusarvo & Voiko kohteita lisätä kuka vain? \\\hline
+\end{tietokohde}
+
+\noindent
 Kalenteriin kuuluu useita kalenterikohteita. Kalenteri kuuluu yhdelle
 käyttäjälle, omistajalle.
 
-\subsection{Tietokohde: Kalenterikohteet}\label{kohteet_kohde}
+\subsection{Kalenterikohteet}\label{kohteet_kohde}
 
-\begin{tabu}{l|l|l}
-   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
-   Nimi        & Merkkijono       & Nimike kohteelle. \\\hline
-   Kuvaus      & Merkkijono (V)   & Huomautus kohteesta. \\\hline
-   Tärkeysaste & \textit{Tärkeys} & Kuinka kriittinen kohde on. \\\hline
-   Paikka      & Merkkijono (V)   & Kohteeseen liittyvä sijainti. \\\hline
-   Osallistujat& \textit{Henkilöt} (V)& Kohteeseen liittyvät henkilöt. \\\hline
+Kaikille kalenterikohteille tyypilliset attribuutit:
+
+\begin{tietokohde}
    Omistaja    & Käyttäjä         & Kohteen luoja ja omistaja. \\\hline
-\end{tabu}
-\\[0.4cm]
+   Nimi        & Merkkijono       & Nimike kohteelle. \\\hline
+\end{tietokohde}
 
-Taulukon esittämä ``kohde'' ei ole varsinainen kohde, vaan ne attribuutit jotka
-sisältyvät kalenterikohteisiin (alla).  Jokainen kalenterikohde on yhden
-käyttäjän omistuksessa, mutta voi olla useassa, myös toisen käyttäjän
-kalenterissa. Kohteet kuuluvat aina vähintään yhteen kalenteriin, eli
-\textbf{kalenterikohde ei voi olla orpo}.
+\noindent
+Jokainen kalenterikohde on yhden käyttäjän omistuksessa, mutta voi olla useassa,
+myös toisen käyttäjän kalenterissa. Kohteet kuuluvat aina vähintään yhteen
+kalenteriin, eli \textbf{kalenterikohde ei voi olla orpo}.
 
 \textit{Tärkeys} ilmaistaan neliportaisella asteikolla: joutava, normaali,
 tärkeä tai kriittinen.
 \textit{Henkilöt} voivat viitata niin järjestelmän käyttäjiin kuin ulkopuolisiin
 kontakteihin (nimi, sähköposti jne.); käytännössä merkkijonoja.
 
+\subsubsection{Tietokohde: Muistiinpano}
+
+\begin{tietokohde}
+   \multicolumn{3}{|c|}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
+   Sisältö & \textit{Rikas teksti} & Muistiinpanon sisältö. \\\hline
+\end{tietokohde}
+
+\noindent
+\textit{Rikas teksti} on joko paljasta tekstiä, tai
+markdownia.\footnote{Riippuen aikataulusta}
+
 \subsubsection{Tietokohde: To-do}
-\begin{tabu}{l|l|l}
-   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
-   \multicolumn{3}{c}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
+\begin{tietokohde}
+   \multicolumn{3}{|c|}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
 
    Valmis     & Totuusarvo      & Onko to-do jo tehty? \\\hline
+   Toistuvuus & \textit{Toisto} & Mihin aikaan, miten toistuu? \\\hline
    AlkuPvm    & Päivämäärä      & Mistä alkaen kohde on relevantti? \\\hline
-   ViimPvm    & Päivämäärä      & Mistä alkaen kohde on vanhentunut? \\\hline
-   Toistuvuus & \textit{Toisto} & Sama tehtävä tulee säännöllisesti vastaan. \\\hline
+   ViimPvm    & Päivämäärä (V)  & Mistä alkaen kohde on vanhentunut? \\\hline
    Hälytys    & Aikaero         & Halutaanko ennen deadlinea hälytys?  \\\hline
-\end{tabu}
-\\[0.4cm]
+   Tärkeysaste & \textit{Tärkeys} & Kuinka kriittinen kohde on. \\\hline
+\end{tietokohde}
 
+\noindent
 \textit{Toisto} kertoo ajankohdan jolloin tehtävän on oltava tehty (deadline),
 ja mahdollisesti myös kuinka useasti (päivittäin, viikoittain, kuukausittain,
 \ldots) kohde toistuu ja mihin asti toisto jatkuu.
 
-\subsubsection{Tietokohde: Muistiinpano}
-\begin{tabu}{l|l|l}
-   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
-   \multicolumn{3}{c}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
-   Sisältö & \textit{Rikas teksti} & Muistiinpanon sisältö. \\\hline
-\end{tabu}
-\\[0.4cm]
-\textit{Rikas teksti} on joko paljasta tekstiä, tai
-markdownia.\footnote{Riippuen aikataulusta}
-
 \subsubsection{Tietokohde: Tapahtuma}
-\begin{tabu}{l|l|l}
-   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\\hline
-   \multicolumn{3}{c}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
+\begin{tietokohde}
+   \multicolumn{3}{|c|}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
 
+   Toistuvuus  & Toisto      & Mihin aikaan, miten toistuu? \\\hline
    AlkuPvm     & Päivämäärä  & Mistä alkaen kohde on relevantti? \\\hline
-   ViimPvm     & Päivämäärä  & Mistä alkaen kohde on vanhentunut? \\\hline
-   Kesto       & Aikaero     & Tapahtuman kesto alkamisajankohdasta. \\\hline
-   Toistuvuus  & Toisto      & Mihin aikaan tapahtuma on, ja mahdollisesti toistuu? \\\hline
-   Hälytys     & Aikaero (V) & Halutaanko ennen tapahtumaa hälytys?
-   \\\hline
-\end{tabu}
-\\[0.4cm]
+   ViimPvm     & Päivämäärä (V) & Mistä alkaen kohde on vanhentunut? \\\hline
+   Paikka      & Merkkijono (V)   & Kohteeseen liittyvä sijainti. \\\hline
+   Tärkeysaste & \textit{Tärkeys} & Kuinka kriittinen kohde on. \\\hline
+   Hälytys     & Aikaero (V) & Halutaanko ennen tapahtumaa hälytys? \\\hline
+   Osallistujat& \textit{Henkilöt} (V) & Kohteeseen liittyvät henkilöt. \\\hline
+   Kuvaus      & Merkkijono (V)   & Huomautus kohteesta. \\\hline
+\end{tietokohde}
 
 \section{Relaatiotietokanta}
-Järjestelmän tietokanta on kuvattu kuvassa~\ref{graph_database}. Kuvassa on
-
-\begin{figure}[ht]
+Järjestelmän tietokannan taulut ja niiden pää- ja vierasavaimet on kuvattu
+kaaviossa~\ref{graph_database}. Taulukossa~\ref{graph_columns} on lueteltu
+taulujen sarakkeet ja niiden tyypit kannassa. Todellisuudessa kanta on luotu ja
+käytetään jarjestelmässä \texttt{persistent}-kirjaston avulla, ks. tiedosto
+\texttt{config/models}.
+\begin{figure}[hb]
    \centering\input{relationships.tex}
-   \caption{Järjestelmän relaatiotietokannan kaavio.}
+   \caption{Järjestelmän relaatietokannan taulut ja yhteydet. Huomaa, että
+   nuolet osoittavat vierasavaimiin.}
    \label{graph_database}
 \end{figure}
-
+\begin{figure}[ht]
+   \centering
+   \includegraphics[clip,trim=1.2cm 7.05cm 9.21cm 1.81cm]{columns.pdf}
+   \caption{Taulujen kentät ja tyypit kannassa.}
+   \label{graph_columns}
+\end{figure}
+\clearpage
 
 \section{Järjestelmän yleisrakenne}
-Jrjestelmän pääkomponentit on sijoiteltu hakemistoihin ja tiedostoihin
-seuraavasti.
+Jrjestelmän pääkomponentit on sijoiteltu hakemistoihin seuraavasti.
 \begin{description}
-   \item[Handler/]      Kontrollerit
-   \item[templates/]    Näkymät
-   \item[config/models] Mallit
-   \item[config/]       Muut asetukset
+   \item[config/] \hfill\\
+      Järjestelmän asetukset. \texttt{postgresql.yml} on tietokantayhteyksille
+      ja \texttt{settings.yml} sisältää yleiset asetukset.  Syntaksina
+      molemmissa YAML.
+   \item[Handler/] \hfill\\
+      Kontrollerit on sijoitettu \texttt{Handler}-kansioon.  kontrollerien
+      URL:it määrätään \texttt{config/routes}-tiedostossa.
+   \item[templates/] \hfill\\
+      Näkymät sijaitsevat templates-kansiossa \texttt{.hamlet} ja
+      \texttt{.lucius}-päätteillä.
+   \item[static/] \hfill\\
+      Staattinen sisältö (kääntövaiheessa).
+   \item[messages/] \hfill\\
+      Yesodin sisäänrakennetun i18n-tuen sanastot.
 \end{description}
 
-%\section{Järjestelmän komponentit}
-%Toistuvuus (sketching):
-%\begin{verbatim}
-%data ObjectRepeat = RForever [RepeatEvery]
-%                  | RFromUntil [RepeatEvery] Date Date
-%data RepeatEvery = Yearly  DaysOfYear
-%                 | Monthly DaysOfMonth
-%                 | Weekly  DaysOfWeek
-%                 | EveryNth Int RepeatEvery
-%\end{verbatim}
+Lisäksi juuren \texttt{.hs}-tiedostoissa on kontrollerien käyttämä yleinen
+logiikka ja tarvittavat resurssit.
+
+\section{Järjestelmän komponentit}
+
+\begin{description}
+   \item[app/main.hs] \hfill\\
+      Itse suoritettavan ohjelma lähdetiedosto (\texttt{main}-funktio).
+   \item[Settings/, Application.hs, Import.hs, Model.hs, Settings.hs] \hfill\\
+      Harvemmin koskemista vaativia tiedostoja, joissa toteutetaan (Yesodille)
+      yleistä kontrollilogiikkaa.
+   \item[CalendarTypes.hs] \hfill\\
+ Kalentereihin ja kohteisiin liittyvät tyypit.
+   \item[Foundation.hs] \hfill\\
+      Järjestelmän keskus. Sisältää mm. autentikointinnin ja navigaatiota.
+   \item[mustached-octo-happiness.cabal] \hfill\\
+      Asennusohjetiedosto \textit{Cabalille}.
+\end{description}
 
 \section{Käyttöliittymä}
+Käyttöliittymä on kuvattu kaaviossa~\ref{graph_ui}. Käyttöliittymässä on
+yleissiirtymänavigaatio, ellei olla etusivulla, kirjautumissivulla tai
+julkisella kalenterisivulla.
+
 \begin{figure}[ht]
-   \centering \includegraphics[width=0.8\textwidth]{ui.1}
-   \caption{Käyttöliittymäkaavio.
-   }
+   \centering
+   \includegraphics[width=0.7\textwidth]{ui.1}
+   \caption{Käyttöliittymäkaavio. Kaikilta ei-julkisilta sivuilta pääsee
+   siirtymään kalenterinäkymään, kalenteriasetuksiin sekä kirjautumaan ulos
+   navigaatiopalkista.}
    \label{graph_ui}
 \end{figure}
 

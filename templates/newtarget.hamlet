@@ -1,0 +1,4 @@
+<h1>Uusi #{ttype}
+
+<form type=post enctype=#{enctype}>
+   ^{formw}

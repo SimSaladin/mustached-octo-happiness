@@ -12,3 +12,5 @@
 <i>testisivut:
    <li>
       <a href=@{CalendarR}>Kalenterinäkymä
+   <li>
+      <a href=@{TargetR TargetNote}>Muistiinpanoformi

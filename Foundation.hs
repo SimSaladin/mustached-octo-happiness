@@ -143,6 +143,21 @@ instance YesodAuth App where
 
     authHttpManager = httpManager
 
+    loginHandler = do
+        tp <- getRouteToParent
+        lift $ do
+            mmsg <- getMessage
+            master <- getYesod
+            pc <- widgetToPageContent $ do
+                setTitle "Kirjaudu sisään"
+                $(combineStylesheets 'StaticR [ css_kube_min_css ])
+                [whamlet|
+                    <div .units-row>
+                      <div .unit-centered .unit-40>
+                            ^{mapM_ (flip apLogin tp) (authPlugins master)}
+                            |]
+            giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
+
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
 instance RenderMessage App FormMessage where

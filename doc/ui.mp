@@ -8,15 +8,16 @@ Class.frontpage("Etusivu")("Julkinen")
 Class.calendar_view("Kalenterisivu")()
       ("Viikkonäkymä");
 Class.calendar_edit("Kalenterien hallinta")()();
-Class.calendar_public("Julkinen kalenterisivu")()();
+Class.calendar_public("Julkinen kalenterisivu")("Julkinen")();
 
 Class.object_view("Kohdesivu")()();
 Class.object_edit("Kohteen hallinta")()("Lisäys", "Muokkaus");
 
-topToBottom(20)
-      (frontpage, calendar_view, object_view, object_edit);
-leftToRight(20)(calendar_view, calendar_edit);
-topToBottom(20)(calendar_edit, calendar_public);
+topToBottom(50)
+      (frontpage, calendar_view
+      , object_view, object_edit);
+leftToRight(50)(calendar_view, calendar_edit);
+topToBottom(50)(calendar_edit, calendar_public);
 Group.views
       (frontpage, calendar_view, object_view, object_edit
       ,calendar_public, calendar_edit);
@@ -26,7 +27,6 @@ drawObjects(views);
 clink(associationUni)(frontpage, calendar_view);
 
 clink(associationUni)(calendar_view, object_view);
-clink(associationUni)(calendar_view, calendar_public);
 clink(associationUni)(calendar_view, calendar_edit);
 
 clink(associationUni)(object_view, object_edit);

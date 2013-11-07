@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# figure to latex (exec. at doc/):
+#    dot2tex -f pstricks --figonly ../db-graphs/diagrams/summary/relationships.real.compact.dot > relationships.tex
+
+# column table exported from html view as pdf.
+
 mkdir db-graphs
 
 schemaspy \

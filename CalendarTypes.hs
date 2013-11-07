@@ -11,13 +11,13 @@ import Database.Persist.Sql
 
 -- * In routing
 
-type TargetUID = Text
+-- FIXME should be an UUID for partability
+type TargetUID = Int
 
 data TargetType = TargetTask
                 | TargetEvent
                 | TargetNote
                 deriving (Show, Eq, Read)
-
 instance PathPiece TargetType where
         toPathPiece TargetTask = "task"
         toPathPiece TargetEvent = "event"
@@ -28,16 +28,21 @@ instance PathPiece TargetType where
         fromPathPiece "note"  = Just TargetNote
         fromPathPiece     _   = Nothing
 
+-- * In db
+
 instance PersistField DiffTime where
         toPersistValue dt  = toPersistValue (floor dt :: Int64)
         fromPersistValue v = fmap fromIntegral ( fromPersistValue v :: Either Text Int64 )
-
 instance PersistFieldSql DiffTime where
         sqlType _ = SqlInt64
 
--- * In database
+data Repeat = RepeatDaily TimeOfDay TimeOfDay | RepeatWeekly -- TODO
+            deriving (Show, Read)
+instance PersistField Repeat where
+        toPersistValue   = toPersistValue . show
+        fromPersistValue = fmap read . fromPersistValue
+instance PersistFieldSql Repeat where
+        sqlType _ = SqlString
 
--- TODO not implemented
-newtype Repeat = Repeat Text    deriving (PersistField, PersistFieldSql)
 newtype Alarm = Alarm Text      deriving (PersistField, PersistFieldSql)
-newtype Urgency = Urgency Int   deriving (PersistField, PersistFieldSql)
+newtype Urgency = Urgency Int   deriving (Eq, PersistField, PersistFieldSql)

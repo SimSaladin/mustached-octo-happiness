@@ -1,1 +1,12 @@
-<h2>Calendar
+<h1>Kalenteri(pohja)
+
+<table>
+   <tr>
+      <th>&nbsp;
+      $forall day <- days
+         <th>#{day}
+   <tr>
+      <th>
+         $forall time <- times
+            #{time}
+            <br>

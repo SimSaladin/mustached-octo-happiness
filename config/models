@@ -20,36 +20,32 @@ Calendar
 Target
     owner UserId
     name Text
-    desc Text Maybe
+
+-- different targets (objects)
+Note
+    content Textarea
+    target TargetId
+Todo
+    done Bool
+    repeat Repeat
+    begin UTCTime
+    end UTCTime Maybe
+    alarm Alarm
+    urgency Urgency
+    target TargetId
+Event
+    repeat Repeat
+    begin UTCTime
+    end UTCTime Maybe
     place Text Maybe
     urgency Urgency
+    alarm Alarm
     attendees [Text]
+    comment Textarea Maybe
+    target TargetId
 
 -- many-to-many
-UserAttendee
-    target TargetId
-    user UserId
-    UniqueTargetAttend target user
 CalTarget
     calendar CalendarId
     target TargetId
     UniqueCalTarget calendar target
-
--- different targets
-Todo
-    target TargetId
-    done Bool
-    begin UTCTime
-    end UTCTime
-    repeat Repeat
-    alarm Alarm
-Note
-    target TargetId
-    content Text
-Event
-    target TargetId
-    begin UTCTime
-    end UTCTime
-    length DiffTime
-    repeat Repeat
-    alarm Alarm

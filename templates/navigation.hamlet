@@ -1,6 +1,7 @@
-<i>Kalenterit
-<ul>
-    <li>Kal A
-    <li>Kal B
-<a>Asetukset
-<a>Kirjaudu ulos
+<ul style="margin-left:5px">
+   <li>
+      <a href=@{CalendarR}>Kalenterit
+   <li>
+      <a href="">Asetukset
+   <li>
+      <a href=@{AuthR LogoutR}>Kirjaudu ulos
