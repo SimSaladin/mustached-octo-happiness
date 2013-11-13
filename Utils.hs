@@ -1,6 +1,7 @@
 module Utils where
 
 import Prelude
+import Data.Text (Text)
 import Yesod
 
 renderKube :: Monad master => FormRender master a
@@ -26,3 +27,18 @@ $forall view <- views
             <span .forms-desc>#{desc}
 |]
     return (res, widget)
+
+passwordConfirmForm :: (MonadHandler m, RenderMessage (HandlerSite m) FormMessage)
+                    => AForm m Text
+passwordConfirmForm = formToAForm $ do
+        (ra, va) <- mreq passwordField "Salasana" Nothing
+        (rb, vb) <- mreq (passwordConfirmField ra) "Salasana uudelleen" Nothing
+        return (rb, [va, vb])
+
+passwordConfirmField :: (MonadHandler m, RenderMessage (HandlerSite m) FormMessage)
+                     => FormResult Text -> Field m Text
+passwordConfirmField r = check (f r) passwordField
+    where
+        f (FormSuccess p) pc | p == pc = Right p
+                             | otherwise = Left ("Salasanat eivät täsmää" :: Text)
+        f _ _ = Left "Salasana puuttuu"

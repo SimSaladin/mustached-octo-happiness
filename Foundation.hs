@@ -1,8 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Foundation where
 
 import Prelude
-import Data.Text (Text)
-import Control.Applicative
 import Yesod
 import Yesod.Static
 import Yesod.Auth
@@ -146,11 +145,13 @@ instance HashDBUser User where
         setSaltAndPasswordHash salt pass user =
             user { userSalt = Just salt, userPassword = Just pass }
 
--- This instance is required to use forms. You can modify renderMessage to
--- achieve customized and internationalized form validation messages.
 instance RenderMessage App FormMessage where
     renderMessage _ _ = defaultFormMessage
 
+widgetToPageContent' :: Widget -> Handler (PageContent (Route App))
+widgetToPageContent' w = widgetToPageContent $ do
+    $(combineStylesheets 'StaticR [ css_kube_min_css, css_style_css])
+    w
 -- | Get the 'Extra' value, used to hold data from the settings.yml file.
 getExtra :: Handler Extra
 getExtra = fmap (appExtra . settings) getYesod
@@ -159,25 +160,5 @@ navigation :: Widget
 navigation = $(widgetFile "navigation")
 
 authHashDB' :: AuthPlugin App
-authHashDB' = (authHashDB $ Just . UniqueUser) { apLogin = myLogin }
-    where
-        login      = PluginR "hashdb" ["login"]
-        myLogin tm = toWidget [hamlet|
-$newline never
-<form .forms.forms-inline method="post" action="@{tm login}">
-  <fieldset .units-row>
-    <legend>Kirjaudu sisään
-    <label .unit-40>
-        Käyttäjänimi
-        <input type="text" id="x" name="username" autofocus="" required>
-    <label .unit-40>
-        Salasana
-        <input type="password" name="password" required>
-    <label .unit-20>
-        &nbsp;
-        <input .btn .unit-100 type="submit" value="Kirjaudu">
-|]
-
-widgetToPageContent' w = widgetToPageContent $ do
-    $(combineStylesheets 'StaticR [ css_kube_min_css, css_style_css])
-    w
+authHashDB' = (authHashDB $ Just . UniqueUser) { apLogin = \tm -> $(widgetFile "hashdblogin") }
+    where login = PluginR "hashdb" ["login"]
