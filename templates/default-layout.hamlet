@@ -3,5 +3,5 @@
       ^{navigation}
    <div #main>
       $maybe msg <- mmsg
-         <div #message>#{msg}
+         <div .message>#{msg}
       ^{widget}

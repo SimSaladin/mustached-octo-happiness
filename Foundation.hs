@@ -1,11 +1,14 @@
 module Foundation where
 
 import Prelude
+import Data.Text (Text)
+import Control.Applicative
 import Yesod
 import Yesod.Static
 import Yesod.Auth
 import Yesod.Auth.BrowserId
 import Yesod.Auth.GoogleEmail
+import Yesod.Auth.HashDB (authHashDB, HashDBUser(..))
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
 import Network.HTTP.Conduit (Manager)
@@ -50,8 +53,6 @@ mkYesodData "App" $(parseRoutesFile "config/routes")
 
 type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 
--- Please see the documentation for the Yesod typeclass. There are a number
--- of settings which can be configured by overriding methods here.
 instance Yesod App where
     approot = ApprootMaster $ appRoot . settings
 
@@ -65,15 +66,7 @@ instance Yesod App where
         master <- getYesod
         mmsg <- getMessage
 
-        -- We break up the default layout into two components:
-        -- default-layout is the contents of the body tag, and
-        -- default-layout-wrapper is the entire page. Since the final
-        -- value passed to hamletToRepHtml cannot be a widget, this allows
-        -- you to use normal widget features in default-layout.
-
-        pc <- widgetToPageContent $ do
-            $(combineStylesheets 'StaticR [ css_kube_min_css ])
-            $(widgetFile "default-layout")
+        pc <- widgetToPageContent' $(widgetFile "default-layout")
         giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- This is done to provide an optimization for serving static files from
@@ -136,27 +129,22 @@ instance YesodAuth App where
         case x of
             Just (Entity uid _) -> return $ Just uid
             Nothing -> do
-                fmap Just $ insert $ User (credsIdent creds) Nothing
+                fmap Just $ insert $ User (credsIdent creds) Nothing Nothing
 
     -- You can add other plugins like BrowserID, email or OAuth here
-    authPlugins _ = [authBrowserId def, authGoogleEmail]
+    authPlugins _ = [ authBrowserId def
+                    , authGoogleEmail
+                    , authHashDB' ]
 
     authHttpManager = httpManager
 
-    loginHandler = do
-        tp <- getRouteToParent
-        lift $ do
-            mmsg <- getMessage
-            master <- getYesod
-            pc <- widgetToPageContent $ do
-                setTitle "Kirjaudu sisään"
-                $(combineStylesheets 'StaticR [ css_kube_min_css ])
-                [whamlet|
-                    <div .units-row>
-                      <div .unit-centered .unit-40>
-                            ^{mapM_ (flip apLogin tp) (authPlugins master)}
-                            |]
-            giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
+    loginHandler = lift $ redirect FrontPageR
+
+instance HashDBUser User where
+        userPasswordHash = userPassword
+        userPasswordSalt = userSalt
+        setSaltAndPasswordHash salt pass user =
+            user { userSalt = Just salt, userPassword = Just pass }
 
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
@@ -169,3 +157,27 @@ getExtra = fmap (appExtra . settings) getYesod
 
 navigation :: Widget
 navigation = $(widgetFile "navigation")
+
+authHashDB' :: AuthPlugin App
+authHashDB' = (authHashDB $ Just . UniqueUser) { apLogin = myLogin }
+    where
+        login      = PluginR "hashdb" ["login"]
+        myLogin tm = toWidget [hamlet|
+$newline never
+<form .forms.forms-inline method="post" action="@{tm login}">
+  <fieldset .units-row>
+    <legend>Kirjaudu sisään
+    <label .unit-40>
+        Käyttäjänimi
+        <input type="text" id="x" name="username" autofocus="" required>
+    <label .unit-40>
+        Salasana
+        <input type="password" name="password" required>
+    <label .unit-20>
+        &nbsp;
+        <input .btn .unit-100 type="submit" value="Kirjaudu">
+|]
+
+widgetToPageContent' w = widgetToPageContent $ do
+    $(combineStylesheets 'StaticR [ css_kube_min_css, css_style_css])
+    w

@@ -1,15 +1,12 @@
 body {
    width:800px;
    margin:5em auto;
-
    background:#444;
 }
-#front-main {
-   text-align:center;
-   padding:2em;
-
+main {
    background:#BBB;
    box-shadow:-8px 8px 0 #999;
+   padding:2em;
 }
 aside {
    font-style:oblique;

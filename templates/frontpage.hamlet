@@ -1,12 +1,34 @@
-<div #front-main>
+<main>
    <h1>Mustached Octo Happiness
    <aside>Kalenterijärjestelmä
 
    $maybe msg <- mmsg
-      <div>#{msg}
+      <div .message>
+         #{msg}
 
-   <p>
-      <a href=@{AuthR LoginR}>Sisään
+   <section>
+     <div .units-row #front-auth>
+      <div .unit-30>
+         <h2 .subheader>Mozilla Persona
+         ^{aRender persona}
+
+         <h3 .subheader>Gmail
+         ^{aRender google}
+
+      <div .unit-70>
+         <h2 .subheader>Oma tunnus
+
+         <form .forms action=@{FrontPageR} method=post>
+            <fieldset>
+               <legend>Rekisteröidy
+               $case res
+                  $of FormFailure _
+                     <i .error>Rekisteröityminen ei onnistunut. Katso virheet alta.
+                  $of _
+               ^{rw}
+               <input .btn type="submit" value="Rekisteröidy">
+
+         ^{aRender hashdb}
 
    <hr>
    <i>testisivut:

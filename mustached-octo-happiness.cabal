@@ -22,6 +22,7 @@ library
                      Settings.Development
                      SharedTypes
                      CalendarTypes
+                     Utils
                      Handler.Fay
                      Handler.FrontPage
                      Handler.Calendar
@@ -54,6 +55,7 @@ library
                  , yesod-static                  >= 1.2        && < 1.3
                  , yesod-form                    >= 1.3        && < 1.4
                  , yesod-fay                     >= 0.4
+                 , yesod-persistent
                  , fay                           >= 0.16
                  , bytestring                    >= 0.9        && < 0.11
                  , text                          >= 0.11       && < 0.12

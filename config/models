@@ -1,13 +1,9 @@
 User
     ident Text
     password Text Maybe
+    salt Text Maybe
     UniqueUser ident
     deriving Typeable
-Email
-    email Text
-    user UserId Maybe
-    verkey Text Maybe
-    UniqueEmail email
 
 Calendar
     owner UserId
