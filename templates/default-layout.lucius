@@ -17,8 +17,3 @@ body {
 
    background:#444
 }
-
-#events {
-   float:left;
-   margin-right:1em;
-}

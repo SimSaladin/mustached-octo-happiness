@@ -2,3 +2,33 @@ input[type="text"],
 input[type="password"] {
    border-width:2px;
 }
+
+.events {
+   width:100%;
+   min-width:50em;
+   margin-right:1em;
+}
+
+.events td, .events th {
+   position:relative;
+   padding:0 .2em 0 0;
+   height:3em;
+}
+.events td { width:14%; }
+.events th { width:2% }
+
+.events th:nth-child(even),
+.events td:nth-child(even) {
+   background:#a7a7a7;
+}
+.events .days th:nth-child(n+2) {
+   background:#aaaaaa;
+   text-align:center;
+   font-weight:bold;
+   font-size:1.2em;
+}
+
+.toright {
+   width:20em;
+   float:right;
+}
