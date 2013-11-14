@@ -1,7 +1,8 @@
 <ul style="margin-left:5px">
    <li>
       <a href=@{CalendarR}>Kalenterit
+      ^{calendars}
    <li>
-      <a href="">Asetukset
+      <a href=@{CalendarSettingsR}>Asetukset
    <li>
       <a href=@{AuthR LogoutR}>Kirjaudu ulos

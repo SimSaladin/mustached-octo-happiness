@@ -9,16 +9,20 @@ import qualified Data.Text as T
 getCalendarR :: Handler Html
 getCalendarR = do
     let days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ] :: [Text]
-        times = map (\x -> show x ++ ".00") [0..23]
+        times = map (\x -> T.pack $ show x ++ ".00") [0..23]
     defaultLayout $ do
         setTitle "Calendar"
         $(widgetFile "calendar")
 
 getCalendarSettingsR :: Handler Html
-getCalendarSettingsR = undefined
+getCalendarSettingsR = do
+    defaultLayout $ do
+        setTitle "Kalenteriasetukset"
+        $(widgetFile "calendarsettings")
 
 postCalendarSettingsR :: Handler Html
-postCalendarSettingsR = undefined
+postCalendarSettingsR = do
+    undefined
 
 -- * Targets
 

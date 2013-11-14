@@ -14,7 +14,8 @@
       $forall hour <- times
          <tr>
             <th .hour>#{hour}
-            $forall d <- days
+            $forall day <- days
                <td>
-                  <a href="" .label .label-small .label-blue>E
-                  <a href="" .label .label-small .label-red>T
+                  $with params <- [("day", day), ("hour", hour)]
+                     <a href=@?{(TargetR TargetEvent, params)} .cact .label.label-small.label-blue>E
+                     <a href=@?{(TargetR TargetTodo , params)} .cact .label.label-small.label-red>T

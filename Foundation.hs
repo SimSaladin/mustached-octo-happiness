@@ -15,6 +15,7 @@ import qualified Settings
 import Settings.Development (development)
 import qualified Database.Persist
 import Database.Persist.Sql (SqlPersistT)
+import qualified Database.Esqueleto as E
 import Settings.StaticFiles
 import Settings (widgetFile, Extra (..))
 import Model
@@ -148,6 +149,13 @@ instance HashDBUser User where
 instance RenderMessage App FormMessage where
     renderMessage _ _ = defaultFormMessage
 
+
+-- * Common views
+
+authHashDB' :: AuthPlugin App
+authHashDB' = (authHashDB $ Just . UniqueUser) { apLogin = \tm -> $(widgetFile "hashdblogin") }
+    where login = PluginR "hashdb" ["login"]
+
 widgetToPageContent' :: Widget -> Handler (PageContent (Route App))
 widgetToPageContent' w = widgetToPageContent $ do
     $(combineStylesheets 'StaticR [ css_kube_min_css, css_style_css])
@@ -159,6 +167,15 @@ getExtra = fmap (appExtra . settings) getYesod
 navigation :: Widget
 navigation = $(widgetFile "navigation")
 
-authHashDB' :: AuthPlugin App
-authHashDB' = (authHashDB $ Just . UniqueUser) { apLogin = \tm -> $(widgetFile "hashdblogin") }
-    where login = PluginR "hashdb" ["login"]
+calendars :: Widget
+calendars = do
+    uid  <- liftHandlerT $ requireAuthId
+    cals <- liftHandlerT . runDB .
+        E.select $
+        E.from $ \(c `E.LeftOuterJoin` mt) -> do
+            E.on      $ E.just (c E.^. CalendarId) E.==. (mt E.?. CalTargetCalendar)
+            E.groupBy $ c E.^. CalendarId
+            E.where_  $ c E.^. CalendarOwner E.==. E.val uid
+            E.orderBy [E.asc $ c E.^. CalendarName]
+            return (c, E.countRows :: E.SqlExpr (E.Value Int))
+    $(widgetFile "calendarlisting")

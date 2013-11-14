@@ -1,0 +1,4 @@
+<ul>
+   $forall (Entity k c, n) <- cals
+      <li>#{calendarName c}
+         <i .label .label-blue>#{show n}

@@ -1,11 +1,13 @@
+body {
+   min-width:60em;
+}
+
 input[type="text"],
 input[type="password"] {
    border-width:2px;
 }
 
 .events {
-   width:100%;
-   min-width:50em;
    margin-right:1em;
 }
 
@@ -15,13 +17,17 @@ input[type="password"] {
    height:3em;
 }
 .events td { width:14%; }
-.events th { width:2% }
+.events th {
+   width:2%;
+   vertical-align:middle;
+   text-align:right;
+}
 
-.events th:nth-child(even),
-.events td:nth-child(even) {
+.events th:nth-child(odd),
+.events td:nth-child(odd) {
    background:#a7a7a7;
 }
-.events .days th:nth-child(n+2) {
+.events .days th {
    background:#aaaaaa;
    text-align:center;
    font-weight:bold;
@@ -31,4 +37,20 @@ input[type="password"] {
 .toright {
    width:20em;
    float:right;
+}
+
+.cact {
+   position:absolute;
+   right:0;
+   opacity:0.1;
+}
+td:hover .cact {
+   opacity:1;
+}
+.cact:first-child {
+   top:0;
+}
+.cact:nth-child(n+2) {
+   top:auto;
+   bottom:0;
 }
