@@ -1,0 +1,6 @@
+<form .forms .forms-columnar method=post action="">
+   <fieldset>
+      <legend>Uusi kalenteri
+      ^{w}
+      <p>
+         <input .btn type=submit value="Luo">

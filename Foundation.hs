@@ -22,6 +22,7 @@ import Model
 import Text.Hamlet (hamletFile)
 import Yesod.Fay
 import System.Log.FastLogger (Logger)
+import Data.Typeable (Typeable)
 
 import CalendarTypes
 
@@ -167,15 +168,23 @@ getExtra = fmap (appExtra . settings) getYesod
 navigation :: Widget
 navigation = $(widgetFile "navigation")
 
+-- | Calendar info wrapper. Memoized.
+newtype CalendarInfo = CalendarInfo
+                       { unCalendarInfo :: [(Entity Calendar, E.Value Int)] }
+                       deriving (Typeable)
+
+queryCalendarInfo :: UserId -> Handler [(Entity Calendar, E.Value Int)]
+queryCalendarInfo uid = fmap unCalendarInfo . cached . fmap CalendarInfo .
+    runDB . E.select $
+    E.from $ \(c `E.LeftOuterJoin` mt) -> do
+        E.on      $ E.just (c E.^. CalendarId) E.==. (mt E.?. CalTargetCalendar)
+        E.groupBy $ c E.^. CalendarId
+        E.where_  $ c E.^. CalendarOwner E.==. E.val uid
+        E.orderBy [E.asc $ c E.^. CalendarName]
+        return (c, E.countRows) --  :: E.SqlExpr (E.Value Int))
+
 calendars :: Widget
 calendars = do
     uid  <- liftHandlerT $ requireAuthId
-    cals <- liftHandlerT . runDB .
-        E.select $
-        E.from $ \(c `E.LeftOuterJoin` mt) -> do
-            E.on      $ E.just (c E.^. CalendarId) E.==. (mt E.?. CalTargetCalendar)
-            E.groupBy $ c E.^. CalendarId
-            E.where_  $ c E.^. CalendarOwner E.==. E.val uid
-            E.orderBy [E.asc $ c E.^. CalendarName]
-            return (c, E.countRows :: E.SqlExpr (E.Value Int))
+    cals <- liftHandlerT $ queryCalendarInfo uid
     $(widgetFile "calendarlisting")

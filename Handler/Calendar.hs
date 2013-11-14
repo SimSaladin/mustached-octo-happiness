@@ -10,6 +10,8 @@ getCalendarR :: Handler Html
 getCalendarR = do
     let days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ] :: [Text]
         times = map (\x -> T.pack $ show x ++ ".00") [0..23]
+    uid <- requireAuthId
+    cals <- queryCalendarInfo uid
     defaultLayout $ do
         setTitle "Calendar"
         $(widgetFile "calendar")
@@ -23,6 +25,39 @@ getCalendarSettingsR = do
 postCalendarSettingsR :: Handler Html
 postCalendarSettingsR = do
     undefined
+
+newCalendarWidget :: Widget
+newCalendarWidget = do
+    ((_, w), _) <- liftHandlerT $ runFormPost newCalendarForm
+    $(widgetFile "calendarWidgetAdd")
+
+newCalendarForm :: Form Calendar
+newCalendarForm = renderKube $ Calendar
+    <$> lift requireAuthId
+    <*> areq textField "Nimi" Nothing
+    <*> aopt textField "Kuvaus" Nothing
+    <*> areq textField "Väri" Nothing
+    <*> areq boolField' "Julkinen" Nothing
+    <*> areq boolField' "Julkisesti muokattava" Nothing
+
+boolField' = boolField { fieldView =
+        \theId name attrs val isReq -> [whamlet|
+$newline never
+<ul .forms-list>
+   $if not isReq
+     <li>
+       <input id=#{theId}-none *{attrs} type=radio name=#{name} value=none checked>
+       <label for=#{theId}-none>Tyhjä
+
+   <li>
+    <input id=#{theId}-yes *{attrs} type=radio name=#{name} value=yes :showVal id val:checked>
+    <label for=#{theId}-yes>Kyllä
+   <li>
+    <input id=#{theId}-no *{attrs} type=radio name=#{name} value=no :showVal not val:checked>
+    <label for=#{theId}-no>Ei
+|] }
+    where showVal = either (\_ -> False)
+
 
 -- * Targets
 

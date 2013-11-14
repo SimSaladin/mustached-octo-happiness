@@ -15,16 +15,13 @@ renderKube aform fragment = do
 $newline never
 \#{fragment}
 $forall view <- views
-    <label for=#{fvId view}>
-        #{fvLabel view}
-
-        $maybe err <- fvErrors view
-            <span .error>#{err}
-
-        ^{fvInput view}
-
-        $maybe desc <- fvTooltip view
-            <span .forms-desc>#{desc}
+ <p>
+   <label for=#{fvId view}>#{fvLabel view}
+      $maybe err <- fvErrors view
+         <span .error>#{err}
+   ^{fvInput view}
+   $maybe desc <- fvTooltip view
+      <span .forms-desc>#{desc}
 |]
     return (res, widget)
 

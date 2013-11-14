@@ -7,6 +7,7 @@ import           Prelude              as Import hiding (head, init, last,
 import           Yesod.Core           as Import hiding (Route (..))
 import           Yesod.Form           as Import
 import           Yesod.Persist        as Import (runDB)
+import           Yesod.Auth           as Import
 import           Database.Esqueleto   as Import hiding (Value)
 
 import           Control.Applicative  as Import (pure, (<$>), (<*>))
