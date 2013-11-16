@@ -31,49 +31,21 @@ newCalendarWidget = do
     ((_, w), _) <- liftHandlerT $ runFormPost newCalendarForm
     $(widgetFile "calendarWidgetAdd")
 
-newCalendarForm :: Form Calendar
-newCalendarForm = renderKube $ Calendar
-    <$> lift requireAuthId
-    <*> areq textField "Nimi" Nothing
-    <*> aopt textField "Kuvaus" Nothing
-    <*> areq textField "Väri" Nothing
-    <*> areq boolField' "Julkinen" Nothing
-    <*> areq boolField' "Julkisesti muokattava" Nothing
-
-boolField' = boolField { fieldView =
-        \theId name attrs val isReq -> [whamlet|
-$newline never
-<ul .forms-list>
-   $if not isReq
-     <li>
-       <input id=#{theId}-none *{attrs} type=radio name=#{name} value=none checked>
-       <label for=#{theId}-none>Tyhjä
-
-   <li>
-    <input id=#{theId}-yes *{attrs} type=radio name=#{name} value=yes :showVal id val:checked>
-    <label for=#{theId}-yes>Kyllä
-   <li>
-    <input id=#{theId}-no *{attrs} type=radio name=#{name} value=no :showVal not val:checked>
-    <label for=#{theId}-no>Ei
-|] }
-    where showVal = either (\_ -> False)
-
-
 -- * Targets
 
 -- ** Create
 
 getTargetR :: TargetType -> Handler Html
 getTargetR TargetNote = do
-    form <- generateFormPost $ noteForm undefined Nothing
+    form <- generateFormPost $ noteForm Nothing undefined
     targetLayout "muistiinpano" form
 
 getTargetR TargetEvent = do
-    form <- generateFormPost $ eventForm undefined Nothing
+    form <- generateFormPost $ eventForm Nothing undefined
     targetLayout "tapahtuma" form
 
 getTargetR TargetTodo = do
-    form <- generateFormPost $ todoForm undefined Nothing
+    form <- generateFormPost $ todoForm Nothing undefined
     targetLayout "to-do" form
 
 targetLayout :: Html -> (Widget, Enctype) -> Handler Html
@@ -106,40 +78,56 @@ postTargetSendR = undefined
 
 -- * Forms
 
-type CalForm a = UserId -> Maybe a -> Form (Target, TargetId -> a)
+newCalendarForm :: Form Calendar
+newCalendarForm = renderKube $ Calendar
+    <$> lift requireAuthId
+    <*> areq textField "Nimi" Nothing
+    <*> aopt textField "Kuvaus" Nothing
+    <*> areq textField "Väri" Nothing
+    <*> areq checkBoxField "Julkinen" Nothing
+    <*> areq checkBoxField "Julkisesti muokattava" Nothing
 
-noteForm :: CalForm Note
-noteForm uid x = renderDivs $ (\target -> (,) target . Note)
-    <$> targetForm uid (noteTarget <$> x)
-    <*> areq textareaField "Sisältö" Nothing
+type CalTargetForm ct = Maybe ct -> UserId -> Form (Either ct (Target, TargetId -> ct))
 
-eventForm :: CalForm Event
-eventForm uid me = renderDivs $ (,)
-    <$> targetForm uid Nothing <*> event
-  where
-      event = Event
-        <$> areq repeatField   "Milloin" Nothing
-        <*> areq timedateField "Aloitus" Nothing
-        <*> aopt timedateField "Lopetus" Nothing
-        <*> aopt textField     "Paikka" Nothing
-        <*> areq urgencyField  "Tärkeys" Nothing
-        <*> areq alarmField    "Muistutus" Nothing
-        <*> (T.words <$> areq textField "Osallistujat" Nothing)
-        <*> aopt textareaField "Kommentit" Nothing
+class GetTarget a where
+        getTarget :: a -> TargetId
 
-todoForm :: CalForm Todo
-todoForm uid mtodo = undefined
+instance GetTarget Todo where getTarget = todoTarget
+instance GetTarget Event where getTarget = eventTarget
+instance GetTarget Note where getTarget = noteTarget
 
-calForm :: UserId -> TargetId
-        -> AForm Handler (TargetId -> a)
-        -> Form (Target, TargetId -> a)
-calForm uid tid e = renderDivs $ (,) <$> targetForm uid Nothing
-                                     <*> e
+calTargetForm' :: GetTarget ct => (Maybe ct -> AForm Handler (TargetId -> ct)) -> CalTargetForm ct
+calTargetForm' ctform Nothing uid = renderKube $ ((Right .) . (,)) <$> targetForm uid <*> ctform Nothing
+calTargetForm' ctform (Just ct) _ = renderKube $ (flip Left $ getTarget ct) <$> ctform (Just mc)
+
+noteForm :: CalTargetForm Note
+noteForm = calTargetForm' $ \mn -> Note
+    <$> areq textareaField "Sisältö" Nothing
+
+eventForm :: CalTargetForm Event
+eventForm = calTargetForm' $ \me -> Event
+    <$> areq repeatField   "Milloin" Nothing
+    <*> areq timedateField "Aloitus" Nothing
+    <*> aopt timedateField "Lopetus" Nothing
+    <*> aopt textField     "Paikka" Nothing
+    <*> areq urgencyField  "Tärkeys" Nothing
+    <*> areq alarmField    "Muistutus" Nothing
+    <*> (T.words <$> areq textField "Osallistujat" Nothing)
+    <*> aopt textareaField "Kommentit" Nothing
+
+todoForm :: CalTargetForm Todo
+todoForm = calTargetForm' $ \mt -> Todo
+    <$> areq checkBoxField "Valmis" Nothing
+    <*> areq repeatField "Milloin" Nothing
+    <*> areq timedateField "Aloitus" Nothing
+    <*> aopt timedateField "Lopetus" Nothing
+    <*> areq alarmField    "Muistutus" Nothing
+    <*> areq urgencyField  "Tärkeys" Nothing
 
 -- ** Fields
 
-targetForm :: UserId -> Maybe TargetId -> AForm Handler Target
-targetForm uid mtid = Target
+targetForm :: UserId -> AForm Handler Target
+targetForm uid = Target
     <$> pure uid
     <*> areq textField "Nimike" Nothing
 
