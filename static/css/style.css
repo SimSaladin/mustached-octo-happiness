@@ -1,12 +1,48 @@
 body {
    min-width:60em;
 }
+aside {
+   font-style:oblique;
+}
+#wrap-main {
+   position:relative;
+   padding-left:110px;
+}
 
+#nav-main {
+   width:100px;
+   margin-left:-110px;
+   padding:20px 0;
+   position:fixed;
+   top:0;
+   bottom:0;
+   overflow:auto;
+
+}
+
+/*{{{ Colors */
+.color-main {
+   background:#d1c0dc;
+   color:#9a40a5;
+}
+.color-secondary {
+   background:#8c1a65;
+   color:#d1c0dc;
+}
+.box-wrapped {
+   box-shadow:-8px 8px 0 #9a40a5;
+   padding:2em;
+}
+/*}}}*/
+
+/* {{{ input */
 input[type="text"],
 input[type="password"] {
    border-width:2px;
 }
+/* }}} */
 
+/* {{{ calendar */
 .events {
    margin-right:1em;
 }
@@ -54,3 +90,4 @@ td:hover .cact {
    top:auto;
    bottom:0;
 }
+/* }}} */

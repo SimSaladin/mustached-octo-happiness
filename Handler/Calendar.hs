@@ -10,8 +10,10 @@ getCalendarR :: Handler Html
 getCalendarR = do
     let days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ] :: [Text]
         times = map (\x -> T.pack $ show x ++ ".00") [0..23]
-    uid <- requireAuthId
-    cals <- queryCalendarInfo uid
+
+    -- TODO calendar content!
+    cals <- queryCalendarInfo
+
     defaultLayout $ do
         setTitle "Calendar"
         $(widgetFile "calendar")
@@ -24,7 +26,15 @@ getCalendarSettingsR = do
 
 postCalendarSettingsR :: Handler Html
 postCalendarSettingsR = do
-    undefined
+    ((resNewCal,_),_) <- runFormPost newCalendarForm
+    case resNewCal of
+        FormSuccess newcal -> do
+            _ <- runDB $ insert newcal
+            setMessage "Kalenteri luotu."
+            redirect CalendarR
+        FormFailure _ -> getCalendarSettingsR
+        _ -> do
+            undefined
 
 newCalendarWidget :: Widget
 newCalendarWidget = do
@@ -78,6 +88,7 @@ postTargetSendR = undefined
 
 -- * Forms
 
+-- ** Calendar
 newCalendarForm :: Form Calendar
 newCalendarForm = renderKube $ Calendar
     <$> lift requireAuthId
@@ -87,18 +98,7 @@ newCalendarForm = renderKube $ Calendar
     <*> areq checkBoxField "Julkinen" Nothing
     <*> areq checkBoxField "Julkisesti muokattava" Nothing
 
-type CalTargetForm ct = Maybe ct -> UserId -> Form (Either ct (Target, TargetId -> ct))
-
-class GetTarget a where
-        getTarget :: a -> TargetId
-
-instance GetTarget Todo where getTarget = todoTarget
-instance GetTarget Event where getTarget = eventTarget
-instance GetTarget Note where getTarget = noteTarget
-
-calTargetForm' :: GetTarget ct => (Maybe ct -> AForm Handler (TargetId -> ct)) -> CalTargetForm ct
-calTargetForm' ctform Nothing uid = renderKube $ ((Right .) . (,)) <$> targetForm uid <*> ctform Nothing
-calTargetForm' ctform (Just ct) _ = renderKube $ (flip Left $ getTarget ct) <$> ctform (Just mc)
+-- ** Targets
 
 noteForm :: CalTargetForm Note
 noteForm = calTargetForm' $ \mn -> Note
@@ -124,12 +124,27 @@ todoForm = calTargetForm' $ \mt -> Todo
     <*> areq alarmField    "Muistutus" Nothing
     <*> areq urgencyField  "Tärkeys" Nothing
 
--- ** Fields
+-- *** Helpers
+
+type CalTargetForm ct = Maybe ct -> UserId -> Form (Either ct (Target, TargetId -> ct))
+
+class GetTarget a where
+        getTarget :: a -> TargetId
+
+instance GetTarget Todo where getTarget = todoTarget
+instance GetTarget Event where getTarget = eventTarget
+instance GetTarget Note where getTarget = noteTarget
+
+calTargetForm' :: GetTarget ct => (Maybe ct -> AForm Handler (TargetId -> ct)) -> CalTargetForm ct
+calTargetForm' ctform Nothing uid = renderKube $ ((Right .) . (,)) <$> targetForm uid <*> ctform Nothing
+calTargetForm' ctform (Just ct) _ = renderKube $ (Left . ($ getTarget ct)) <$> ctform (Just ct)
 
 targetForm :: UserId -> AForm Handler Target
 targetForm uid = Target
     <$> pure uid
     <*> areq textField "Nimike" Nothing
+
+-- ** Fields
 
 urgencyField :: Field Handler Urgency
 urgencyField = radioFieldList
@@ -145,6 +160,5 @@ repeatField :: Field Handler Repeat
 repeatField = error "undefined: `repeatField`"
 
 alarmField :: Field Handler Alarm
-alarmField  = error "undefined: `alarmField' in Handler/Calendar.hs"
-
+alarmField = error "undefined: `alarmField' in Handler/Calendar.hs"
 

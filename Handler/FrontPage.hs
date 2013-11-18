@@ -2,7 +2,6 @@ module Handler.FrontPage where
 
 import Import
 import Text.Hamlet (hamletFile)
-import Yesod.Auth
 import Yesod.Auth.HashDB (setPassword)
 
 getFrontPageR :: Handler Html

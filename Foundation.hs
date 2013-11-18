@@ -129,10 +129,8 @@ instance YesodAuth App where
         x <- getBy $ UniqueUser $ credsIdent creds
         case x of
             Just (Entity uid _) -> return $ Just uid
-            Nothing -> do
-                fmap Just $ insert $ User (credsIdent creds) Nothing Nothing
+            Nothing -> fmap Just $ insert $ User (credsIdent creds) Nothing Nothing
 
-    -- You can add other plugins like BrowserID, email or OAuth here
     authPlugins _ = [ authBrowserId def
                     , authGoogleEmail
                     , authHashDB' ]
@@ -173,18 +171,18 @@ newtype CalendarInfo = CalendarInfo
                        { unCalendarInfo :: [(Entity Calendar, E.Value Int)] }
                        deriving (Typeable)
 
-queryCalendarInfo :: UserId -> Handler [(Entity Calendar, E.Value Int)]
-queryCalendarInfo uid = fmap unCalendarInfo . cached . fmap CalendarInfo .
-    runDB . E.select $
-    E.from $ \(c `E.LeftOuterJoin` mt) -> do
-        E.on      $ E.just (c E.^. CalendarId) E.==. (mt E.?. CalTargetCalendar)
-        E.groupBy $ c E.^. CalendarId
-        E.where_  $ c E.^. CalendarOwner E.==. E.val uid
-        E.orderBy [E.asc $ c E.^. CalendarName]
-        return (c, E.countRows) --  :: E.SqlExpr (E.Value Int))
+queryCalendarInfo :: Handler [(Entity Calendar, E.Value Int)]
+queryCalendarInfo = do
+    uid <- requireAuthId
+    fmap unCalendarInfo . cached . fmap CalendarInfo .  runDB . E.select $
+        E.from $ \(c `E.LeftOuterJoin` mt) -> do
+            E.on      $ E.just (c E.^. CalendarId) E.==. (mt E.?. CalTargetCalendar)
+            E.groupBy $ c E.^. CalendarId
+            E.where_  $ c E.^. CalendarOwner E.==. E.val uid
+            E.orderBy [E.asc $ c E.^. CalendarName]
+            return (c, E.count $ mt E.?. CalTargetId) --  :: E.SqlExpr (E.Value Int))
 
 calendars :: Widget
 calendars = do
-    uid  <- liftHandlerT $ requireAuthId
-    cals <- liftHandlerT $ queryCalendarInfo uid
+    cals <- liftHandlerT queryCalendarInfo
     $(widgetFile "calendarlisting")

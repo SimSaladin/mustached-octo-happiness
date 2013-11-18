@@ -1,14 +1,13 @@
 $newline never
-<form .forms.forms-inline method="post" action="@{tm login}">
-  <fieldset .units-row>
-    <legend>Kirjaudu sisään
-    <label .unit-40>
-        Käyttäjänimi
-        <input type="text" id="x" name="username" autofocus="" required>
-    <label .unit-40>
-        Salasana
-        <input type="password" name="password" required>
-    <label .unit-20>
-        &nbsp;
-        <input .btn .unit-100 type="submit" value="Kirjaudu">
+<form .forms .forms-columnar method="post" action="@{tm login}">
+ <fieldset>
+   <legend>Kirjaudu sisään
+   <p>
+      <label>Käyttäjänimi
+      <input type="text" id="x" name="username" autofocus="" required>
+   <p>
+      <label>Salasana
+      <input type="password" name="password" required>
+   <p>
+      <input .btn type="submit" value="Kirjaudu">
 

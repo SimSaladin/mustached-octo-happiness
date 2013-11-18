@@ -1,43 +1,42 @@
-<main>
-   <h1>Mustached Octo Happiness
-   <aside>Kalenterijärjestelmä
-
-   $maybe msg <- mmsg
-      <div .message>
-         #{msg}
-
-   <section>
-     <div .units-row #front-auth>
-      <div .unit-30>
-         <h2 .subheader>Mozilla Persona
-         ^{aRender persona}
-
-         <h3 .subheader>Gmail
-         ^{aRender google}
-
-      <div .unit-70>
-         <h2 .subheader>Oma tunnus
-
-         <form .forms action=@{FrontPageR} method=post>
-            <fieldset>
-               <legend>Rekisteröidy
-               $case res
-                  $of FormFailure _
-                     <i .error>Rekisteröityminen ei onnistunut. Katso virheet alta.
-                  $of _
-               ^{rw}
-               <input .btn type="submit" value="Rekisteröidy">
-
-         ^{aRender hashdb}
-
-   <hr>
-   <i>testisivut:
-   <ul>
-      <li>
-         <a href=@{CalendarR}>Kalenterinäkymä
-      <li>
-         <a href=@{TargetR TargetNote}>Muistiinpanoformi
-      <li>
-         <a href=@{TargetR TargetEvent}>Event..
-      <li>
-         <a href=@{TargetR TargetTodo}>Todo..
+<body .color-secondary>
+ <main .color-main .box-wrapped>
+    <h1>Mustached Octo Happiness
+    <h1 .subheader>Kalenterijärjestelmä
+    <aside>
+       Kirjaudu sisään Personan tai GMailin kautta, tai luo dedikoitu tunnus.
+ 
+    $maybe msg <- mmsg
+       <div .message>#{msg}
+ 
+    <section>
+      <div .units-row #front-auth>
+       <div .unit-30>
+          <h2 .subheader>Mozilla Persona
+          ^{aRender persona}
+          <h3 .subheader>Gmail
+          ^{aRender google}
+       <div .unit-70>
+          <h2 .subheader>Oma tunnus
+          ^{aRender hashdb}
+          <form .forms .forms-columnar action=@{FrontPageR} method=post>
+             <fieldset>
+                <legend>Rekisteröidy
+                $case res
+                   $of FormFailure _
+                      <i .error>Rekisteröityminen ei onnistunut, katso virheet alta.
+                   $of _
+                ^{rw}
+                <p>
+                   <input .btn type="submit" value="Rekisteröidy">
+ 
+    <hr>
+    <i>testisivut:
+    <ul>
+       <li>
+          <a href=@{CalendarR}>Kalenterinäkymä
+       <li>
+          <a href=@{TargetR TargetNote}>Muistiinpanoformi
+       <li>
+          <a href=@{TargetR TargetEvent}>Event..
+       <li>
+          <a href=@{TargetR TargetTodo}>Todo..

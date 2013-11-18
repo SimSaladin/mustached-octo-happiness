@@ -1,4 +1,7 @@
-<ul>
-   $forall (Entity k c, n) <- cals
-      <li>#{calendarName c}
-         <i .label .label-blue>#{show n}
+$if null cals
+   <i>(empty)
+$else
+   <ul>
+      $forall (Entity _ c, E.Value n) <- cals
+         <li>#{calendarName c} #
+            <i .label .label-blue .label-small>#{show n}

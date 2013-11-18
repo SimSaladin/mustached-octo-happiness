@@ -22,7 +22,7 @@ instance PathPiece TargetType where
         toPathPiece TargetTodo  = "todo"
         toPathPiece TargetEvent = "event"
         toPathPiece TargetNote  = "note"
-        fromPathPiece "task"  = Just TargetTodo
+        fromPathPiece "todo"  = Just TargetTodo
         fromPathPiece "event" = Just TargetEvent
         fromPathPiece "note"  = Just TargetNote
         fromPathPiece     _   = Nothing
