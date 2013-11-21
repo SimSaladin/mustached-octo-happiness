@@ -49,29 +49,38 @@ newCalendarWidget = do
 -- ** Create
 
 getTargetR :: TargetType -> Handler Html
-getTargetR TargetNote = do
-    form <- generateFormPost $ noteForm Nothing undefined
-    targetLayout "muistiinpano" form
+getTargetR TargetNote  = runTargetForm noteForm  >>= layoutNote
+getTargetR TargetEvent = runTargetForm eventForm >>= layoutEvent
+getTargetR TargetTodo  = runTargetForm todoForm  >>= layoutTodo
 
-getTargetR TargetEvent = do
-    form <- generateFormPost $ eventForm Nothing undefined
-    targetLayout "tapahtuma" form
+layoutNote  = targetLayout "muistiinpano"
+layoutEvent = targetLayout "tapahtuma"
+layoutTodo  = targetLayout "to-do"
 
-getTargetR TargetTodo = do
-    form <- generateFormPost $ todoForm Nothing undefined
-    targetLayout "to-do" form
-
-targetLayout :: Html -> (Widget, Enctype) -> Handler Html
-targetLayout what (formw, enctype) = 
+targetLayout :: Html -> ((FormResult a, Widget), Enctype) -> Handler Html
+targetLayout what ((res, formw), enctype) = 
     defaultLayout $ do
         setTitle $ "Uusi " <> what
         $(widgetFile "newtarget")
+
+-- (real sig would be three lines...)
+-- runTargetForm :: form -> Handler ((,),)
+runTargetForm theForm = runFormPost . theForm Nothing =<< requireAuthId
 
 -- ** Update, Delete
 
 -- | Create or update a target.
 postTargetR :: TargetType -> Handler Html
-postTargetR = undefined
+postTargetR TargetEvent = do
+        runres@((res,_),_) <- runTargetForm eventForm
+        case res of
+            FormSuccess e -> do
+                -- runDB $ insert Event
+                undefined
+                setMessage "Tapahtuma lisätty"
+                redirect CalendarR
+            FormFailure _ -> layoutEvent runres
+            FormMissing   -> redirect $ TargetR TargetEvent
 
 -- ** Read
 
@@ -109,7 +118,6 @@ noteForm = calTargetForm' $ \mn -> Note
 
 eventForm :: CalTargetForm Event
 eventForm = calTargetForm' $ \me -> Event
-    -- <$> areq repeatField   "Milloin"        (eventRepeat    <$> me)
     <$> repeatForm
     <*> myDayFieldReq      "Päivästä"       (eventBegin     <$> me)
     <*> myDayField         "Päivään"        (eventEnd       <$> me)
@@ -127,7 +135,6 @@ eventForm = calTargetForm' $ \me -> Event
 todoForm :: CalTargetForm Todo
 todoForm = calTargetForm' $ \mt -> Todo
     <$> areq checkBoxField "Valmis"    (todoDone    <$> mt)
-    -- <*> areq repeatField   "Milloin"   (todoRepeat  <$> mt)
     <*> repeatForm
     <*> myDayFieldReq      "Aloitus"   (todoBegin   <$> mt)
     <*> myDayField         "Lopetus"   (todoEnd     <$> mt)
@@ -184,11 +191,21 @@ weekDaysField = multiSelectFieldList $ zip days [1..]
 
 repeatForm :: AForm Handler Repeat
 repeatForm = formToAForm $ do
-    (wr, wv) <- mreq weekDaysField "Toistuva päivinä" Nothing
+    (wr, wv) <- mreq weekDaysField "Toisto" Nothing
     (sr, sv) <- mreq timeField "Alkaa klo." Nothing
     (er, ev) <- mreq timeField "Loppuu klo." Nothing
-    let _w = error "TODO add custom repeat field widget"
-    return (Repeat <$> (Weekly <$> wr) <*> sr <*> er, [sv, ev, wv])
+    let myView = FieldView -- TODO fields not complete
+            { fvErrors   = Nothing
+            , fvId       = "repeat"
+            , fvLabel    = "Klo."
+            , fvRequired = True
+            , fvTooltip  = Nothing
+            , fvInput    = [whamlet|
+<p>^{fvInput sv} - ^{fvInput ev}
+|] }
+    return (Repeat <$> (Weekly <$> wr) <*> sr <*> er, [wv, myView]) -- [sv, ev, wv])
+
+-- daysRangeForm :: Maybe Day -> (Maybe (Maybe Day)) -> AForm Handler (Day,... ?????)
 
 alarmField :: Field Handler Alarm
 alarmField = radioFieldList $ map (\x -> (x <> " min", Alarm x))
