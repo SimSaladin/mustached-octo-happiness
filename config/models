@@ -35,7 +35,7 @@ Event
     end Day Maybe
     place Text Maybe
     urgency Urgency
-    alarm Alarm
+    alarm Alarm Maybe
     attendees [Text]
     comment Textarea Maybe
     target TargetId

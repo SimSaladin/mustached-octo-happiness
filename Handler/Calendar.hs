@@ -115,7 +115,7 @@ eventForm = calTargetForm' $ \me -> Event
     <*> myDayField         "Päivään"        (eventEnd       <$> me)
     <*> aopt textField     "Paikka"         (eventPlace     <$> me)
     <*> areq urgencyField  "Tärkeys" (Just $ maybe (Urgency 2) eventUrgency me)
-    <*> areq alarmField    "Muistutus"      (eventAlarm     <$> me)
+    <*> aopt alarmField    "Muistutus"      (eventAlarm     <$> me)
     <*> areq attendeeField "Osallistujat"   (Just $ maybe [] eventAttendees me)
     <*> aopt textareaField "Kommentit"      (eventComment   <$> me)
         where
