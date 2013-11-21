@@ -14,17 +14,17 @@ import Network.HTTP.Conduit (Manager)
 import qualified Settings
 import Settings.Development (development)
 import qualified Database.Persist
-import Database.Persist.Sql (SqlPersistT)
 import qualified Database.Esqueleto as E
+import Database.Persist.Sql (SqlPersistT)
 import Settings.StaticFiles
 import Settings (widgetFile, Extra (..))
 import Model
 import Text.Hamlet (hamletFile)
 import Yesod.Fay
 import System.Log.FastLogger (Logger)
-import Data.Typeable (Typeable)
 
 import CalendarTypes
+import CalendarQueries
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -165,22 +165,6 @@ getExtra = fmap (appExtra . settings) getYesod
 
 navigation :: Widget
 navigation = $(widgetFile "navigation")
-
--- | Calendar info wrapper. Memoized.
-newtype CalendarInfo = CalendarInfo
-                       { unCalendarInfo :: [(Entity Calendar, E.Value Int)] }
-                       deriving (Typeable)
-
-queryCalendarInfo :: Handler [(Entity Calendar, E.Value Int)]
-queryCalendarInfo = do
-    uid <- requireAuthId
-    fmap unCalendarInfo . cached . fmap CalendarInfo .  runDB . E.select $
-        E.from $ \(c `E.LeftOuterJoin` mt) -> do
-            E.on      $ E.just (c E.^. CalendarId) E.==. (mt E.?. CalTargetCalendar)
-            E.groupBy $ c E.^. CalendarId
-            E.where_  $ c E.^. CalendarOwner E.==. E.val uid
-            E.orderBy [E.asc $ c E.^. CalendarName]
-            return (c, E.count $ mt E.?. CalTargetId) --  :: E.SqlExpr (E.Value Int))
 
 calendars :: Widget
 calendars = do

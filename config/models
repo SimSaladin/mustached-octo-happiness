@@ -24,15 +24,15 @@ Note
 Todo
     done Bool
     repeat Repeat
-    begin UTCTime
-    end UTCTime Maybe
+    begin Day
+    end Day Maybe
     alarm Alarm
     urgency Urgency
     target TargetId
 Event
     repeat Repeat
-    begin UTCTime
-    end UTCTime Maybe
+    begin Day
+    end Day Maybe
     place Text Maybe
     urgency Urgency
     alarm Alarm

@@ -1,15 +1,18 @@
 module Handler.Calendar where
 
 import Import
+import Control.Monad
 import Data.Time
 import qualified Data.Text as T
+
+days :: [Text]
+days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ]
 
 -- * Calendar
 
 getCalendarR :: Handler Html
 getCalendarR = do
-    let days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ] :: [Text]
-        times = map (\x -> T.pack $ show x ++ ".00") [0..23]
+    let times = map (\x -> T.pack $ show x ++ ".00") ([0..23] :: [Int])
 
     -- TODO calendar content!
     cals <- queryCalendarInfo
@@ -102,27 +105,34 @@ newCalendarForm = renderKube $ Calendar
 
 noteForm :: CalTargetForm Note
 noteForm = calTargetForm' $ \mn -> Note
-    <$> areq textareaField "Sisältö" Nothing
+    <$> areq textareaField "Sisältö" (noteContent <$> mn)
 
 eventForm :: CalTargetForm Event
 eventForm = calTargetForm' $ \me -> Event
-    <$> areq repeatField   "Milloin" Nothing
-    <*> areq timedateField "Aloitus" Nothing
-    <*> aopt timedateField "Lopetus" Nothing
-    <*> aopt textField     "Paikka" Nothing
-    <*> areq urgencyField  "Tärkeys" Nothing
-    <*> areq alarmField    "Muistutus" Nothing
-    <*> (T.words <$> areq textField "Osallistujat" Nothing)
-    <*> aopt textareaField "Kommentit" Nothing
+    -- <$> areq repeatField   "Milloin"        (eventRepeat    <$> me)
+    <$> repeatForm
+    <*> myDayFieldReq      "Päivästä"       (eventBegin     <$> me)
+    <*> myDayField         "Päivään"        (eventEnd       <$> me)
+    <*> aopt textField     "Paikka"         (eventPlace     <$> me)
+    <*> areq urgencyField  "Tärkeys" (Just $ maybe (Urgency 2) eventUrgency me)
+    <*> areq alarmField    "Muistutus"      (eventAlarm     <$> me)
+    <*> areq attendeeField "Osallistujat"   (Just $ maybe [] eventAttendees me)
+    <*> aopt textareaField "Kommentit"      (eventComment   <$> me)
+        where
+            attendeeField = checkMMap
+                -- hmm.. could the ambigous Left value be defaulted by ghc?
+                (return . (Right :: [Text] -> Either Text [Text]) . T.words)
+                T.unwords textField
 
 todoForm :: CalTargetForm Todo
 todoForm = calTargetForm' $ \mt -> Todo
-    <$> areq checkBoxField "Valmis" Nothing
-    <*> areq repeatField "Milloin" Nothing
-    <*> areq timedateField "Aloitus" Nothing
-    <*> aopt timedateField "Lopetus" Nothing
-    <*> areq alarmField    "Muistutus" Nothing
-    <*> areq urgencyField  "Tärkeys" Nothing
+    <$> areq checkBoxField "Valmis"    (todoDone    <$> mt)
+    -- <*> areq repeatField   "Milloin"   (todoRepeat  <$> mt)
+    <*> repeatForm
+    <*> myDayFieldReq      "Aloitus"   (todoBegin   <$> mt)
+    <*> myDayField         "Lopetus"   (todoEnd     <$> mt)
+    <*> areq alarmField    "Muistutus" (todoAlarm   <$> mt)
+    <*> areq urgencyField  "Tärkeys"   (todoUrgency <$> mt)
 
 -- *** Helpers
 
@@ -144,6 +154,22 @@ targetForm uid = Target
     <$> pure uid
     <*> areq textField "Nimike" Nothing
 
+myDayField :: FieldSettings App -> Maybe (Maybe Day) -> AForm Handler (Maybe Day)
+myDayField opts mday = formToAForm $ do
+    (r, v) <- mopt dayField opts . Just . Just =<< dayDefault (join mday)
+    return (r, [v])
+
+myDayFieldReq :: FieldSettings App -> Maybe Day -> AForm Handler Day
+myDayFieldReq opts mday = formToAForm $ do
+    (r, v) <- mreq dayField opts . Just =<< dayDefault mday
+    return (r, [v])
+
+dayDefault :: MonadIO m => Maybe Day -> m Day
+dayDefault mday = case mday of
+        Just day -> return day
+        -- FIXME users most likely expect zoned time..
+        Nothing  -> liftM utctDay (liftIO getCurrentTime)
+
 -- ** Fields
 
 urgencyField :: Field Handler Urgency
@@ -153,12 +179,17 @@ urgencyField = radioFieldList
     , ("Tärkeä", Urgency 3)
     , ("Kriittinen", Urgency 4) ]
 
-timedateField :: Field Handler UTCTime
-timedateField = error "undefined: `timedateField`"
+weekDaysField :: Field Handler [Int]
+weekDaysField = multiSelectFieldList $ zip days [1..]
 
-repeatField :: Field Handler Repeat
-repeatField = error "undefined: `repeatField`"
+repeatForm :: AForm Handler Repeat
+repeatForm = formToAForm $ do
+    (wr, wv) <- mreq weekDaysField "Toistuva päivinä" Nothing
+    (sr, sv) <- mreq timeField "Alkaa klo." Nothing
+    (er, ev) <- mreq timeField "Loppuu klo." Nothing
+    let _w = error "TODO add custom repeat field widget"
+    return (Repeat <$> (Weekly <$> wr) <*> sr <*> er, [sv, ev, wv])
 
 alarmField :: Field Handler Alarm
-alarmField = error "undefined: `alarmField' in Handler/Calendar.hs"
-
+alarmField = radioFieldList $ map (\x -> (x <> " min", Alarm x))
+        ["10", "20", "30", "45", "60", "120"]

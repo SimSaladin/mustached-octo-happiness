@@ -34,4 +34,5 @@ infixr 5 <>
 #endif
 
 import           CalendarTypes        as Import
+import           CalendarQueries      as Import
 import           Utils                as Import

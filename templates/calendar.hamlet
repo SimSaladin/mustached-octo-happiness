@@ -10,7 +10,8 @@ $else
    <div .toright>
       <section .notes>
          <h2>Muistiinpanot
-         <h2.subheader>Uusi muistiinpano
+         <a href=@{TargetR TargetNote}>Uusi muistiinpano
+         ...
       <section .todos>
          <h2>To-do
          ...

@@ -6,7 +6,6 @@ import Prelude
 import Yesod
 import Data.Text (Text)
 import Data.Time
-import Data.Int
 import Database.Persist.Sql
 
 -- * In routing
@@ -18,6 +17,7 @@ data TargetType = TargetTodo
                 | TargetEvent
                 | TargetNote
                 deriving (Show, Eq, Read)
+
 instance PathPiece TargetType where
         toPathPiece TargetTodo  = "todo"
         toPathPiece TargetEvent = "event"
@@ -29,19 +29,28 @@ instance PathPiece TargetType where
 
 -- * In db
 
-instance PersistField DiffTime where
-        toPersistValue dt  = toPersistValue (floor dt :: Int64)
-        fromPersistValue v = fmap fromIntegral ( fromPersistValue v :: Either Text Int64 )
-instance PersistFieldSql DiffTime where
-        sqlType _ = SqlInt64
+type DayOfWeek = Int
 
-data Repeat = RepeatDaily TimeOfDay TimeOfDay | RepeatWeekly -- TODO
-            deriving (Show, Read)
+data RepeatTime = Weekly [DayOfWeek]
+        deriving (Show, Read)
+
+data Repeat = Repeat
+        { repeatWhen  :: RepeatTime
+        , repeatStart :: TimeOfDay
+        , repeatEnd   :: TimeOfDay
+        } deriving (Show, Read)
 instance PersistField Repeat where
         toPersistValue   = toPersistValue . show
         fromPersistValue = fmap read . fromPersistValue
 instance PersistFieldSql Repeat where
         sqlType _ = SqlString
 
-newtype Alarm = Alarm Text      deriving (PersistField, PersistFieldSql)
+newtype Alarm = Alarm Text      deriving (Eq, PersistField, PersistFieldSql)
 newtype Urgency = Urgency Int   deriving (Eq, PersistField, PersistFieldSql)
+
+-- instance PersistField DiffTime where
+--         toPersistValue dt  = toPersistValue (floor dt :: Int64)
+--         fromPersistValue v = fmap fromIntegral ( fromPersistValue v :: Either Text Int64 )
+-- 
+-- instance PersistFieldSql DiffTime where
+--         sqlType _ = SqlInt64
