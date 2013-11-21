@@ -53,34 +53,48 @@ getTargetR TargetNote  = runTargetForm noteForm  >>= layoutNote
 getTargetR TargetEvent = runTargetForm eventForm >>= layoutEvent
 getTargetR TargetTodo  = runTargetForm todoForm  >>= layoutTodo
 
+-- *** Layouts
+
+layoutNote :: TargetFormRes Note -> Handler Html
 layoutNote  = targetLayout "muistiinpano"
+
+layoutEvent :: TargetFormRes Event -> Handler Html
 layoutEvent = targetLayout "tapahtuma"
+
+layoutTodo :: TargetFormRes Todo -> Handler Html
 layoutTodo  = targetLayout "to-do"
 
-targetLayout :: Html -> ((FormResult a, Widget), Enctype) -> Handler Html
+targetLayout :: Html -> TargetFormRes a -> Handler Html
 targetLayout what ((res, formw), enctype) = 
     defaultLayout $ do
         setTitle $ "Uusi " <> what
         $(widgetFile "newtarget")
 
--- (real sig would be three lines...)
--- runTargetForm :: form -> Handler ((,),)
+runTargetForm :: CalTargetForm a -> Handler (TargetFormRes a)
 runTargetForm theForm = runFormPost . theForm Nothing =<< requireAuthId
 
 -- ** Update, Delete
 
 -- | Create or update a target.
 postTargetR :: TargetType -> Handler Html
-postTargetR TargetEvent = do
-        runres@((res,_),_) <- runTargetForm eventForm
-        case res of
-            FormSuccess e -> do
-                -- runDB $ insert Event
-                undefined
-                setMessage "Tapahtuma lisätty"
-                redirect CalendarR
-            FormFailure _ -> layoutEvent runres
-            FormMissing   -> redirect $ TargetR TargetEvent
+postTargetR tt@TargetEvent = targetPostHelper tt layoutEvent eventForm $ \event -> case event of
+    Left modified -> do
+        undefined
+    Right (t, f) -> do
+        setMessage "Tapahtuma lisätty"
+        undefined
+
+targetPostHelper :: TargetType
+                 -> (TargetFormRes a -> Handler Html) -- ^ Layout (on failed)
+                 -> CalTargetForm a                   -- ^ Target form
+                 -> (CalTargetAt a -> Handler b)      -- ^ Form result handler (on success)
+                 -> Handler Html
+targetPostHelper tt layout form handler = do
+    x@((res,_),_) <- runTargetForm form
+    case res of
+        FormSuccess a -> handler a >> redirect CalendarR
+        FormFailure _ -> layout x
+        FormMissing   -> redirect (TargetR tt)
 
 -- ** Read
 
@@ -143,7 +157,9 @@ todoForm = calTargetForm' $ \mt -> Todo
 
 -- *** Helpers
 
-type CalTargetForm ct = Maybe ct -> UserId -> Form (Either ct (Target, TargetId -> ct))
+type CalTargetAt a   = Either a (Target, TargetId -> a)
+type CalTargetForm a = Maybe a -> UserId -> Form (CalTargetAt a)
+type TargetFormRes a = ((FormResult (CalTargetAt a), Widget), Enctype)
 
 class GetTarget a where
         getTarget :: a -> TargetId

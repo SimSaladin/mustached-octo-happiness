@@ -1,6 +1,6 @@
-<h1>Uusi #{what}
-
 <form .forms.forms-columnar method=post enctype=#{enctype}>
-   ^{formw}
-   <p>
-      <input .btn .btn-big .btn-blue type=submit value="Lisää">
+   <fieldset>
+      <legend>Uusi #{what}
+      ^{formw}
+      <p>
+         <input .btn .btn-big .btn-blue type=submit value="Lisää">
