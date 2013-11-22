@@ -10,7 +10,7 @@ $else
    <div .toright>
       <section .notes>
          <h2>Muistiinpanot
-         <a href=@{TargetR TargetNote}>Uusi muistiinpano
+         <a href=@{TargetR actCal TargetNote}>Uusi muistiinpano
          ...
       <section .todos>
          <h2>To-do
@@ -27,5 +27,5 @@ $else
                $forall day <- days
                   <td>
                      $with params <- [("day", day), ("hour", hour)]
-                        <a href=@?{(TargetR TargetEvent, params)} .cact .label.label-small.label-blue>E
-                        <a href=@?{(TargetR TargetTodo , params)} .cact .label.label-small.label-red>T
+                        <a href=@?{(TargetR actCal TargetEvent, params)} .cact .label.label-small.label-blue>E
+                        <a href=@?{(TargetR actCal TargetTodo , params)} .cact .label.label-small.label-red>T

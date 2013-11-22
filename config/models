@@ -17,10 +17,11 @@ Target
     owner UserId
     name Text
 
--- different targets (objects)
+-- targets (calendar objects)
 Note
     content Textarea
     target TargetId
+    UniqueNote target
 Todo
     done Bool
     repeat Repeat
@@ -29,6 +30,7 @@ Todo
     alarm Alarm
     urgency Urgency
     target TargetId
+    UniqueTodo target
 Event
     repeat Repeat
     begin Day
@@ -39,8 +41,9 @@ Event
     attendees [Text]
     comment Textarea Maybe
     target TargetId
+    UniqueEvent target
 
--- many-to-many
+-- many-to-many: cals-to-targets
 CalTarget
     calendar CalendarId
     target TargetId

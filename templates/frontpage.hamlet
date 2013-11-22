@@ -28,15 +28,3 @@
                 ^{rw}
                 <p>
                    <input .btn type="submit" value="Rekisteröidy">
- 
-    <hr>
-    <i>testisivut:
-    <ul>
-       <li>
-          <a href=@{CalendarR}>Kalenterinäkymä
-       <li>
-          <a href=@{TargetR TargetNote}>Muistiinpanoformi
-       <li>
-          <a href=@{TargetR TargetEvent}>Event..
-       <li>
-          <a href=@{TargetR TargetTodo}>Todo..

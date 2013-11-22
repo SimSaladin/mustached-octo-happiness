@@ -17,6 +17,8 @@ getCalendarR = do
     -- TODO calendar content!
     cals <- queryCalendarInfo
 
+    actCal <- activeCalendar
+
     defaultLayout $ do
         setTitle "Calendar"
         $(widgetFile "calendar")
@@ -48,10 +50,10 @@ newCalendarWidget = do
 
 -- ** Create
 
-getTargetR :: TargetType -> Handler Html
-getTargetR TargetNote  = runTargetForm noteForm  >>= layoutNote
-getTargetR TargetEvent = runTargetForm eventForm >>= layoutEvent
-getTargetR TargetTodo  = runTargetForm todoForm  >>= layoutTodo
+getTargetR :: CalendarId -> TargetType -> Handler Html
+getTargetR cid TargetNote  = runTargetForm noteForm  >>= layoutNote
+getTargetR cid TargetEvent = runTargetForm eventForm >>= layoutEvent
+getTargetR cid TargetTodo  = runTargetForm todoForm  >>= layoutTodo
 
 -- *** Layouts
 
@@ -76,40 +78,51 @@ runTargetForm theForm = runFormPost . theForm Nothing =<< requireAuthId
 -- ** Update, Delete
 
 -- | Create or update a target.
-postTargetR :: TargetType -> Handler Html
-postTargetR tt@TargetEvent = targetPostHelper tt layoutEvent eventForm $ \event -> case event of
-    Left modified -> do
-        undefined
-    Right (t, f) -> do
-        setMessage "Tapahtuma lisätty"
-        undefined
+postTargetR :: CalendarId -> TargetType -> Handler Html
+postTargetR cid tt@TargetEvent = targetPostHelper cid tt layoutEvent eventForm eventTarget UniqueEvent
 
-targetPostHelper :: TargetType
+targetPostHelper :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
+                 => CalendarId
+                 -> TargetType
                  -> (TargetFormRes a -> Handler Html) -- ^ Layout (on failed)
                  -> CalTargetForm a                   -- ^ Target form
-                 -> (CalTargetAt a -> Handler b)      -- ^ Form result handler (on success)
+                 -> (a -> TargetId)                   -- ^ Extract targetId
+                 -> (TargetId -> Unique a)
                  -> Handler Html
-targetPostHelper tt layout form handler = do
+targetPostHelper cid tt layout form toTid fromTid = do
     x@((res,_),_) <- runTargetForm form
     case res of
-        FormSuccess a -> handler a >> redirect CalendarR
+        FormSuccess s -> handler s >> redirect CalendarR
         FormFailure _ -> layout x
-        FormMissing   -> redirect (TargetR tt)
+        FormMissing   -> redirect (TargetR cid tt)
+  where
+    handler (Left modified) = do --queryModifyTarget toTid fromTid modified
+                                 setMessage "Kohde onnistuneesti lisätty."
+    handler (Right tinfo)   = do queryAddTarget cid tinfo
+                                 setMessage "Onnistuneesti muokattu."
+
+queryAddTarget' :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
+                => CalendarId -> (Target, TargetId -> a) -> Handler ()
+queryAddTarget' cid (t, f) = runDB $ do
+        tid <- insert t
+        _ <- insert (f tid)
+        _ <- insert $ CalTarget cid tid
+        return ()
 
 -- ** Read
 
-getTargetThisR :: TargetUID -> Handler Html
+getTargetThisR :: TargetId -> Handler Html
 getTargetThisR = undefined
 
-postTargetThisR :: TargetUID -> Handler Html
+postTargetThisR :: TargetId -> Handler Html
 postTargetThisR = undefined
 
 -- ** Export
 
-getTargetTextR :: TargetUID -> Handler Html
+getTargetTextR :: TargetId -> Handler Html
 getTargetTextR = undefined
 
-postTargetSendR :: TargetUID -> Handler Html
+postTargetSendR :: TargetId -> Handler Html
 postTargetSendR = undefined
 
 -- * Forms
