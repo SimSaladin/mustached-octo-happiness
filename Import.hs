@@ -10,7 +10,7 @@ import           Yesod.Persist        as Import (runDB)
 import           Yesod.Auth           as Import
 import           Database.Esqueleto   as Import hiding (Value)
 
-import           Control.Applicative  as Import (pure, (<$>), (<*>))
+import           Control.Applicative  as Import
 import           Data.Text            as Import (Text)
 
 import           Foundation           as Import

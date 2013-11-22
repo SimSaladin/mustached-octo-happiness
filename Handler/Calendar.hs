@@ -48,22 +48,77 @@ newCalendarWidget = do
 
 -- * Targets
 
--- ** Create
-
+-- | View new target form.
+--
+-- CalendarId is used as a dummy here: POST form posts by default to the
+-- origin url which already contains the id.
 getTargetR :: CalendarId -> TargetType -> Handler Html
-getTargetR cid TargetNote  = runTargetForm noteForm  >>= layoutNote
-getTargetR cid TargetEvent = runTargetForm eventForm >>= layoutEvent
-getTargetR cid TargetTodo  = runTargetForm todoForm  >>= layoutTodo
+getTargetR _ TargetNote  = runTargetForm Nothing noteForm  >>= layoutNote
+getTargetR _ TargetEvent = runTargetForm Nothing eventForm >>= layoutEvent
+getTargetR _ TargetTodo  = runTargetForm Nothing todoForm  >>= layoutTodo
 
--- *** Layouts
+-- | Create a new target.
+postTargetR :: CalendarId -> TargetType -> Handler Html
+postTargetR cid tt = case tt of
+    TargetEvent -> f layoutEvent eventForm eventTarget UniqueEvent
+    TargetTodo  -> f layoutTodo  todoForm  todoTarget  UniqueTodo
+    TargetNote  -> f layoutNote  noteForm  noteTarget  UniqueNote
+  where
+      -- Damn GHC.. won't quantify over "a" here unless explicitly told to :/
+      -- (it would indeed be shorter to just copy-paste f's def...)
+      f :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
+        => (TargetFormRes a -> Handler Html) -> CalTargetForm a
+        -> (a -> TargetId) -> (TargetId -> Unique a) -> Handler Html
+      f = targetPostHelper cid tt Nothing
+
+-- | View a target, or edit when GET param edit is set.
+getTargetThisR :: TargetId -> Handler Html
+getTargetThisR = undefined
+
+-- | Update a target, or delete it.
+postTargetThisR :: TargetId -> Handler Html
+postTargetThisR = undefined
+
+-- | Export a target as text.
+getTargetTextR :: TargetId -> Handler Html
+getTargetTextR = undefined
+
+-- | Send a target to another user.
+postTargetSendR :: TargetId -> Handler Html
+postTargetSendR = undefined
+
+-- ** Helpers
+
+targetPostHelper :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
+                 => CalendarId
+                 -> TargetType
+                 -> Maybe a                           -- ^ Possible initial value
+                 -> (TargetFormRes a -> Handler Html) -- ^ Layout (on failed)
+                 -> CalTargetForm a                   -- ^ Target form
+                 -> (a -> TargetId)                   -- ^ Extract targetId
+                 -> (TargetId -> Unique a)            -- ^ Access target
+                 -> Handler Html
+targetPostHelper cid tt initial layout form toTid fromTid = do
+    x@((res,_),_) <- runTargetForm initial form
+    case res of
+        FormSuccess s -> handler s >> redirect CalendarR
+        FormFailure _ -> layout x
+        FormMissing   -> redirect (TargetR cid tt)
+  where
+    handler (Left modified) = queryModifyTarget toTid fromTid modified
+                              >> setMessage "Kohteen tiedot päivitetty."
+    handler (Right tinfo)   = queryAddTarget cid tinfo
+                              >> setMessage "Kohde onnistuneesti lisätty."
+
+-- XXX: editing others' targets is possible!
+runTargetForm :: Maybe a -> CalTargetForm a -> Handler (TargetFormRes a)
+runTargetForm ival theForm = runFormPost . theForm ival =<< requireAuthId
 
 layoutNote :: TargetFormRes Note -> Handler Html
-layoutNote  = targetLayout "muistiinpano"
-
 layoutEvent :: TargetFormRes Event -> Handler Html
-layoutEvent = targetLayout "tapahtuma"
-
 layoutTodo :: TargetFormRes Todo -> Handler Html
+layoutNote  = targetLayout "muistiinpano"
+layoutEvent = targetLayout "tapahtuma"
 layoutTodo  = targetLayout "to-do"
 
 targetLayout :: Html -> TargetFormRes a -> Handler Html
@@ -72,60 +127,18 @@ targetLayout what ((res, formw), enctype) =
         setTitle $ "Uusi " <> what
         $(widgetFile "newtarget")
 
-runTargetForm :: CalTargetForm a -> Handler (TargetFormRes a)
-runTargetForm theForm = runFormPost . theForm Nothing =<< requireAuthId
-
--- ** Update, Delete
-
--- | Create or update a target.
-postTargetR :: CalendarId -> TargetType -> Handler Html
-postTargetR cid tt@TargetEvent = targetPostHelper cid tt layoutEvent eventForm eventTarget UniqueEvent
-
-targetPostHelper :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
-                 => CalendarId
-                 -> TargetType
-                 -> (TargetFormRes a -> Handler Html) -- ^ Layout (on failed)
-                 -> CalTargetForm a                   -- ^ Target form
-                 -> (a -> TargetId)                   -- ^ Extract targetId
-                 -> (TargetId -> Unique a)
-                 -> Handler Html
-targetPostHelper cid tt layout form toTid fromTid = do
-    x@((res,_),_) <- runTargetForm form
-    case res of
-        FormSuccess s -> handler s >> redirect CalendarR
-        FormFailure _ -> layout x
-        FormMissing   -> redirect (TargetR cid tt)
-  where
-    handler (Left modified) = do --queryModifyTarget toTid fromTid modified
-                                 setMessage "Kohde onnistuneesti lisätty."
-    handler (Right tinfo)   = do queryAddTarget cid tinfo
-                                 setMessage "Onnistuneesti muokattu."
-
-queryAddTarget' :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
-                => CalendarId -> (Target, TargetId -> a) -> Handler ()
-queryAddTarget' cid (t, f) = runDB $ do
-        tid <- insert t
-        _ <- insert (f tid)
-        _ <- insert $ CalTarget cid tid
-        return ()
-
--- ** Read
-
-getTargetThisR :: TargetId -> Handler Html
-getTargetThisR = undefined
-
-postTargetThisR :: TargetId -> Handler Html
-postTargetThisR = undefined
-
--- ** Export
-
-getTargetTextR :: TargetId -> Handler Html
-getTargetTextR = undefined
-
-postTargetSendR :: TargetId -> Handler Html
-postTargetSendR = undefined
-
 -- * Forms
+
+type CalTargetAt a   = Either a (Target, TargetId -> a)
+type CalTargetForm a = Maybe a -> UserId -> Form (CalTargetAt a)
+type TargetFormRes a = ((FormResult (CalTargetAt a), Widget), Enctype)
+
+class GetTarget a where
+        getTarget :: a -> TargetId
+
+instance GetTarget Todo where getTarget = todoTarget
+instance GetTarget Event where getTarget = eventTarget
+instance GetTarget Note where getTarget = noteTarget
 
 -- ** Calendar
 newCalendarForm :: Form Calendar
@@ -144,10 +157,10 @@ noteForm = calTargetForm' $ \mn -> Note
     <$> areq textareaField "Sisältö" (noteContent <$> mn)
 
 eventForm :: CalTargetForm Event
-eventForm = calTargetForm' $ \me -> Event
-    <$> repeatForm
-    <*> myDayFieldReq      "Päivästä"       (eventBegin     <$> me)
+eventForm = calTargetForm' $ \me -> (\f t r -> Event r f t)
+    <$> myDayFieldReq      "Päivästä"       (eventBegin     <$> me)
     <*> myDayField         "Päivään"        (eventEnd       <$> me)
+    <*> repeatForm                          (eventRepeat    <$> me)
     <*> aopt textField     "Paikka"         (eventPlace     <$> me)
     <*> areq urgencyField  "Tärkeys" (Just $ maybe (Urgency 2) eventUrgency me)
     <*> aopt alarmField    "Muistutus"      (eventAlarm     <$> me)
@@ -162,24 +175,13 @@ eventForm = calTargetForm' $ \me -> Event
 todoForm :: CalTargetForm Todo
 todoForm = calTargetForm' $ \mt -> Todo
     <$> areq checkBoxField "Valmis"    (todoDone    <$> mt)
-    <*> repeatForm
+    <*> repeatForm                     (todoRepeat  <$> mt)
     <*> myDayFieldReq      "Aloitus"   (todoBegin   <$> mt)
     <*> myDayField         "Lopetus"   (todoEnd     <$> mt)
     <*> areq alarmField    "Muistutus" (todoAlarm   <$> mt)
     <*> areq urgencyField  "Tärkeys"   (todoUrgency <$> mt)
 
 -- *** Helpers
-
-type CalTargetAt a   = Either a (Target, TargetId -> a)
-type CalTargetForm a = Maybe a -> UserId -> Form (CalTargetAt a)
-type TargetFormRes a = ((FormResult (CalTargetAt a), Widget), Enctype)
-
-class GetTarget a where
-        getTarget :: a -> TargetId
-
-instance GetTarget Todo where getTarget = todoTarget
-instance GetTarget Event where getTarget = eventTarget
-instance GetTarget Note where getTarget = noteTarget
 
 calTargetForm' :: GetTarget ct => (Maybe ct -> AForm Handler (TargetId -> ct)) -> CalTargetForm ct
 calTargetForm' ctform Nothing uid = renderKube $ ((Right .) . (,)) <$> targetForm uid <*> ctform Nothing
@@ -189,6 +191,36 @@ targetForm :: UserId -> AForm Handler Target
 targetForm uid = Target
     <$> pure uid
     <*> areq textField "Nimike" Nothing
+
+dayDefault :: MonadIO m => Maybe Day -> m Day
+dayDefault mday = case mday of
+        Just day -> return day
+        -- FIXME users most likely expect zoned time..
+        Nothing  -> liftM utctDay (liftIO getCurrentTime)
+
+lookupTimeAt :: Handler ZonedTime
+lookupTimeAt = do
+    t <- lookupGetParam "at"
+    return undefined
+
+-- ** Fields
+
+alarmField :: Field Handler Alarm
+alarmField = radioFieldList $ map (\x -> (x <> " min", Alarm x))
+        ["10", "20", "30", "45", "60", "120"]
+
+urgencyField :: Field Handler Urgency
+urgencyField = radioFieldList
+    [ ("Joutava" :: Text, Urgency 1)
+    , ("Normaali", Urgency 2)
+    , ("Tärkeä", Urgency 3)
+    , ("Kriittinen", Urgency 4) ]
+
+weekDaysField :: Field Handler RepeatTime
+weekDaysField = checkMMap (return . f) unWeekly $ multiSelectFieldList $ zip days [1..]
+    where
+        f :: [Int] -> Either Text RepeatTime
+        f = Right . Weekly
 
 myDayField :: FieldSettings App -> Maybe (Maybe Day) -> AForm Handler (Maybe Day)
 myDayField opts mday = formToAForm $ do
@@ -200,29 +232,20 @@ myDayFieldReq opts mday = formToAForm $ do
     (r, v) <- mreq dayField opts . Just =<< dayDefault mday
     return (r, [v])
 
-dayDefault :: MonadIO m => Maybe Day -> m Day
-dayDefault mday = case mday of
-        Just day -> return day
-        -- FIXME users most likely expect zoned time..
-        Nothing  -> liftM utctDay (liftIO getCurrentTime)
+repeatForm :: Maybe Repeat -> AForm Handler Repeat
+repeatForm info = formToAForm $ do
+    -- lt <- liftIO $ liftM2 utcToLocalTime getCurrentTimeZone getCurrentTime
+    (wd, sd, ed) <- case info of
+        Nothing  -> do
+            zd <- lift lookupTimeAt
+            let tod = localTimeOfDay $ zonedTimeToLocalTime zd
+            return (Weekly [1..7], tod, tod) -- TODO _3 +1h
+        Just rep ->
+            return $ liftA3 (,,) repeatWhen repeatStart repeatEnd $ rep
 
--- ** Fields
-
-urgencyField :: Field Handler Urgency
-urgencyField = radioFieldList
-    [ ("Joutava" :: Text, Urgency 1)
-    , ("Normaali", Urgency 2)
-    , ("Tärkeä", Urgency 3)
-    , ("Kriittinen", Urgency 4) ]
-
-weekDaysField :: Field Handler [Int]
-weekDaysField = multiSelectFieldList $ zip days [1..]
-
-repeatForm :: AForm Handler Repeat
-repeatForm = formToAForm $ do
-    (wr, wv) <- mreq weekDaysField "Toisto" Nothing
-    (sr, sv) <- mreq timeField "Alkaa klo." Nothing
-    (er, ev) <- mreq timeField "Loppuu klo." Nothing
+    (wr, wv) <- mreq weekDaysField "Toisto"  $ Just wd
+    (sr, sv) <- mreq timeField "Alkaa klo."  $ Just sd
+    (er, ev) <- mreq timeField "Loppuu klo." $ Just ed
     let myView = FieldView -- TODO fields not complete
             { fvErrors   = Nothing
             , fvId       = "repeat"
@@ -232,10 +255,4 @@ repeatForm = formToAForm $ do
             , fvInput    = [whamlet|
 <p>^{fvInput sv} - ^{fvInput ev}
 |] }
-    return (Repeat <$> (Weekly <$> wr) <*> sr <*> er, [wv, myView]) -- [sv, ev, wv])
-
--- daysRangeForm :: Maybe Day -> (Maybe (Maybe Day)) -> AForm Handler (Day,... ?????)
-
-alarmField :: Field Handler Alarm
-alarmField = radioFieldList $ map (\x -> (x <> " min", Alarm x))
-        ["10", "20", "30", "45", "60", "120"]
+    return (Repeat <$> wr <*> sr <*> er, [wv, myView])

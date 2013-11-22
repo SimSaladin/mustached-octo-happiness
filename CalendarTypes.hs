@@ -34,6 +34,8 @@ type DayOfWeek = Int
 data RepeatTime = Weekly [DayOfWeek]
         deriving (Show, Read)
 
+unWeekly (Weekly x) = x
+
 data Repeat = Repeat
         { repeatWhen  :: RepeatTime
         , repeatStart :: TimeOfDay
