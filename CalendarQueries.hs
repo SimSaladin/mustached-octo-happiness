@@ -58,9 +58,9 @@ queryAddTarget :: (YesodPersist site,
                   PersistEntity a,
                   PersistEntityBackend a ~ SqlBackend)
                   => CalendarId -> (Target, TargetId -> a)
-                  -> HandlerT site IO ()
-queryAddTarget cid (t,f) =
-        runDB $ insert t >>= liftA2 (>>) (insert . f) (insert . CalTarget cid)
+                  -> HandlerT site IO CalTargetId
+queryAddTarget cid (t,f) = runDB $
+    insert t >>= liftA2 (>>) (insert . f) (insert . CalTarget cid)
 
 -- | Update values of a target.
 queryModifyTarget targ uniq new = runDB $ do
