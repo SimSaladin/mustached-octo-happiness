@@ -1,23 +1,84 @@
+{-# LANGUAGE TupleSections #-}
 module Handler.Calendar where
 
 import Import
 import Control.Monad
+import Control.Arrow
 import Data.Time
+import Data.List as L
+import Data.Ord
 import qualified Data.Text as T
+import System.Locale
 
-days :: [Text]
-days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ]
+read' :: Read a => Text -> a
+read' = read . T.unpack
 
 -- * Calendar
 
+-- Type synonyms to help reasoning
+
+-- | For every hour in every day there is a cell which contains objects
+-- starting that hour (on that day).
+type Cell = (LocalTime, Either Event Todo)
+
+-- | Every hour (a row) is a collection of cells associated with a day.
+type HourView = [ (Day, [Cell]) ]
+
+-- | A week is a list of HourViews (the list of rows) associated with the
+-- hour.
+type WeekView = [ (Hour, HourView) ]
+
+type Hour = Int
+type Unfold a b = a -> Maybe (b, a)
+
+-- | Calculate next occurances of a Repeat at given days.
+nextRepeatsAt :: [Day] -> Day -> Maybe Day -> Repeat -> [LocalTime]
+nextRepeatsAt xs lower upper rep = concatMap f xs
+    where f d = [LocalTime d (repeatStart rep)]
+
 getCalendarR :: Handler Html
 getCalendarR = do
-    let times = map (\x -> T.pack $ show x ++ ".00") ([0..23] :: [Int])
+    uid              <- requireAuthId
+    myCalendars      <- getViewCalendars
+    mcal             <- activeCalendar
+    (fromDay, toDay) <- getViewTimeframe
+    (events, todos)  <- liftM (map entityVal *** map entityVal) $ queryCalendarObjects myCalendars fromDay toDay
 
-    -- TODO calendar content!
-    cals <- queryCalendarInfo
+    timezone <- liftIO getCurrentTimeZone -- TODO user supplied?
 
-    actCal <- activeCalendar
+    let dayRange     = [fromDay..toDay]
+        numOfObjects = length events + length todos
+
+        -- TODO do something for these spaghetti monsters...
+
+        objectWeeks :: WeekView
+        objectWeeks = map (second sepDays) $ sepHours $ sortBy (comparing fst)
+            $ f eventRF Left events ++ f todoRF Right todos
+            where
+                f rs cs = concatMap (liftA2 zip rs (repeat . cs))
+                eventRF = nextRepeatsAt dayRange <$> eventBegin <*> eventEnd <*> eventRepeat
+                todoRF  = nextRepeatsAt dayRange <$> todoBegin <*> todoEnd <*> todoRepeat
+
+        sepHours :: [Cell] -> [(Hour, [Cell])]
+        sepHours xs = L.unfoldr f (0, map getHour xs)
+            where
+                f :: Unfold (Hour, [(Hour, Cell)]) (Hour, [Cell])
+                f (24, _) = Nothing
+                f (h, xs) = Just $ ((h, ) . map snd) *** (h + 1, ) $ L.span ((== h) . fst) xs
+                getHour x@(t,_) = (todHour $ localTimeOfDay t, x)
+
+        sepDays :: [Cell] -> [(Day, [Cell])]
+        sepDays xs = L.unfoldr f (fromDay, map getDay xs)
+            where
+                f :: Unfold (Day, [(Day, Cell)]) (Day, [Cell])
+                f (d, xs)
+                    | d > toDay = Nothing
+                    | otherwise = Just $ ((d,) . map snd) *** (addDays 1 d,) $ L.span ((== d) . fst) xs
+                getDay x@(t,_) = (localDay t, x)
+        
+        targetParams :: Day -> Hour -> [(Text, Text)]
+        targetParams day hour = let zonedtime =  ZonedTime (LocalTime day $ TimeOfDay hour 0 0) timezone
+                                    in [("at", T.pack $ show zonedtime)]
 
     defaultLayout $ do
         setTitle "Calendar"
@@ -31,20 +92,48 @@ getCalendarSettingsR = do
 
 postCalendarSettingsR :: Handler Html
 postCalendarSettingsR = do
-    ((resNewCal,_),_) <- runFormPost newCalendarForm
-    case resNewCal of
-        FormSuccess newcal -> do
-            _ <- runDB $ insert newcal
+    ((res, _), _) <- runFormPost newCalendarForm
+    case res of
+        FormSuccess cal -> do
+            insertCalendar cal
             setMessage "Kalenteri luotu."
             redirect CalendarR
         FormFailure _ -> getCalendarSettingsR
-        _ -> do
-            undefined
+        FormMissing   -> setMessage "Tyhjä lomake." >> redirect CalendarSettingsR
 
 newCalendarWidget :: Widget
 newCalendarWidget = do
     ((_, w), _) <- liftHandlerT $ runFormPost newCalendarForm
     $(widgetFile "calendarWidgetAdd")
+
+-- * Time helpers
+
+dayDefault :: MonadIO m => Maybe Day -> m Day
+dayDefault mday = case mday of
+        Just day -> return day
+        -- FIXME users most likely expect zoned time..
+        Nothing  -> liftM utctDay (liftIO getCurrentTime)
+
+lookupTimeAt :: Handler ZonedTime
+lookupTimeAt = do
+    mt <- lookupGetParam "at"
+    case mt of
+        Nothing -> 
+            -- XXX: user specified time zone?
+            liftIO $ liftM2 utcToZonedTime getCurrentTimeZone getCurrentTime
+        Just t  -> return $ read' t
+
+getViewTimeframe :: Handler (Day, Day)
+getViewTimeframe = liftM (liftA2 (,) id (addDays 6) . utctDay) $
+    liftIO getCurrentTime
+
+days :: [Text]
+days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ]
+
+myLocale :: TimeLocale
+myLocale = defaultTimeLocale -- TODO finnish hacks
+
+formatWeekday = formatTime myLocale "%A"
 
 -- * Targets
 
@@ -192,17 +281,6 @@ targetForm uid = Target
     <$> pure uid
     <*> areq textField "Nimike" Nothing
 
-dayDefault :: MonadIO m => Maybe Day -> m Day
-dayDefault mday = case mday of
-        Just day -> return day
-        -- FIXME users most likely expect zoned time..
-        Nothing  -> liftM utctDay (liftIO getCurrentTime)
-
-lookupTimeAt :: Handler ZonedTime
-lookupTimeAt = do
-    t <- lookupGetParam "at"
-    return undefined
-
 -- ** Fields
 
 alarmField :: Field Handler Alarm
@@ -234,7 +312,6 @@ myDayFieldReq opts mday = formToAForm $ do
 
 repeatForm :: Maybe Repeat -> AForm Handler Repeat
 repeatForm info = formToAForm $ do
-    -- lt <- liftIO $ liftM2 utcToLocalTime getCurrentTimeZone getCurrentTime
     (wd, sd, ed) <- case info of
         Nothing  -> do
             zd <- lift lookupTimeAt

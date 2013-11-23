@@ -84,6 +84,7 @@ library
                  , aeson
                  , unordered-containers
                  , time
+                 , old-locale
 
 executable         mustached-octo-happiness
     if flag(library-only)

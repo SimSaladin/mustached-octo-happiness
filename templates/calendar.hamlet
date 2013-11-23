@@ -1,4 +1,35 @@
-$if null cals
+$maybe cal <- mcal
+ <div .toright>
+   Yhteensä #{numOfObjects} objektia näkyvissä.
+   <section .notes>
+       <h2>Muistiinpanot
+       <a href=@{TargetR cal TargetNote}>Uusi muistiinpano
+       ...
+    <section .todos>
+       <h2>To-do
+       ...
+ <section .events>
+  <table>
+
+   <tr .days>
+      <th>&nbsp;
+      $forall view <- map formatWeekday dayRange
+         <th>#{view}
+
+   $forall (hour, hourViews) <- objectWeeks
+     <tr>
+      <th .hour>#{hour}
+      $forall (day, cells) <- hourViews
+        <td>
+          <a href=@?{(TargetR cal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
+          <a href=@?{(TargetR cal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-red>T
+          $forall (time, cell) <- cells
+            $case cell
+               $of Left event
+                  event
+               $of Right todo
+                  todo
+$nothing
    <div .units-row>
       <div .unit-centered .unit-60>
          <h1>Tyhjää!
@@ -6,26 +37,3 @@ $if null cals
             Näyttäisi siltä että sinulla ei ole yhtään kalenteria. #
             Luo kalenteri alla.
          ^{newCalendarWidget}
-$else
-   <div .toright>
-      <section .notes>
-         <h2>Muistiinpanot
-         <a href=@{TargetR actCal TargetNote}>Uusi muistiinpano
-         ...
-      <section .todos>
-         <h2>To-do
-         ...
-   <section .events>
-      <table>
-         <tr .days>
-            <th>&nbsp;
-            $forall day <- days
-               <th>#{day}
-         $forall hour <- times
-            <tr>
-               <th .hour>#{hour}
-               $forall day <- days
-                  <td>
-                     $with params <- [("day", day), ("hour", hour)]
-                        <a href=@?{(TargetR actCal TargetEvent, params)} .cact .label.label-small.label-blue>E
-                        <a href=@?{(TargetR actCal TargetTodo , params)} .cact .label.label-small.label-red>T
