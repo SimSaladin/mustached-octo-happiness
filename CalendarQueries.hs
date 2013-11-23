@@ -8,7 +8,7 @@ import Control.Applicative
 import Data.Time
 import Data.Typeable        (Typeable)
 import Database.Esqueleto
-import Yesod                (HandlerT, runDB, cached, lookupSession, setSession)
+import Yesod                (HandlerT, runDB, cached, lookupSession, setSession, get404, getBy404)
 import Yesod.Auth           (requireAuthId, YesodAuth, AuthId)
 import Yesod.Persist.Core   (YesodPersist, YesodPersistBackend)
 import qualified Data.Text as T
@@ -146,4 +146,14 @@ queryModifyTarget targ uniq new = runDB $ do
     case mt of
         Nothing -> error "queryModifyTarget: non-existing target id"
         Just (Entity oid _) -> replace oid new
+
+data TW = T1 (Entity Event) | T2 (Entity Todo) | T3 (Entity Note)
+
+queryTarget tid = runDB $ liftM2 (,) (get404 tid) getEvent
+    where
+        -- Perhaps this colud be somewhow optimized to not do three queries
+        -- in worst case?
+        getEvent = maybe getTodo (return . T1) =<< getBy (UniqueEvent tid)
+        getTodo  = maybe getNote (return . T2) =<< getBy (UniqueTodo tid)
+        getNote  = liftM T3 $ getBy404 $ UniqueNote tid
 

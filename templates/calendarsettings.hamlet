@@ -1,7 +1,10 @@
-<h1>Kalenteriasetukset
-
-<h1.subheader>Kalenterit
-.
-
-<h1.subheader>Uusi kalenteri
-^{newCalendarWidget}
+<div .units-row>
+ <div .unit-centered.unit-80>
+   <h1>Kalenteriasetukset
+   <div .units-row>
+    <div .unit-50>
+      <h1.subheader>Kalenterit
+      ...
+    <div .unit-50>
+      <h1.subheader>Uusi kalenteri
+      ^{newCalendarWidget}

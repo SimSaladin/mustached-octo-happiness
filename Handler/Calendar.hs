@@ -4,6 +4,7 @@ module Handler.Calendar where
 import Import
 import Control.Monad
 import Control.Arrow
+import Data.Maybe
 import Data.Time
 import Data.List as L
 import Data.Ord
@@ -179,7 +180,11 @@ postTargetR cid tt = case tt of
 
 -- | View a target, or edit when GET param edit is set.
 getTargetThisR :: TargetId -> Handler Html
-getTargetThisR = undefined
+getTargetThisR tid = do
+    (t, v) <- queryTarget tid
+    defaultLayout $ do
+        setTitle $ toHtml $ targetName t
+        $(widgetFile "viewtarget")
 
 -- | Update a target, or delete it.
 postTargetThisR :: TargetId -> Handler Html
@@ -197,7 +202,7 @@ noteFormStandalone :: CalendarId -> Widget
 noteFormStandalone cid = do
     ((_,formw), enctype) <- liftHandlerT $ runFormPost . noteForm Nothing =<< requireAuthId
     [whamlet|
-<form .forms .forms-basic .forms-90 method=post action=@{TargetR cid TargetTodo} enctype=#{enctype}>
+<form .forms .forms-basic .forms-90 method=post action=@{TargetR cid TargetNote} enctype=#{enctype}>
     ^{formw}
     <p>
         <input .btn.btn-green.unit-90 type=submit value="Lisää muistiinpano">
@@ -280,7 +285,7 @@ eventForm = calTargetForm' $ \me -> (\f t r -> Event r f t)
     <*> aopt textField     "Paikka"         (eventPlace     <$> me)
     <*> areq urgencyField  "Tärkeys" (Just $ maybe (Urgency 2) eventUrgency me)
     <*> aopt alarmField    "Muistutus"      (eventAlarm     <$> me)
-    <*> areq attendeeField "Osallistujat"   (Just $ maybe [] eventAttendees me)
+    <*> (fromMaybe [] <$> aopt attendeeField "Osallistujat"   (Just $ eventAttendees <$> me))
     <*> aopt textareaField "Kommentit"      (eventComment   <$> me)
         where
             attendeeField = checkMMap

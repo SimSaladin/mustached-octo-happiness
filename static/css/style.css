@@ -24,10 +24,17 @@ aside {
    font-weight:bold;
    color:#FFF;
 }
+.cal-view {
+   margin-right:0.5em;
+}
+.cal-view ul {
+   list-style:none;
+   margin:0;
+}
 #nav-main li {
    padding-top:1em;
 }
-#nav-main li > a {
+#nav-main > ul > li > a {
    color:#F2B0FF;
    font-size:1.2em;
 }
@@ -44,6 +51,16 @@ aside {
 }
 .toright > * {
    padding-left:1em;
+}
+.message {
+   position:absolute;
+   bottom:0;
+   left:4%;
+   right:4%;
+   margin-left:auto;
+   margin-right:auto;
+   z-index:9001;
+   opacity:0.8;
 }
 
 /*{{{ Colors */

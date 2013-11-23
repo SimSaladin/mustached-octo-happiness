@@ -3,4 +3,36 @@
    <p style="margin-top:2em">
       <a .btn .btn-red href=@{CalendarR}>Takaisin
    <div>
-      
+      <h1>#{targetName t}
+      $case v
+         $of T1 (Entity _ event)
+            <h1 .subheader>Tapahtuma #
+               <i .label .pull-right>#{show $ eventUrgency event}
+            $maybe place <- eventPlace event
+               <p>Paikka #{place}
+            <h4>Osallistujat: #
+            $forall attendee <- eventAttendees event
+               <span>#{attendee}
+            <h4>Seuraavat instanssit
+            <h4>Hälytykset
+            $maybe comment <- eventComment event
+               <h4>Kommentti
+               <textarea>#{comment}
+            <hr>
+         $of T2 (Entity _ todo)
+            <h1 .subheader>Tehtävä #
+               <i .label .pull-right>#{show $ todoUrgency todo}
+            <hr>
+            $if todoDone todo
+               <a .btn .btn-black href="javascript:alert('not implemented, sorry.')">Merkkaa tekemättömäksi
+            $else
+               <a .btn .btn-green href="javascript:alert('not implemented, sorry.')">Merkkaa tehdyksi
+         $of T3 (Entity _ note)
+            <h1 .subheader>Muistiinpano
+            <p>#{noteContent note}
+            <hr>
+      <a .btn .btn-orange .pull-right href="javascript:alert('not implemented, sorry.')">Poista
+      <a .btn .btn href="javascript:alert('not implemented, sorry.')">Muokkaa
+      <a .btn .btn href="javascript:alert('not implemented, sorry.')">Teksti
+      <a .btn .btn href="javascript:alert('not implemented, sorry.')">Linkki
+      <a .btn .btn href="javascript:alert('not implemented, sorry.')">Lähetä...

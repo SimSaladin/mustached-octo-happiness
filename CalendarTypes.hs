@@ -48,7 +48,7 @@ instance PersistFieldSql Repeat where
         sqlType _ = SqlString
 
 newtype Alarm = Alarm Text      deriving (Eq, PersistField, PersistFieldSql)
-newtype Urgency = Urgency Int   deriving (Eq, PersistField, PersistFieldSql)
+newtype Urgency = Urgency Int   deriving (Eq, PersistField, PersistFieldSql, Show)
 
 -- instance PersistField DiffTime where
 --         toPersistValue dt  = toPersistValue (floor dt :: Int64)
