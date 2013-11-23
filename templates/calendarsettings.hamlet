@@ -3,8 +3,6 @@
    <h1>Kalenteriasetukset
    <div .units-row>
     <div .unit-50>
-      <h1.subheader>Kalenterit
-      ...
-    <div .unit-50>
-      <h1.subheader>Uusi kalenteri
-      ^{newCalendarWidget}
+      <h1.subheader>Muokkaa
+      (TODO)
+    <div .unit-50>^{newCalendarWidget}
