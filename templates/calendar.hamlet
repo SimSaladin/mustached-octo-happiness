@@ -11,24 +11,31 @@ $maybe cal <- mcal
  <section .events>
   <table>
 
-   <tr .days>
-      <th>&nbsp;
-      $forall view <- map formatWeekday dayRange
-         <th>#{view}
+   <thead .days>
+      <tr>
+         <th>&nbsp;
+         $forall view <- map formatWeekday dayRange
+            <th>#{view}
 
-   $forall (hour, hourViews) <- objectWeeks
-     <tr>
-      <th .hour>#{hour}
-      $forall (day, cells) <- hourViews
-        <td>
-          <a href=@?{(TargetR cal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
-          <a href=@?{(TargetR cal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-red>T
-          $forall (time, cell) <- cells
-            $case cell
-               $of Left event
-                  event
-               $of Right todo
-                  todo
+   <tbody>
+     $forall (hour, hourViews) <- objectWeeks
+       <tr>
+        <th #h-#{hour}>#{hour}
+        $forall (day, cells) <- hourViews
+          <td>
+            <a href=@?{(TargetR cal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
+            <a href=@?{(TargetR cal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-red>T
+
+            $forall ((start,end), (Entity k t, cell)) <- cells
+             <div .tt.#{getType cell}>
+              <a href=@{TargetThisR k}>
+                 <span .timestart>#{cellTimeFormat start}
+                 <span .title>#{targetName t}
+                 $case cell
+                    $of Left event
+                    $of Right todo
+                       todo
+  <div .filler>
 $nothing
    <div .units-row>
       <div .unit-centered .unit-60>

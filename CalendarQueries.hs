@@ -37,21 +37,25 @@ queryCalendarObjects :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend si
                      => [CalendarId] -- ^ Calendars to query
                      -> Day     -- ^ Timeframe start (inclusive)
                      -> Day     -- ^ Timeframe end  (inclusive)
-                     -> HandlerT site IO ([Entity Event], [Entity Todo])
+                     -> HandlerT site IO ([(Entity Target, Entity Event)], [(Entity Target, Entity Todo)])
 queryCalendarObjects calendars begin end =
         runDB $ liftM2 (,) queryEvents queryTodos
     where
-        queryEvents = select $ from $ \(ct `LeftOuterJoin` e) -> do
-            on $ ct ^. CalTargetCalendar `in_` valList calendars
-            where_ $ e ^. EventBegin >=. val begin
-            where_ $ e ^. EventEnd   <=. just (val end)
-            return e
+        queryEvents = select $ from $ \(ct `LeftOuterJoin` target `LeftOuterJoin` event) -> do
+            on $ target ^. TargetId ==. event ^. EventTarget
+            on $ target ^. TargetId ==. ct ^. CalTargetTarget
+            where_ $ ct ^. CalTargetCalendar `in_` valList calendars
+            where_ $ event ^. EventBegin >=. val begin
+            where_ $ event ^. EventEnd   <=. just (val end)
+            return (target, event)
 
-        queryTodos = select $ from $ \(ct `LeftOuterJoin` t) -> do
-            on $ ct ^. CalTargetCalendar `in_` valList calendars
-            where_ $ t ^. TodoBegin >=. val begin
-            where_ $ t ^. TodoEnd   <=. just (val end)
-            return t
+        queryTodos = select $ from $ \(ct `LeftOuterJoin` target `LeftOuterJoin` todo) -> do
+            on $ target ^. TargetId ==. todo ^. TodoTarget
+            on $ target ^. TargetId ==. ct ^. CalTargetTarget
+            where_ $ ct ^. CalTargetCalendar `in_` valList calendars
+            where_ $ todo ^. TodoBegin >=. val begin
+            where_ $ todo ^. TodoEnd   <=. just (val end)
+            return (target, todo)
 
 insertCalendar :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site)
                => Calendar -> HandlerT site IO ()

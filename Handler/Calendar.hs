@@ -19,7 +19,7 @@ read' = read . T.unpack
 
 -- | For every hour in every day there is a cell which contains objects
 -- starting that hour (on that day).
-type Cell = (LocalTime, Either Event Todo)
+type Cell = (TimeRange, (Entity Target, Either Event Todo))
 
 -- | Every hour (a row) is a collection of cells associated with a day.
 type HourView = [ (Day, [Cell]) ]
@@ -29,12 +29,17 @@ type HourView = [ (Day, [Cell]) ]
 type WeekView = [ (Hour, HourView) ]
 
 type Hour = Int
+type TimeRange = (LocalTime, LocalTime)
 type Unfold a b = a -> Maybe (b, a)
 
 -- | Calculate next occurances of a Repeat at given days.
-nextRepeatsAt :: [Day] -> Day -> Maybe Day -> Repeat -> [LocalTime]
+nextRepeatsAt :: [Day] -> Day -> Maybe Day -> Repeat -> [(LocalTime, LocalTime)]
 nextRepeatsAt xs lower upper rep = concatMap f xs
-    where f d = [LocalTime d (repeatStart rep)]
+    where
+        f d | d >= lower && maybe True (d <=) upper = let
+                t = LocalTime d (repeatStart rep)
+                in [(t,t)]
+            | otherwise = []
 
 getCalendarR :: Handler Html
 getCalendarR = do
@@ -42,43 +47,50 @@ getCalendarR = do
     myCalendars      <- getViewCalendars
     mcal             <- activeCalendar
     (fromDay, toDay) <- getViewTimeframe
-    (events, todos)  <- liftM (map entityVal *** map entityVal) $ queryCalendarObjects myCalendars fromDay toDay
+    (events, todos)  <- liftM (map (second entityVal) *** map (second entityVal))
+                             (queryCalendarObjects myCalendars fromDay toDay)
 
     timezone <- liftIO getCurrentTimeZone -- TODO user supplied?
 
     let dayRange     = [fromDay..toDay]
         numOfObjects = length events + length todos
 
-        -- TODO do something for these spaghetti monsters...
-
         objectWeeks :: WeekView
         objectWeeks = map (second sepDays) $ sepHours $ sortBy (comparing fst)
-            $ f eventRF Left events ++ f todoRF Right todos
+            $ (go eventRF Left events ++ go todoRF Right todos)
             where
-                f rs cs = concatMap (liftA2 zip rs (repeat . cs))
-                eventRF = nextRepeatsAt dayRange <$> eventBegin <*> eventEnd <*> eventRepeat
-                todoRF  = nextRepeatsAt dayRange <$> todoBegin <*> todoEnd <*> todoRepeat
+                go :: (b -> [TimeRange]) -> (b -> Either Event Todo) -> [(Entity Target, b)] -> [Cell]
+                go rs vs = concatMap $ zip <$> rs . snd <*> repeat . second vs
+                eventRF  = nextRepeatsAt dayRange <$> eventBegin <*> eventEnd <*> eventRepeat
+                todoRF   = nextRepeatsAt dayRange <$> todoBegin <*> todoEnd <*> todoRepeat
+
+        -- TODO do something for these spaghetti monsters...
 
         sepHours :: [Cell] -> [(Hour, [Cell])]
-        sepHours xs = L.unfoldr f (0, map getHour xs)
-            where
-                f :: Unfold (Hour, [(Hour, Cell)]) (Hour, [Cell])
-                f (24, _) = Nothing
-                f (h, xs) = Just $ ((h, ) . map snd) *** (h + 1, ) $ L.span ((== h) . fst) xs
-                getHour x@(t,_) = (todHour $ localTimeOfDay t, x)
-
         sepDays :: [Cell] -> [(Day, [Cell])]
-        sepDays xs = L.unfoldr f (fromDay, map getDay xs)
-            where
-                f :: Unfold (Day, [(Day, Cell)]) (Day, [Cell])
-                f (d, xs)
-                    | d > toDay = Nothing
-                    | otherwise = Just $ ((d,) . map snd) *** (addDays 1 d,) $ L.span ((== d) . fst) xs
-                getDay x@(t,_) = (localDay t, x)
+
+        sepHours xs = L.unfoldr f (0, map getHour xs)
+        sepDays  xs = L.unfoldr g (fromDay, map getDay xs)
+
+        f :: Unfold (Hour, [(Hour, Cell)]) (Hour, [Cell])
+        f (24, _) = Nothing
+        f (h, xs) = Just $ ((h, ) . map snd) *** (h + 1, ) $ L.span ((== h) . fst) xs
+
+        g :: Unfold (Day, [(Day, Cell)]) (Day, [Cell])
+        g (d, xs)
+            | d > toDay = Nothing
+            | otherwise = Just $ ((d,) . map snd) *** (addDays 1 d,) $ L.span ((== d) . fst) xs
+
+        getHour x@((t,_),_) = (todHour $ localTimeOfDay t, x)
+        getDay  x@((t,_),_) = (localDay t, x)
         
-        targetParams :: Day -> Hour -> [(Text, Text)]
-        targetParams day hour = let zonedtime =  ZonedTime (LocalTime day $ TimeOfDay hour 0 0) timezone
-                                    in [("at", T.pack $ show zonedtime)]
+    let targetParams :: Day -> Hour -> [(Text, Text)]
+        targetParams day hour = let
+            zonedtime = ZonedTime (LocalTime day $ TimeOfDay hour 0 0) timezone
+            in [("at", T.pack $ show zonedtime)]
+
+        getType (Left _) = "event" :: Html
+        getType (Right _) = "todo"
 
     defaultLayout $ do
         setTitle "Calendar"
@@ -108,11 +120,10 @@ newCalendarWidget = do
 
 -- * Time helpers
 
-dayDefault :: MonadIO m => Maybe Day -> m Day
+dayDefault :: Maybe Day -> Handler Day
 dayDefault mday = case mday of
         Just day -> return day
-        -- FIXME users most likely expect zoned time..
-        Nothing  -> liftM utctDay (liftIO getCurrentTime)
+        Nothing  -> liftM (localDay . zonedTimeToLocalTime) lookupTimeAt
 
 lookupTimeAt :: Handler ZonedTime
 lookupTimeAt = do
@@ -133,7 +144,11 @@ days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ]
 myLocale :: TimeLocale
 myLocale = defaultTimeLocale -- TODO finnish hacks
 
-formatWeekday = formatTime myLocale "%A"
+formatWeekday :: FormatTime t => t -> String
+formatWeekday = formatTime myLocale "%d.%m %a"
+
+cellTimeFormat :: FormatTime t => t -> String
+cellTimeFormat = formatTime myLocale "%H:%M"
 
 -- * Targets
 
@@ -302,12 +317,14 @@ weekDaysField = checkMMap (return . f) unWeekly $ multiSelectFieldList $ zip day
 
 myDayField :: FieldSettings App -> Maybe (Maybe Day) -> AForm Handler (Maybe Day)
 myDayField opts mday = formToAForm $ do
-    (r, v) <- mopt dayField opts . Just . Just =<< dayDefault (join mday)
+    day <- lift $ dayDefault (join mday)
+    (r, v) <- mopt dayField opts . Just $ Just day
     return (r, [v])
 
 myDayFieldReq :: FieldSettings App -> Maybe Day -> AForm Handler Day
 myDayFieldReq opts mday = formToAForm $ do
-    (r, v) <- mreq dayField opts . Just =<< dayDefault mday
+    day <- lift $ dayDefault mday
+    (r, v) <- mreq dayField opts $ Just day
     return (r, [v])
 
 repeatForm :: Maybe Repeat -> AForm Handler Repeat
