@@ -14,7 +14,6 @@ import Network.HTTP.Conduit (Manager)
 import qualified Settings
 import Settings.Development (development)
 import qualified Database.Persist
-import qualified Database.Esqueleto as E
 import Database.Persist.Sql (SqlPersistT)
 import Settings.StaticFiles
 import Settings (widgetFile, Extra (..))
@@ -168,5 +167,7 @@ navigation = $(widgetFile "navigation")
 
 calendars :: Widget
 calendars = do
-    cals <- liftHandlerT queryCalendarInfo
+    CalendarInfo cals <- liftHandlerT queryCalendarInfo
+    let activate   k = [("activate", toPathPiece k)]
+        deactivate k = [("deactivate", toPathPiece k)]
     $(widgetFile "calendarlisting")

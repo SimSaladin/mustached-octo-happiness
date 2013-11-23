@@ -1,7 +1,13 @@
 $if null cals
    <i>(empty)
 $else
-   <ul>
-      $forall (Entity _ c, E.Value n) <- cals
-         <li>#{calendarName c} #
-            <i .label .label-blue .label-small>#{show n}
+   $forall (Entity k c, act, n) <- cals
+      <p>
+         <span .btn-group>
+            $if act
+               <a .btn .btn-small .btn-active .btn-#{calendarColor c}>#{show n}
+               <a .btn .btn-small href=@?{(CalendarSettingsR, deactivate k)}>Piilota
+            $else
+               <a .btn .btn-small .btn-#{calendarColor c}>#{show n}
+               <a .btn .btn-small href=@?{(CalendarSettingsR, activate k)}>Näytä
+         <b>#{calendarName c}

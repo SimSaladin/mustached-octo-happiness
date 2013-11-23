@@ -50,6 +50,8 @@ getCalendarR = do
     (events, todos)  <- liftM (map (second entityVal) *** map (second entityVal))
                              (queryCalendarObjects myCalendars fromDay toDay)
 
+    notes <- queryCalendarNotes myCalendars
+
     timezone <- liftIO getCurrentTimeZone -- TODO user supplied?
 
     let dayRange     = [fromDay..toDay]
@@ -191,6 +193,16 @@ getTargetTextR = undefined
 postTargetSendR :: TargetId -> Handler Html
 postTargetSendR = undefined
 
+noteFormStandalone :: CalendarId -> Widget
+noteFormStandalone cid = do
+    ((_,formw), enctype) <- liftHandlerT $ runFormPost . noteForm Nothing =<< requireAuthId
+    [whamlet|
+<form .forms .forms-basic .forms-90 method=post action=@{TargetR cid TargetTodo} enctype=#{enctype}>
+    ^{formw}
+    <p>
+        <input .btn.btn-green.unit-90 type=submit value="Lisää muistiinpano">
+|]
+
 -- ** Helpers
 
 targetPostHelper :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
@@ -221,12 +233,12 @@ runTargetForm ival theForm = runFormPost . theForm ival =<< requireAuthId
 layoutNote :: TargetFormRes Note -> Handler Html
 layoutEvent :: TargetFormRes Event -> Handler Html
 layoutTodo :: TargetFormRes Todo -> Handler Html
-layoutNote  = targetLayout "muistiinpano"
-layoutEvent = targetLayout "tapahtuma"
-layoutTodo  = targetLayout "to-do"
+layoutNote  = targetLayout "muistiinpano" "green"
+layoutEvent = targetLayout "tapahtuma" "blue"
+layoutTodo  = targetLayout "tehtävä" "yellow"
 
-targetLayout :: Html -> TargetFormRes a -> Handler Html
-targetLayout what ((res, formw), enctype) = 
+targetLayout :: Html -> Html -> TargetFormRes a -> Handler Html
+targetLayout what col ((res, formw), enctype) = 
     defaultLayout $ do
         setTitle $ "Uusi " <> what
         $(widgetFile "newtarget")

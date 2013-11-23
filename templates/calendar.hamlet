@@ -1,22 +1,32 @@
 $maybe cal <- mcal
  <div .toright>
-   Yhteensä #{numOfObjects} objektia näkyvissä.
+   <h2>Muistiinpanot
    <section .notes>
-       <h2>Muistiinpanot
-       <a href=@{TargetR cal TargetNote}>Uusi muistiinpano
-       ...
+       $case notes
+         $of []
+          <p>
+            <i>Tyhjä! Voit luoda muistiinpanon alla.
+         $of xs
+          $forall (Entity k t, Entity _ note) <- xs
+            <a href=@{TargetThisR k}> #{targetName t}
+            <p>#{noteContent note}
+       <hr>
+       ^{noteFormStandalone cal}
+
+    <h2>Tehtävät
     <section .todos>
-       <h2>To-do
-       ...
+       <ul>
+          $forall (Entity k t, todo) <- todos
+            <li>
+               <a href=@{TargetThisR k}>#{targetName t}
+
  <section .events>
   <table>
-
    <thead .days>
       <tr>
          <th>&nbsp;
          $forall view <- map formatWeekday dayRange
             <th>#{view}
-
    <tbody>
      $forall (hour, hourViews) <- objectWeeks
        <tr>
@@ -35,7 +45,19 @@ $maybe cal <- mcal
                     $of Left event
                     $of Right todo
                        todo
+  <div .bottom>
+   <span .pull-right>Näytetään #{numOfObjects} kalenteriobjektia.
+   <p>
+      <span .btn-group>
+           <a.btn.btn-blue   href=@{TargetR cal TargetEvent}>Tapahtuma
+           <a.btn.btn-yellow href=@{TargetR cal TargetTodo}>Tehtävä
+           <a.btn.btn-green  href=@{TargetR cal TargetNote}>Muistiinpano
+   <p>
+      <span .btn-group>
+         <a .btn .disabled>Viikko N-1
+         <a .btn .disabled>Viikko N+1
   <div .filler>
+
 $nothing
    <div .units-row>
       <div .unit-centered .unit-60>

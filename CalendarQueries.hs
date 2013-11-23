@@ -16,22 +16,80 @@ import Model
 
 -- * Calendar
 
+insertCalendar :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site, YesodAuth site, AuthId site ~ UserId)
+               => Calendar -> HandlerT site IO ()
+insertCalendar cal = runDB (insert cal)
+    >>= setActiveCalendar >> updateViewCalendars >> return ()
+
+-- * Info
+
 -- | Calendar info wrapper. Memoized.
 newtype CalendarInfo = CalendarInfo
-                       { unCalendarInfo :: [(Entity Calendar, Value Int)] }
-                       deriving (Typeable)
+                       { unCalendarInfo :: [(Entity Calendar, Bool, Int)] -- ^ Calendar, is active, num of entries
+                       } deriving (Typeable)
 
 queryCalendarInfo :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site, YesodAuth site, AuthId site ~ UserId)
-                  => HandlerT site IO [(Entity Calendar, Value Int)]
+                  => HandlerT site IO CalendarInfo
 queryCalendarInfo = do
     uid <- requireAuthId
-    fmap unCalendarInfo . cached . fmap CalendarInfo .  runDB . select $
-        from $ \(c `LeftOuterJoin` mt) -> do
+    xs  <- getViewCalendars
+    let f (ent, Value n) = (ent, entityKey ent `elem` xs, n)
+
+    cached . runDB . fmap (CalendarInfo . map f) . select . from $
+        \(c `LeftOuterJoin` mt) -> do
             on      $ just (c ^. CalendarId) ==. (mt ?. CalTargetCalendar)
             groupBy $ c ^. CalendarId
             where_  $ c ^. CalendarOwner ==. val uid
             orderBy [asc $ c ^. CalendarName]
             return (c, count $ mt ?. CalTargetId)
+
+getViewCalendars :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site, YesodAuth site, AuthId site ~ UserId)
+                 => HandlerT site IO [CalendarId]
+getViewCalendars = do
+        mcals <- lookupSession "active_calendars"
+        case mcals of
+            Just cals -> return $ read $ T.unpack cals
+            Nothing   -> updateViewCalendars
+
+updateViewCalendars :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site, YesodAuth site, AuthId site ~ UserId)
+                    => HandlerT site IO [CalendarId]
+updateViewCalendars = do
+    uid <- requireAuthId
+    cals <- liftM (map unValue) . runDB . select . from $ \c -> do
+        where_ $ c ^. CalendarOwner ==. val uid
+        orderBy [ asc $ c ^. CalendarId ]
+        return $ c ^. CalendarId
+
+    setSession "active_calendars" (T.pack $ show cals)
+    return cals
+    where
+        unValue (Value x) = x
+
+-- * Active one
+
+-- | Lookup active calendar. In most cases only looks up the session key
+-- "calendar". Result is Nothing if user has no calendars
+activeCalendar :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site, YesodAuth site, AuthId site ~ UserId)
+               => HandlerT site IO (Maybe CalendarId)
+activeCalendar =
+        lookupSession "calendar" >>= maybe defcal (return . Just . read . T.unpack)
+    where
+        -- just select first calendar id.
+        defcal = do
+            uid <- requireAuthId
+            xs <- runDB $ select $ from $ \c -> do
+                where_ $ c ^.CalendarOwner ==. val uid
+                orderBy [asc $ c ^. CalendarId]
+                return (c ^. CalendarId)
+            case xs of
+                (Value x : _) -> setActiveCalendar x >> return (Just x)
+                _             -> return Nothing
+
+setActiveCalendar :: CalendarId -> HandlerT site IO ()
+setActiveCalendar = setSession "calendar" . T.pack . show
+    
+
+-- * Target
 
 queryCalendarObjects :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site, YesodAuth site, AuthId site ~ UserId)
                      => [CalendarId] -- ^ Calendars to query
@@ -41,7 +99,7 @@ queryCalendarObjects :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend si
 queryCalendarObjects calendars begin end =
         runDB $ liftM2 (,) queryEvents queryTodos
     where
-        queryEvents = select $ from $ \(ct `LeftOuterJoin` target `LeftOuterJoin` event) -> do
+        queryEvents = select $ from $ \(ct `RightOuterJoin` target `RightOuterJoin` event) -> do
             on $ target ^. TargetId ==. event ^. EventTarget
             on $ target ^. TargetId ==. ct ^. CalTargetTarget
             where_ $ ct ^. CalTargetCalendar `in_` valList calendars
@@ -49,7 +107,7 @@ queryCalendarObjects calendars begin end =
             where_ $ event ^. EventEnd   <=. just (val end)
             return (target, event)
 
-        queryTodos = select $ from $ \(ct `LeftOuterJoin` target `LeftOuterJoin` todo) -> do
+        queryTodos = select $ from $ \(ct `RightOuterJoin` target `RightOuterJoin` todo) -> do
             on $ target ^. TargetId ==. todo ^. TodoTarget
             on $ target ^. TargetId ==. ct ^. CalTargetTarget
             where_ $ ct ^. CalTargetCalendar `in_` valList calendars
@@ -57,48 +115,15 @@ queryCalendarObjects calendars begin end =
             where_ $ todo ^. TodoEnd   <=. just (val end)
             return (target, todo)
 
-insertCalendar :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site)
-               => Calendar -> HandlerT site IO ()
-insertCalendar cal = runDB (insert cal) >>= setActiveCalendar
-
--- | Lookup active calendar. In most cases only looks up the session key
--- "calendar". Result is Nothing if user has no calendars
-activeCalendar :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site)
-               => HandlerT site IO (Maybe CalendarId)
-activeCalendar =
-        lookupSession "calendar" >>= maybe defcal (return . Just . read . T.unpack)
-    where
-        defcal = do
-            xs <- runDB $ select $ from $ \c -> do
-                orderBy [asc $ c ^. CalendarId]
-                return (c ^. CalendarId)
-            case xs of
-                (Value x : _) -> setActiveCalendar x >> return (Just x)
-                _             -> return Nothing
-
-setActiveCalendar :: CalendarId -> HandlerT site IO ()
-setActiveCalendar = setSession "calendar" . T.pack . show
-
--- getActiveCalendars :: HandlerT site
-getViewCalendars = do
-        mcals <- lookupSession "active_calendars"
-        case mcals of
-            Just cals -> return $ read $ T.unpack cals
-            Nothing   -> do
-                uid <- requireAuthId
-
-                cals <- liftM (map unValue) $ runDB $ select $ from $ \c -> do
-                    where_  $ c ^. CalendarOwner ==. val uid
-                    orderBy [ asc $ c ^. CalendarId ]
-                    return $ c ^. CalendarId
-
-                setSession "active_calendars" (T.pack $ show cals)
-                return cals
-    where
-        unValue (Value x) = x
-    
-
--- * Target
+queryCalendarNotes :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site)
+                   => [CalendarId] -> HandlerT site IO [ (Entity Target, Entity Note) ]
+queryCalendarNotes calendars = runDB $
+    select $ from $ \(ct `RightOuterJoin` target `RightOuterJoin` note) -> do
+        on $ target ^. TargetId ==. note ^. NoteTarget
+        on $ target ^. TargetId ==. ct ^. CalTargetTarget
+        where_ $ ct ^. CalTargetCalendar `in_` valList calendars
+        orderBy [ asc $ note ^. NoteTarget ]
+        return (target, note)
 
 -- | Create a new target given values.
 queryAddTarget :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site,
