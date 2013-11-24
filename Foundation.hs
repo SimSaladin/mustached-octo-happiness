@@ -24,6 +24,7 @@ import System.Log.FastLogger (Logger)
 
 import CalendarTypes
 import CalendarQueries
+import Utils
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -145,7 +146,7 @@ instance HashDBUser User where
             user { userSalt = Just salt, userPassword = Just pass }
 
 instance RenderMessage App FormMessage where
-    renderMessage _ _ = defaultFormMessage
+    renderMessage _ _ = finnishFormMessage
 
 
 -- * Common views

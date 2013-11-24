@@ -1,5 +1,10 @@
-<form .forms .forms-columnar method=post action=@{CalendarSettingsR}>
+<form .forms .forms-columnar method=post action=@{CalendarSettingsR} enctype=#{enctype}>
    <fieldset>
+      $case res
+         $of FormFailure _
+            <span .error>Lomakkeessa havaittiin virheitä. Ole hyvä ja korjaa #
+               virheelliset kohdat.
+         $of _
       <legend>Uusi kalenteri
       ^{w}
       <p>

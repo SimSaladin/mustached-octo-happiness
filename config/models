@@ -27,7 +27,7 @@ Todo
     repeat Repeat
     begin Day
     end Day Maybe
-    alarm Alarm
+    alarm Alarm Maybe
     urgency Urgency
     target TargetId
     UniqueTodo target

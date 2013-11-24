@@ -51,7 +51,7 @@ postCalendarSettingsR = do
 
 newCalendarWidget :: Widget
 newCalendarWidget = do
-    ((_, w), _) <- liftHandlerT $ runFormPost newCalendarForm
+    ((res, w), enctype) <- liftHandlerT $ runFormPost newCalendarForm
     $(widgetFile "calendarWidgetAdd")
 
 -- ** Read
@@ -347,7 +347,7 @@ newCalendarForm = renderKube $ Calendar
     <$> lift requireAuthId
     <*> areq textField "Nimi" Nothing
     <*> aopt textField "Kuvaus" Nothing
-    <*> areq textField "Väri" Nothing
+    <*> areq colorField "Väri" (Just "green")
     <*> areq checkBoxField "Julkinen" Nothing
     <*> areq checkBoxField "Julkisesti muokattava" Nothing
 
@@ -363,7 +363,7 @@ eventForm = calTargetForm' $ \me -> (\f t r -> Event r f t)
     <*> myDayField         "Päivään"        (eventEnd       <$> me)
     <*> repeatForm                          (eventRepeat    <$> me)
     <*> aopt textField     "Paikka"         (eventPlace     <$> me)
-    <*> areq urgencyField  "Tärkeys" (Just $ maybe (Urgency 2) eventUrgency me)
+    <*> areq urgencyField  "Tärkeys"        (Just $ maybe (Urgency 2) eventUrgency me)
     <*> aopt alarmField    "Muistutus"      (eventAlarm     <$> me)
     <*> (fromMaybe [] <$> aopt attendeeField "Osallistujat"   (Just $ eventAttendees <$> me))
     <*> aopt textareaField "Kommentit"      (eventComment   <$> me)
@@ -375,12 +375,12 @@ eventForm = calTargetForm' $ \me -> (\f t r -> Event r f t)
 
 todoForm :: CalTargetForm Todo
 todoForm = calTargetForm' $ \mt -> Todo
-    <$> areq checkBoxField "Valmis"    (todoDone    <$> mt)
+    <$> maybe (pure False) (areq checkBoxField "Valmis" . Just . todoDone) mt
     <*> repeatForm                     (todoRepeat  <$> mt)
     <*> myDayFieldReq      "Aloitus"   (todoBegin   <$> mt)
     <*> myDayField         "Lopetus"   (todoEnd     <$> mt)
-    <*> areq alarmField    "Muistutus" (todoAlarm   <$> mt)
-    <*> areq urgencyField  "Tärkeys"   (todoUrgency <$> mt)
+    <*> aopt alarmField    "Muistutus" (todoAlarm   <$> mt)
+    <*> areq urgencyField  "Tärkeys"   (Just $ maybe (Urgency 2) todoUrgency mt)
 
 -- *** Helpers
 
@@ -396,8 +396,9 @@ targetForm uid = Target
 -- ** Fields
 
 alarmField :: Field Handler Alarm
-alarmField = radioFieldList $ map (\x -> (x <> " min", Alarm x))
-        ["10", "20", "30", "45", "60", "120"]
+alarmField = radioFieldList $
+    ("10 min. ennen", Alarm "10") : map (liftA2 (,) (<> " min") Alarm)
+                                    ["20", "30", "45", "60", "120"]
 
 urgencyField :: Field Handler Urgency
 urgencyField = radioFieldList
@@ -428,9 +429,10 @@ repeatForm :: Maybe Repeat -> AForm Handler Repeat
 repeatForm info = formToAForm $ do
     (wd, sd, ed) <- case info of
         Nothing  -> do
-            zd <- lift lookupTimeAt
-            let tod = localTimeOfDay $ zonedTimeToLocalTime zd
-            return (Weekly [1..7], tod, tod) -- TODO _3 +1h
+            tod <- liftM (localTimeOfDay . zonedTimeToLocalTime) $ lift lookupTimeAt
+            let tod'  = TimeOfDay (todHour tod) (todMin tod) 0
+                tod'' = TimeOfDay (todHour tod + 1) (todMin tod) 0
+            return (Weekly [1..7], tod', tod'')
         Just rep ->
             return $ liftA3 (,,) repeatWhen repeatStart repeatEnd $ rep
 
@@ -444,6 +446,17 @@ repeatForm info = formToAForm $ do
             , fvRequired = True
             , fvTooltip  = Nothing
             , fvInput    = [whamlet|
-<p>^{fvInput sv} - ^{fvInput ev}
+^{fvInput sv} - ^{fvInput ev}
 |] }
-    return (Repeat <$> wr <*> sr <*> er, [wv, myView])
+    -- TODO implement weekday repeat?
+    return (Repeat <$> wr <*> sr <*> er, [ {- wv, -} myView])
+
+colorField :: Field Handler Text
+colorField = radioFieldList
+    [("Vihreä" :: Text, "green")
+    ,("Sininen",    "blue")
+    ,("Musta",      "black")
+    ,("Punainen",   "red")
+    ,("Oranssi",    "orange")
+    ,("Keltainen",  "yellow") ]
+

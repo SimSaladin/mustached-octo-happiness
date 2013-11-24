@@ -2,6 +2,8 @@ module Utils where
 
 import Prelude
 import Data.Text (Text)
+import Data.Monoid (mappend)
+import Yesod.Form
 import qualified Data.Text as T
 import Yesod
 
@@ -20,7 +22,7 @@ $newline never
 \#{fragment}
 $forall view <- views
  <p>
-   <label for=#{fvId view}>#{fvLabel view}
+   <label for=#{fvId view} :fvRequired view:.required>#{fvLabel view}
       $maybe err <- fvErrors view
          <span .error>#{err}
    ^{fvInput view}
@@ -43,3 +45,23 @@ passwordConfirmField r = check (f r) passwordField
         f (FormSuccess p) pc | p == pc = Right p
                              | otherwise = Left ("Salasanat eivät täsmää" :: Text)
         f _ _ = Left "Salasana puuttuu"
+
+finnishFormMessage :: FormMessage -> Text
+finnishFormMessage (MsgInvalidInteger t) = "Kelpaamaton kokonaisluku: " `mappend` t
+finnishFormMessage (MsgInvalidNumber t) = "Kelpaamaton luku: " `mappend` t
+finnishFormMessage (MsgInvalidEntry t) = "Kelpaamaton syöte: " `mappend` t
+finnishFormMessage MsgInvalidTimeFormat = "Kelpaamaton aika, formaatti on HH:MM[:SS]"
+finnishFormMessage MsgInvalidDay = "Kelpaamaton päivä, formaatti on VVVV-KK-PP"
+finnishFormMessage (MsgInvalidUrl t) = "Kelpaamaton URL: " `mappend` t
+finnishFormMessage (MsgInvalidEmail t) = "Kelpaamaton sähköpostiosoite: " `mappend` t
+finnishFormMessage (MsgInvalidHour t) = "Kelpaamaton tunti: " `mappend` t
+finnishFormMessage (MsgInvalidMinute t) = "Kelpaamaton minuutti: " `mappend` t
+finnishFormMessage (MsgInvalidSecond t) = "Kelpaamaton sekunti: " `mappend` t
+finnishFormMessage MsgCsrfWarning = "Ole hyvä ja vahvista lomakkeen lähetys suojauksena CSRF-hyökkäyksiä vastaan."
+finnishFormMessage MsgValueRequired = "Arvo vaaditaan"
+finnishFormMessage (MsgInputNotFound t) = "Syötettä ei löytynyt: " `mappend` t
+finnishFormMessage MsgSelectNone = "<Tyhjä>"
+finnishFormMessage (MsgInvalidBool t) = "Kelpaamaton totuusarvo: " `mappend` t
+finnishFormMessage MsgBoolYes = "Kyllä"
+finnishFormMessage MsgBoolNo = "Ei"
+finnishFormMessage MsgDelete = "Poista?"

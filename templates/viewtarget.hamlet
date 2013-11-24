@@ -41,7 +41,7 @@
             <p>#{noteContent note}
             <hr>
       <form .pull-right action=@{TargetDeleteR tid} method=post>
-         <input type=submit .btn .btn-orange value="Poista">
+         <input .btn .btn-orange type=submit value="Poista">
       <a .btn .btn href=@{TargetUpdateR tid}>Muokkaa
       <a .btn .btn href=@{TargetTextR tid}>Teksti
       <a .btn .btn .disabled href="javascript:alert('not implemented, sorry.')">Linkki
