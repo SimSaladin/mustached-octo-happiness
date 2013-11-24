@@ -14,7 +14,7 @@ iAssoc.bottom:=6;
 Class.U("Käyttäjä")()();
 Class.C("Kalenteri")()();
 Class.E("Tapahtuma")()();
-Class.T("To-do")()();
+Class.T("Tehtävä")()();
 Class.J("Muistiinpano")()();
 
 leftToRight(30)(E,T,J);

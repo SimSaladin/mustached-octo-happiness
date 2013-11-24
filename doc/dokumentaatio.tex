@@ -15,6 +15,8 @@
 
 \usepackage{pdfpages}
 
+\usepackage{enumitem}
+
 \usepackage[left=2.9cm,right=2.9cm,top=2cm,bottom=2cm]{geometry}
 \usepackage[english,finnish]{babel}
 \usepackage[T1]{fontenc}
@@ -215,7 +217,7 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
          \item[Osallistujat] Henkilöt, joita kohde koskee.
          \item[Tärkeys]  Kuinka tärkeä kohde on (jollain asteikolla).
          \item[Hälytysajat]  Kun kohteesta halutaan muistutus. Esimerkiksi
-            tietty aika ennen tapahtuman alkamisajankohtaa tai to-do:n
+            tietty aika ennen tapahtuman alkamisajankohtaa tai tehtävän
             deadlinea.
       \end{description}
 
@@ -229,7 +231,7 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
       Kohdetyypeille ominaiset muokattavat attribuutit:
       \\(Nämä muistuttavat (hyvin löyhästi) iCalendar-määrittelyä)
       \begin{description}
-         \item[Tapahtuma (VEVENT)] \hfill\\
+         \item[Tapahtuma (Event)] \hfill\\
             Kalenterien tyypillinen ominaisuus on tapahtumien muistaminen ja
             niistä muistuttaminen. Tärkeimmät attribuutit:
             \begin{description}
@@ -239,7 +241,7 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
                   toistuu)?
             \end{description}
 
-         \item[Muistiinpano (VJOURNAL)] \hfill\\
+         \item[Muistiinpano (Note)] \hfill\\
             Muistiinpanot ovat yleiskäyttöisiä
             kohteita.  Niitä voi käyttää esimerkiksi päiväkirjana tai
             mikroblogina. Attribuutit:
@@ -248,8 +250,8 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
                   kenttä. Sisältö voi olla esimerkiksi HTML:ää tai Markdown:ia.
             \end{description}
 
-         \item[To-do (VTODO)] \hfill\\
-            To-do:n voi tehdä mistä tahansa tehtävästä. Attribuutit:
+         \item[Tehtävä (Todo)] \hfill\\
+            Tehtävän voi tehdä mistä tahansa tehtävästä. Attribuutit:
             \begin{description}
                \item[Valmis] Onko \texttt{todo} valmistunut?
                \item[Toistuvuus] Toistuuko tehtävä säännöllisesti, milloin?
@@ -364,11 +366,11 @@ kontakteihin (nimi, sähköposti jne.); käytännössä merkkijonoja.
 \textit{Rikas teksti} on joko paljasta tekstiä, tai
 markdownia.\footnote{Riippuen aikataulusta}
 
-\subsubsection{Tietokohde: To-do}
+\subsubsection{Tietokohde: Tehtävä}
 \begin{tietokohde}
    \multicolumn{3}{|c|}{(Taulukon~\ref{kohteet_kohde} attribuutit)} \\\hline
 
-   Valmis     & Totuusarvo      & Onko to-do jo tehty? \\\hline
+   Valmis     & Totuusarvo      & Onko Tehtävä jo tehty? \\\hline
    Toistuvuus & \textit{Toisto} & Mihin aikaan, miten toistuu? \\\hline
    AlkuPvm    & Päivämäärä      & Mistä alkaen kohde on relevantti? \\\hline
    ViimPvm    & Päivämäärä (V)  & Mistä alkaen kohde on vanhentunut? \\\hline
@@ -416,37 +418,44 @@ käytetään jarjestelmässä \texttt{persistent}-kirjaston avulla, ks. tiedosto
 \clearpage
 
 \section{Järjestelmän yleisrakenne}
-Jrjestelmän pääkomponentit on sijoiteltu hakemistoihin seuraavasti.
-\begin{description}
-   \item[config/] \hfill\\
-      Järjestelmän asetukset. \texttt{postgresql.yml} on tietokantayhteyksille
-      ja \texttt{settings.yml} sisältää yleiset asetukset.  Syntaksina
-      molemmissa YAML.
-   \item[Handler/] \hfill\\
-      Kontrollerit on sijoitettu \texttt{Handler}-kansioon.  kontrollerien
-      URL:it määrätään \texttt{config/routes}-tiedostossa.
-   \item[templates/] \hfill\\
-      Näkymät sijaitsevat templates-kansiossa \texttt{.hamlet} ja
-      \texttt{.lucius}-päätteillä.
-   \item[static/] \hfill\\
-      Staattinen sisältö (kääntövaiheessa).
-   \item[messages/] \hfill\\
-      Yesodin sisäänrakennetun i18n-tuen sanastot.
-\end{description}
+Järjestelmän pääkomponentit on sijoiteltu hakemistoihin seuraavasti.
 
-Lisäksi juuren \texttt{.hs}-tiedostoissa on kontrollerien käyttämä yleinen
-logiikka ja tarvittavat resurssit.
+\newenvironment{descfiles}
+   {\begin{description}[style=multiline,leftmargin=3cm,font=\ttfamily]}
+   {\end{description}}
+
+\begin{descfiles}
+   \item[config/]
+      Järjestelmän asetukset. \texttt{postgresql.yml} on tietokantayhteyksille
+      ja \texttt{settings.yml} sisältää yleiset asetukset.
+      \\Syntaksina molemmissa YAML.
+   \item[Handler/]
+      Kontrollerit on sijoitettu \texttt{Handler}-kansioon.
+      \\Kontrollerien URL:it määrätään \texttt{config/routes}-tiedostossa.
+   \item[templates/]
+      Näkymät sijaitsevat templates-kansiossa \texttt{.hamlet} ja
+      \texttt{.lucius}-\-päätteillä.
+   \item[static/]
+      Staattinen sisältö (kääntövaiheessa).
+   \item[messages/]
+      Yesodin sisäänrakennetun i18n-tuen sanastot.
+   \item[*.hs]
+      Kontrollerien käyttämä yleinen logiikka ja tarvittavat resurssit.
+\end{descfiles}
+
 
 \section{Järjestelmän komponentit}
 
-\begin{description}
+\begin{description}[font=\ttfamily]
    \item[app/main.hs] \hfill\\
-      Itse suoritettavan ohjelma lähdetiedosto (\texttt{main}-funktio).
-   \item[Settings/, Application.hs, Import.hs, Model.hs, Settings.hs] \hfill\\
-      Harvemmin koskemista vaativia tiedostoja, joissa toteutetaan (Yesodille)
-      yleistä kontrollilogiikkaa.
+      Itse suoritettavan ohjelman lähdetiedosto (\texttt{main}-funktio).
+   \item[Application.hs, Settings*, Import.hs, Model.hs] \hfill\\
+      Kehityksessä harvemmin koskemista vaativia tiedostoja, joissa toteutetaan
+      (Yesodille) yleistä kontrollilogiikkaa.
    \item[CalendarTypes.hs] \hfill\\
- Kalentereihin ja kohteisiin liittyvät tyypit.
+      Kalentereihin ja kohteisiin liittyvät tyypit.
+   \item[CalendarQueries.hs] \hfill\\
+      Järjestelmän tärkeimmät tietokantakyselyt sekä liittyvä autentikointi.
    \item[Foundation.hs] \hfill\\
       Järjestelmän keskus. Sisältää mm. autentikointinnin ja navigaatiota.
    \item[mustached-octo-happiness.cabal] \hfill\\
@@ -469,15 +478,76 @@ julkisella kalenterisivulla.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Käyttö}
-\section{Asennustiedot} <++>
-\section{Käynnistys- / käyttöohje} <++>
+\section{Asennustiedot}
+
+\subsection{Esivaatimukset}
+
+Järjestelmän asentamiseen vaaditaan toimiva ja ajantasainen Haskell-ympäristö,
+tai ainakin GHC:n versio 7.4.2 tai uudempi.  Järjestelmä on pakattu yhdeksi
+\emph{cabal}-\-paketiksi. Sen asentaminen lähdekoodista on siis kätevintä
+(uudehkolla) \emph{cabal-install}-ohjelmalla.
+
+Hae lähdekoodi:
+\begin{verbatim}
+git clone http://github.com/SimSaladin/mustached-octo-happiness
+cd mustached-octo-happiness
+\end{verbatim}
+
+\textbf{Huom.} Varmista, että \~/.cabal/bin (tai .cabal-sandbox/bin, jos loit
+hiekkalaatikon) on PATH:issa.
+
+\subsection{Tietokanta}
+
+Asenna ja konfiguroi PostgreSQL.
+\\
+Luo järjestelmälle käyttäjä ja tietokanta.
+\\
+Aseta tietokantaparametrit tiedostoon \texttt{config/postgresql.yml}.
+
+\subsection{Kehityspalvelin}
+
+Ensimmäinen asennus kestää pitkään useiden riippuvuuksien vuoksi (nopealla
+koneella 15min, hitaammalla vielä kauemmin):
+\begin{verbatim}
+cabal install
+\end{verbatim}
+
+\textit{XXX: Binäärit pitänee asentaa käsin ennen ylempää, puhtaalla systeemilla?
+(alex, happy)}
+
+\section{Käynnistys- / käyttöohje}
+
+\subsection{Kehitysympäristö}
+
+Kehityspalvelimen käynnistys:
+\begin{verbatim}
+cabal install # ei ole tarpeen, jos ajoit jo aiemmin
+yesod devel
+\end{verbatim}
+
+Nyt järjestelmä kuuntelee osoitteessa \texttt{http://localhost:3000}, jos kaikki
+meni oikein.
+
+\subsection{Tuotantoasennus}
+
+Tuotantoasennusta varten voi tutustua skriptiin \texttt{script/deploy.sh}.
+Lyhyesti, käännetään cabal-paketti production-lipalla ja kopioidaan binääri ja
+staattiset tiedostot tuotantopalvelimelle.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat}
-Autentikaatiossa browserId, gmail jne. failaavat, jos hashdb:llä joku on
-rekisteröinyt saman spostin.
 
+\section*{Autentikoinnista ja autorisoinnista}
+
+Autentikaoidessa BrowserId, Gmail jne. failaavat, jos hashdb:llä joku on
+rekisteröinyt saman spostin nimimerkiksi.
+
+\section*{Tietokantakyselyistä}
+
+\section*{Ideoita}
 % jatko: ryhmiä, icalendar,
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliography{refs.bib}
 
 \end{document}
