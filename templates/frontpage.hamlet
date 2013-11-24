@@ -1,4 +1,4 @@
-<body .color-secondary>
+<body .bannered .color-secondary>
  <main .color-main .box-wrapped>
     <h1>Mustached Octo Happiness
     <h1 .subheader>Kalenterijärjestelmä

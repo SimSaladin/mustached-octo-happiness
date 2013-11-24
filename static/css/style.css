@@ -38,6 +38,16 @@ aside {
    color:#F2B0FF;
    font-size:1.2em;
 }
+/*
+#navigation ul {
+   list-style:none;
+}
+#navigation {
+   background:#222;
+   color:#EEE;
+}
+*/
+
 .events {
    position:fixed;
    height:100%;
@@ -206,8 +216,7 @@ label.radio {
 label.required {
    color:inherit;
 }
-label.required + *:not(:valid),
-label.required + *:empty {
+label.required + *:invalid, *[required]:invalid {
    background:#D5FCB1;
 }
 label.required:after {

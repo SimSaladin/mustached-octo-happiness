@@ -19,37 +19,25 @@ import Settings.StaticFiles
 import Settings (widgetFile, Extra (..))
 import Model
 import Text.Hamlet (hamletFile)
-import Yesod.Fay
+--import Yesod.Fay
 import System.Log.FastLogger (Logger)
 
 import CalendarTypes
 import CalendarQueries
 import Utils
 
--- | The site argument for your application. This can be a good place to
--- keep settings and values requiring initialization before your application
--- starts running, such as database connections. Every handler will have
--- access to the data present here.
 data App = App
     { settings :: AppConfig DefaultEnv Extra
     , getStatic :: Static -- ^ Settings for static file serving.
     , connPool :: Database.Persist.PersistConfigPool Settings.PersistConf -- ^ Database connection pool.
     , httpManager :: Manager
     , persistConfig :: Settings.PersistConf
-    , fayCommandHandler :: CommandHandler App
+--    , fayCommandHandler :: CommandHandler App
     , appLogger :: Logger
     }
 
--- Set up i18n messages. See the message folder.
 mkMessage "App" "messages" "en"
 
--- This is where we define all of the routes in our application. For a full
--- explanation of the syntax, please see:
--- http://www.yesodweb.com/book/routing-and-handlers
---
--- Note that this is really half the story; in Application.hs, mkYesodDispatch
--- generates the rest of the code. Please see the linked documentation for an
--- explanation for this split.
 mkYesodData "App" $(parseRoutesFile "config/routes")
 
 type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
@@ -57,8 +45,6 @@ type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 instance Yesod App where
     approot = ApprootMaster $ appRoot . settings
 
-    -- Store session data on the client in encrypted cookies,
-    -- default session idle timeout is 120 minutes
     makeSessionBackend _ = fmap Just $ defaultClientSessionBackend
         (120 * 60) -- 120 minutes
         "config/client_session_key.aes"
@@ -101,14 +87,14 @@ instance Yesod App where
 
     makeLogger = return . appLogger
 
-instance YesodJquery App
-instance YesodFay App where
-
-    fayRoute = FaySiteR
-
-    yesodFayCommand render command = do
-        master <- getYesod
-        fayCommandHandler master render command
+--instance YesodJquery App
+--instance YesodFay App where
+--
+--    fayRoute = FaySiteR
+--
+--    yesodFayCommand render command = do
+--        master <- getYesod
+--        fayCommandHandler master render command
 
 -- How to run database actions.
 instance YesodPersist App where

@@ -355,7 +355,7 @@ newCalendarForm = renderKube $ Calendar
 
 noteForm :: CalTargetForm Note
 noteForm = calTargetForm' $ \mn -> Note
-    <$> areq textareaField "Sisältö" (noteContent <$> mn)
+    <$> areq textareaField ("Sisältö"{fsAttrs=[("required","")]}) (noteContent <$> mn)
 
 eventForm :: CalTargetForm Event
 eventForm = calTargetForm' $ \me -> (\f t r -> Event r f t)
@@ -367,11 +367,6 @@ eventForm = calTargetForm' $ \me -> (\f t r -> Event r f t)
     <*> aopt alarmField    "Muistutus"      (eventAlarm     <$> me)
     <*> (fromMaybe [] <$> aopt attendeeField "Osallistujat"   (Just $ eventAttendees <$> me))
     <*> aopt textareaField "Kommentit"      (eventComment   <$> me)
-        where
-            attendeeField = checkMMap
-                -- hmm.. could the ambigous Left value be defaulted by ghc?
-                (return . (Right :: [Text] -> Either Text [Text]) . T.words)
-                T.unwords textField
 
 todoForm :: CalTargetForm Todo
 todoForm = calTargetForm' $ \mt -> Todo
@@ -399,6 +394,12 @@ alarmField :: Field Handler Alarm
 alarmField = radioFieldList $
     ("10 min. ennen", Alarm "10") : map (liftA2 (,) (<> " min") Alarm)
                                     ["20", "30", "45", "60", "120"]
+
+attendeeField :: Field Handler [Text]
+attendeeField = checkMMap
+    -- hmm.. could the ambigous Left value be defaulted by ghc?
+    (return . (Right :: [Text] -> Either Text [Text]) . T.words)
+    T.unwords textField
 
 urgencyField :: Field Handler Urgency
 urgencyField = radioFieldList

@@ -13,12 +13,12 @@ import Yesod.Default.Handlers
 import Network.Wai.Middleware.RequestLogger
 import qualified Database.Persist
 import Network.HTTP.Conduit (newManager, def)
-import Yesod.Fay (getFaySite)
+--import Yesod.Fay (getFaySite)
 import Control.Monad.Logger (runLoggingT)
 import System.IO (stdout)
 import System.Log.FastLogger (mkLogger)
 
-import Handler.Fay
+--import Handler.Fay
 import Handler.FrontPage
 import Handler.Calendar
 
@@ -52,7 +52,7 @@ makeFoundation conf = do
               Database.Persist.applyEnv
     p <- Database.Persist.createPoolConfig (dbconf :: Settings.PersistConf)
     logger <- mkLogger True stdout
-    let foundation = App conf s p manager dbconf onCommand logger
+    let foundation = App conf s p manager dbconf {-onCommand-} logger
 
     -- Perform database migration using our application's logging settings.
     runLoggingT
