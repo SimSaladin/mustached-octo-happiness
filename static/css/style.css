@@ -64,10 +64,16 @@ aside {
 }
 
 /*{{{ Colors */
-a { text-decoration:none }
+a { 
+   color:#1F06DB;
+   text-decoration:none;
+}
+a:hover, a:active {
+   color:#E40002;
+}
 .color-main {
-   background:#d1c0dc;
-   color:#9a40a5;
+   background:#D7C7EC;
+   color:#353535;
 }
 .color-secondary {
    background:#8c1a65;
@@ -122,7 +128,7 @@ input[type="password"] {
    color:#5F5F5F;
 }
 .events {
-   background:#C5C524;
+   background:#D7C7EC;
 }
 .events .days th:first-child { width:2%; }
 .events tbody { 
@@ -130,14 +136,6 @@ input[type="password"] {
 }
 .events, .events thead {
    min-width:45em;
-}
-.filler {
-   position:absolute;
-   width:100%;
-   bottom:0;
-   top:2em;
-   z-index:-1;
-   background:#d1c0dc;
 }
 .events tbody td:nth-child(even) { background:#CCB7DF; }
 .events tbody td:nth-child(odd) { background:#AA98C9; }
@@ -163,15 +161,14 @@ input[type="password"] {
 .cact {
    position:absolute;
    right:0;
-   opacity:0.1;
+   opacity:0.01;
    font-weight:bolder;
 }
+.cact-example { opacity:1; }
 td:hover .cact { opacity:1; }
-.cact:first-child { top:0; }
-.cact:nth-child(n+2) {
-   top:0;
-   right:4em;
-}
+.cact { top:0.2em; }
+.cact { right:0.2em; }
+.cact:nth-child(n+2) { right:3em; }
 
 
 /* content */
@@ -195,3 +192,26 @@ td:hover .cact { opacity:1; }
 .forms-90 input[type="date"],
 .forms-90 input[type="submit"],
 .forms-90 textarea { width:90%; }
+
+/* Let's get this party started */
+::-webkit-scrollbar {
+    width: 12px;
+}
+ 
+/* Track */
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 2px rgba(0,0,0,0.3); 
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+    background: rgba(186, 130, 194, 0.8); 
+    -webkit-box-shadow: none; /// inset 0 0 6px rgba(0,0,0,0.5); 
+}
+::-webkit-scrollbar-thumb:window-inactive {
+   background: rgba(186, 130, 194, 0.9); 
+}

@@ -46,17 +46,21 @@ $maybe cal <- mcal
                     $of Right todo
                        todo
   <div .bottom>
-   <span .pull-right>Näytetään #{numOfObjects} kalenteriobjektia.
+   <span .pull-right>
+      Uusi tapahtuma
+      <sup .cact-example .label.label-small.label-blue>E
+      Uusi tehtävä
+      <sup .cact-example .label.label-small.label-red>T
+      <br>
+      <i>Näytetään #{numOfObjects} kalenteriobjektia.
    <p>
       <span .btn-group>
            <a.btn.btn-blue   href=@{TargetR cal TargetEvent}>Tapahtuma
            <a.btn.btn-yellow href=@{TargetR cal TargetTodo}>Tehtävä
            <a.btn.btn-green  href=@{TargetR cal TargetNote}>Muistiinpano
-   <p>
       <span .btn-group>
          <a .btn .disabled>Viikko N-1
          <a .btn .disabled>Viikko N+1
-  <div .filler>
 
 $nothing
    <div .units-row>

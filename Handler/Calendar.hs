@@ -76,13 +76,12 @@ getCalendarR = do
         sepDays  xs = L.unfoldr g (fromDay, map getDay xs)
 
         f :: Unfold (Hour, [(Hour, Cell)]) (Hour, [Cell])
-        f (24, _) = Nothing
-        f (h, xs) = Just $ ((h, ) . map snd) *** (h + 1, ) $ L.span ((== h) . fst) xs
-
         g :: Unfold (Day, [(Day, Cell)]) (Day, [Cell])
+        f (24, _)       = Nothing
+        f (h, xs)       = Just $ (h,) . map snd *** (h + 1,) $ L.span ((== h) . fst) xs
         g (d, xs)
             | d > toDay = Nothing
-            | otherwise = Just $ ((d,) . map snd) *** (addDays 1 d,) $ L.span ((== d) . fst) xs
+            | otherwise = Just $ (d,) . map snd *** (addDays 1 d,) $ L.span ((== d) . fst) xs
 
         getHour x@((t,_),_) = (todHour $ localTimeOfDay t, x)
         getDay  x@((t,_),_) = (localDay t, x)
@@ -92,7 +91,7 @@ getCalendarR = do
             zonedtime = ZonedTime (LocalTime day $ TimeOfDay hour 0 0) timezone
             in [("at", T.pack $ show zonedtime)]
 
-        getType (Left _) = "event" :: Html
+        getType (Left _)  = "event" :: Html
         getType (Right _) = "todo"
 
     defaultLayout $ do
