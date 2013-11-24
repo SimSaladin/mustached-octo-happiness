@@ -208,7 +208,7 @@ queryDeleteTarget tid = do
 
     runDB $ do del $ at . (^. CalTargetTarget)
                del $ at . (^. NoteTarget)
-               del $ at . (^. EventTarget)
+               del $ at . (^. TodoTarget)
                del $ at . (^. EventTarget)
                del $ at . (^. TargetId)
     where
