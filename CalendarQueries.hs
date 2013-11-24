@@ -8,7 +8,7 @@ import Control.Applicative
 import Data.Time
 import Data.Typeable        (Typeable)
 import Database.Esqueleto
-import Yesod                (HandlerT, runDB, cached, lookupSession, setSession, getBy404, notFound)
+import Yesod                (HandlerT, runDB, cached, lookupSession, setSession, get404, getBy404, notFound, permissionDenied)
 import Yesod.Auth           (requireAuthId, YesodAuth, AuthId)
 import Yesod.Persist.Core   (YesodPersist, YesodPersistBackend)
 import qualified Data.Text as T
@@ -106,16 +106,22 @@ queryCalendarObjects calendars begin end =
         runDB $ liftM2 (,) queryEvents queryTodos
     where
         queryEvents = select $ from $ \(ct `InnerJoin` target `InnerJoin` event) -> do
-            on $ target ^. TargetId ==. event ^. EventTarget
-            on $ target ^. TargetId ==. ct ^. CalTargetTarget
+
+            let onTid = on . (==. target ^. TargetId)
+            onTid (event ^. EventTarget)
+            onTid (ct    ^. CalTargetTarget)
+
             where_ $ ct ^. CalTargetCalendar `in_` valList calendars
             where_ $ event ^. EventBegin >=. val begin      -- event-specific
             where_ $ event ^. EventEnd   <=. just (val end)
             return (target, event)
 
         queryTodos = select $ from $ \(ct `InnerJoin` target `InnerJoin` todo) -> do
-            on $ target ^. TargetId ==. todo ^. TodoTarget
-            on $ target ^. TargetId ==. ct ^. CalTargetTarget
+
+            let onTid = on . (==. target ^. TargetId)
+            onTid (todo ^. TodoTarget)
+            onTid (ct   ^. CalTargetTarget)
+
             where_ $ ct ^. CalTargetCalendar `in_` valList calendars
             where_ $ todo ^. TodoBegin >=. val begin        -- todo-specific
             where_ $ todo ^. TodoEnd   <=. just (val end)
@@ -124,9 +130,12 @@ queryCalendarObjects calendars begin end =
 queryCalendarNotes :: [CalendarId] -> QueryHandler [ (Entity Target, Entity Note) ]
 queryCalendarNotes calendars = runDB $
     select $ from $ \(ct `InnerJoin` target `InnerJoin` note) -> do
-        on $ target ^. TargetId ==. note ^. NoteTarget
-        on $ target ^. TargetId ==. ct ^. CalTargetTarget
-        where_ $ ct ^. CalTargetCalendar `in_` valList calendars
+
+        let onTid = on . (==. target ^. TargetId)
+        onTid  (note ^. NoteTarget)
+        onTid  (ct   ^. CalTargetTarget)
+
+        where_ (ct   ^. CalTargetCalendar `in_` valList calendars)
         orderBy [ asc $ note ^. NoteTarget ]
         return (target, note)
 
@@ -157,14 +166,21 @@ queryTarget' :: TargetId -> QueryHandler
 queryTarget' tid = runDB $ do
     ts <- select . from $
         \(target `LeftOuterJoin` event `LeftOuterJoin` note `LeftOuterJoin` todo) -> do
-            on $ todo  ?. TodoTarget  ==. just (target ^. TargetId)
-            on $ note  ?. NoteTarget  ==. just (target ^. TargetId)
-            on $ event ?. EventTarget ==. just (target ^. TargetId)
+
+            let onTid = on . (==. just (target ^. TargetId))
+
+            onTid $ todo  ?. TodoTarget
+            onTid $ note  ?. NoteTarget
+            onTid $ event ?. EventTarget
+
             where_ $ target ^. TargetId ==. val tid
             return (target, note, todo, event)
-    cs <- select . from $ \ct -> do
+
+    cs <- select . from $
+        \ct -> do
             where_ (ct ^. CalTargetTarget ==. val tid)
             return (ct ^. CalTargetCalendar)
+
     return (ts, map unValue cs)
 
 -- ** Insert
@@ -175,6 +191,7 @@ queryAddTarget :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
                -> (Target, TargetId -> a)
                -> QueryHandler CalTargetId
 queryAddTarget cid (t,f) = runDB $
+    -- insert target, then specialization, finally associate to the calendar
     insert t >>= liftA2 (>>) (insert . f) (insert . CalTarget cid)
 
 -- ** Update (replace)
@@ -185,39 +202,35 @@ queryModifyTarget :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
                   -> (TargetId -> Unique a)
                   -> a
                   -> QueryHandler ()
-queryModifyTarget targ uniq new = do
-    -- NOTE This could be optimized to one query, with the cost of
-    -- elegance: list out all fields and values in a "update...where
-    -- target = TID"  query. Magnitudes as many lines though.
-
-    _uid <- requireAuthId
-
-    -- FIXME add access control
-    runDB $ do
-        Entity oid _ <- getBy404 $ uniq $ targ new
-        replace oid new
+queryModifyTarget toTid uniq new = let
+    tid = toTid new
+    in do runDB (get404 tid) >>= guardTarget "Ei oikeutta muokata toisen kohdetta."
+          runDB $ getBy404 (uniq tid) >>= flip replace new . entityKey
 
 -- ** Delete
 
 -- | Delete a target and it's instances from calendars.
 queryDeleteTarget :: TargetId -> QueryHandler ()
 queryDeleteTarget tid = do
-    _uid <- requireAuthId
-
-    -- FIXME check it is ours.. 
-
-    runDB $ do del $ at . (^. CalTargetTarget)
-               del $ at . (^. NoteTarget)
-               del $ at . (^. TodoTarget)
-               del $ at . (^. EventTarget)
-               del $ at . (^. TargetId)
+    runDB (get404 tid) >>= guardTarget "Ei oikeutta poistaa toisen kohdetta."
+    runDB $ del CalTargetTarget
+          >> del NoteTarget >> del TodoTarget >> del EventTarget
+          >> del TargetId
     where
-        -- combinators <3, haskell's monomorphism </3
-        del = delete . from 
+        del = delete . from . (at . ) . flip (^.)
         at  = where_ . (==. val tid)
+
+        -- combinators <3, haskell's monomorphism </3; above won't work without this general sig.
+        at :: Esqueleto query expr back => expr (Value TargetId) -> query ()
 
 
 -- * Helpers
+
+guardTarget :: T.Text -> Target -> QueryHandler ()
+guardTarget msg t = do uid <- requireAuthId
+                       if (targetOwner t /= uid)
+                           then permissionDenied msg
+                           else return ()
 
 unValue :: Value a -> a
 unValue (Value x) = x

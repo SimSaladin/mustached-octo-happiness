@@ -1,6 +1,10 @@
 body {
    min-width:77em; // nav 12em + events 45em + right bar 20em
 }
+body.bannered {
+   width:800px;
+   margin:5em auto;
+}
 aside {
    font-style:oblique;
    padding:0.2em 0.5em;
