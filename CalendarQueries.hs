@@ -8,7 +8,7 @@ import Control.Applicative
 import Data.Time
 import Data.Typeable        (Typeable)
 import Database.Esqueleto
-import Yesod                (HandlerT, runDB, cached, lookupSession, setSession, get404, getBy404)
+import Yesod                (HandlerT, runDB, cached, lookupSession, setSession, get404, getBy404, notFound)
 import Yesod.Auth           (requireAuthId, YesodAuth, AuthId)
 import Yesod.Persist.Core   (YesodPersist, YesodPersistBackend)
 import qualified Data.Text as T
@@ -62,8 +62,6 @@ updateViewCalendars = do
 
     setSession "active_calendars" (T.pack $ show cals)
     return cals
-    where
-        unValue (Value x) = x
 
 -- * Active one
 
@@ -91,6 +89,14 @@ setActiveCalendar = setSession "calendar" . T.pack . show
 
 -- * Target
 
+-- ** Types
+
+-- | Target query reply has to quantify over different target types, hence
+-- this sum type.
+data TW = T1 (Entity Event) | T2 (Entity Todo) | T3 (Entity Note)
+
+-- * Select many
+
 queryCalendarObjects :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site, YesodAuth site, AuthId site ~ UserId)
                      => [CalendarId] -- ^ Calendars to query
                      -> Day     -- ^ Timeframe start (inclusive)
@@ -99,31 +105,69 @@ queryCalendarObjects :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend si
 queryCalendarObjects calendars begin end =
         runDB $ liftM2 (,) queryEvents queryTodos
     where
-        queryEvents = select $ from $ \(ct `RightOuterJoin` target `RightOuterJoin` event) -> do
+        queryEvents = select $ from $ \(ct `InnerJoin` target `InnerJoin` event) -> do
             on $ target ^. TargetId ==. event ^. EventTarget
             on $ target ^. TargetId ==. ct ^. CalTargetTarget
             where_ $ ct ^. CalTargetCalendar `in_` valList calendars
-            where_ $ event ^. EventBegin >=. val begin
+            where_ $ event ^. EventBegin >=. val begin      -- event-specific
             where_ $ event ^. EventEnd   <=. just (val end)
             return (target, event)
 
-        queryTodos = select $ from $ \(ct `RightOuterJoin` target `RightOuterJoin` todo) -> do
+        queryTodos = select $ from $ \(ct `InnerJoin` target `InnerJoin` todo) -> do
             on $ target ^. TargetId ==. todo ^. TodoTarget
             on $ target ^. TargetId ==. ct ^. CalTargetTarget
             where_ $ ct ^. CalTargetCalendar `in_` valList calendars
-            where_ $ todo ^. TodoBegin >=. val begin
+            where_ $ todo ^. TodoBegin >=. val begin        -- todo-specific
             where_ $ todo ^. TodoEnd   <=. just (val end)
             return (target, todo)
 
 queryCalendarNotes :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site)
                    => [CalendarId] -> HandlerT site IO [ (Entity Target, Entity Note) ]
 queryCalendarNotes calendars = runDB $
-    select $ from $ \(ct `RightOuterJoin` target `RightOuterJoin` note) -> do
+    select $ from $ \(ct `InnerJoin` target `InnerJoin` note) -> do
         on $ target ^. TargetId ==. note ^. NoteTarget
         on $ target ^. TargetId ==. ct ^. CalTargetTarget
         where_ $ ct ^. CalTargetCalendar `in_` valList calendars
         orderBy [ asc $ note ^. NoteTarget ]
         return (target, note)
+
+-- * Select single
+
+-- | Get a single target by TargetId, along with calendars it resides in.
+queryTarget :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site)
+            => TargetId -> HandlerT site IO (Target, [CalendarId], TW)
+queryTarget tid = do
+    res <- queryTarget' tid
+    case res of
+        ([]                    ,  _) -> notFound
+        (x@(Entity _ t,_,_,_):_, cs) -> case x of
+            (_,Just note,_,_)  -> return (t, cs, T3 note)
+            (_,_,Just todo,_)  -> return (t, cs, T2 todo)
+            (_,_,_,Just event) -> return (t, cs, T1 event)
+            _                  -> error
+                "queryTarget: this should not happen, as this indicates a orphan Target entry in db."
+
+-- | Query target info. Second result list is always 0 or 1 in length, 0 indicates
+-- no matches. We return only CalendarId's, as calendar info is already
+-- cached on every page in CalendarInfo.
+queryTarget' :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site)
+            => TargetId -> HandlerT site IO
+            ( [(Entity Target, Maybe (Entity Note), Maybe (Entity Todo), Maybe (Entity Event))]
+            , [CalendarId] )
+queryTarget' tid = runDB $ do
+    ts <- select . from $
+        \(target `LeftOuterJoin` event `LeftOuterJoin` note `LeftOuterJoin` todo) -> do
+            on $ todo  ?. TodoTarget  ==. just (target ^. TargetId)
+            on $ note  ?. NoteTarget  ==. just (target ^. TargetId)
+            on $ event ?. EventTarget ==. just (target ^. TargetId)
+            where_ $ target ^. TargetId ==. val tid
+            return (target, note, todo, event)
+    cs <- select . from $ \ct -> do
+            where_ (ct ^. CalTargetTarget ==. val tid)
+            return (ct ^. CalTargetCalendar)
+    return (ts, map unValue cs)
+
+-- * Insert
 
 -- | Create a new target given values.
 queryAddTarget :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site,
@@ -133,27 +177,31 @@ queryAddTarget :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site,
 queryAddTarget cid (t,f) = runDB $
     insert t >>= liftA2 (>>) (insert . f) (insert . CalTarget cid)
 
+-- * Update (replace)
+
 -- | Update values of a target.
 queryModifyTarget :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site,
                      PersistEntity a, PersistEntityBackend a ~ SqlBackend)
                   => (a -> TargetId) -> (TargetId -> Unique a) -> a
                   -> HandlerT site IO ()
-queryModifyTarget targ uniq new = runDB $ do
+queryModifyTarget targ uniq new =
     -- NOTE This could be optimized to one query, with the cost of
     -- verbosity: list out all fields and values in a "update...where
     -- target = TID"  query.
-    mt <- getBy $ uniq $ targ new
-    case mt of
-        Nothing -> error "queryModifyTarget: non-existing target id"
-        Just (Entity oid _) -> replace oid new
+    runDB $ do
+        Entity oid _ <- getBy404 $ uniq $ targ new
+        -- FIXME add access control
+        replace oid new
 
-data TW = T1 (Entity Event) | T2 (Entity Todo) | T3 (Entity Note)
+-- * Delete
 
-queryTarget tid = runDB $ liftM2 (,) (get404 tid) getEvent
-    where
-        -- Perhaps this colud be somewhow optimized to not do three queries
-        -- in worst case?
-        getEvent = maybe getTodo (return . T1) =<< getBy (UniqueEvent tid)
-        getTodo  = maybe getNote (return . T2) =<< getBy (UniqueTodo tid)
-        getNote  = liftM T3 $ getBy404 $ UniqueNote tid
+queryDeleteTarget :: (YesodPersist site, SqlPersistT ~ YesodPersistBackend site,
+                     PersistEntity a, PersistEntityBackend a ~ SqlBackend)
+                  => TargetId -> HandlerT site IO ()
+queryDeleteTarget tid = do
+        undefined
 
+-- * Helpers
+
+unValue :: Value a -> a
+unValue (Value x) = x

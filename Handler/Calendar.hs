@@ -11,12 +11,9 @@ import Data.Ord
 import qualified Data.Text as T
 import System.Locale
 
-read' :: Read a => Text -> a
-read' = read . T.unpack
-
 -- * Calendar
 
--- Type synonyms to help reasoning
+-- ** Types
 
 -- | For every hour in every day there is a cell which contains objects
 -- starting that hour (on that day).
@@ -33,14 +30,31 @@ type Hour = Int
 type TimeRange = (LocalTime, LocalTime)
 type Unfold a b = a -> Maybe (b, a)
 
--- | Calculate next occurances of a Repeat at given days.
-nextRepeatsAt :: [Day] -> Day -> Maybe Day -> Repeat -> [(LocalTime, LocalTime)]
-nextRepeatsAt xs lower upper rep = concatMap f xs
-    where
-        f d | d >= lower && maybe True (d <=) upper = let
-                t = LocalTime d (repeatStart rep)
-                in [(t,t)]
-            | otherwise = []
+-- ** Create
+
+getCalendarSettingsR :: Handler Html
+getCalendarSettingsR = do
+    defaultLayout $ do
+        setTitle "Kalenteriasetukset"
+        $(widgetFile "calendarsettings")
+
+postCalendarSettingsR :: Handler Html
+postCalendarSettingsR = do
+    ((res, _), _) <- runFormPost newCalendarForm
+    case res of
+        FormSuccess cal -> do
+            insertCalendar cal
+            setMessage "Kalenteri luotu."
+            redirect CalendarR
+        FormFailure _ -> getCalendarSettingsR
+        FormMissing   -> setMessage "Tyhjä lomake." >> redirect CalendarSettingsR
+
+newCalendarWidget :: Widget
+newCalendarWidget = do
+    ((_, w), _) <- liftHandlerT $ runFormPost newCalendarForm
+    $(widgetFile "calendarWidgetAdd")
+
+-- ** Read
 
 getCalendarR :: Handler Html
 getCalendarR = do
@@ -50,9 +64,7 @@ getCalendarR = do
     (fromDay, toDay) <- getViewTimeframe
     (events, todos)  <- liftM (map (second entityVal) *** map (second entityVal))
                              (queryCalendarObjects myCalendars fromDay toDay)
-
     notes <- queryCalendarNotes myCalendars
-
     timezone <- liftIO getCurrentTimeZone -- TODO user supplied?
 
     let dayRange     = [fromDay..toDay]
@@ -71,7 +83,6 @@ getCalendarR = do
 
         sepHours :: [Cell] -> [(Hour, [Cell])]
         sepDays :: [Cell] -> [(Day, [Cell])]
-
         sepHours xs = L.unfoldr f (0, map getHour xs)
         sepDays  xs = L.unfoldr g (fromDay, map getDay xs)
 
@@ -98,29 +109,20 @@ getCalendarR = do
         setTitle "Calendar"
         $(widgetFile "calendar")
 
-getCalendarSettingsR :: Handler Html
-getCalendarSettingsR = do
-    defaultLayout $ do
-        setTitle "Kalenteriasetukset"
-        $(widgetFile "calendarsettings")
+-- ** Update
 
-postCalendarSettingsR :: Handler Html
-postCalendarSettingsR = do
-    ((res, _), _) <- runFormPost newCalendarForm
-    case res of
-        FormSuccess cal -> do
-            insertCalendar cal
-            setMessage "Kalenteri luotu."
-            redirect CalendarR
-        FormFailure _ -> getCalendarSettingsR
-        FormMissing   -> setMessage "Tyhjä lomake." >> redirect CalendarSettingsR
+-- ** Delete
 
-newCalendarWidget :: Widget
-newCalendarWidget = do
-    ((_, w), _) <- liftHandlerT $ runFormPost newCalendarForm
-    $(widgetFile "calendarWidgetAdd")
+-- ** Helpers
 
--- * Time helpers
+-- | Calculate next occurances of a Repeat at given days.
+nextRepeatsAt :: [Day] -> Day -> Maybe Day -> Repeat -> [(LocalTime, LocalTime)]
+nextRepeatsAt xs lower upper rep = concatMap f xs
+    where
+        f d | d >= lower && maybe True (d <=) upper = let
+                t = LocalTime d (repeatStart rep)
+                in [(t,t)]
+            | otherwise = []
 
 dayDefault :: Maybe Day -> Handler Day
 dayDefault mday = case mday of
@@ -152,63 +154,110 @@ formatWeekday = formatTime myLocale "%d.%m %a"
 cellTimeFormat :: FormatTime t => t -> String
 cellTimeFormat = formatTime myLocale "%H:%M"
 
+
 -- * Targets
+
+-- ** Create
 
 -- | View new target form.
 --
 -- CalendarId is used as a dummy here: POST form posts by default to the
 -- origin url which already contains the id.
-getTargetR :: CalendarId -> TargetType -> Handler Html
-getTargetR _ TargetNote  = runTargetForm Nothing noteForm  >>= layoutNote
-getTargetR _ TargetEvent = runTargetForm Nothing eventForm >>= layoutEvent
-getTargetR _ TargetTodo  = runTargetForm Nothing todoForm  >>= layoutTodo
+getTargetCreateR :: CalendarId -> TargetType -> Handler Html
+getTargetCreateR _ TargetNote  = runTargetForm Nothing noteForm  >>= formLayoutNote
+getTargetCreateR _ TargetEvent = runTargetForm Nothing eventForm >>= formLayoutEvent
+getTargetCreateR _ TargetTodo  = runTargetForm Nothing todoForm  >>= formLayoutTodo
 
--- | Create a new target.
-postTargetR :: CalendarId -> TargetType -> Handler Html
-postTargetR cid tt = case tt of
-    TargetEvent -> f layoutEvent eventForm eventTarget UniqueEvent
-    TargetTodo  -> f layoutTodo  todoForm  todoTarget  UniqueTodo
-    TargetNote  -> f layoutNote  noteForm  noteTarget  UniqueNote
-  where
-      -- Damn GHC.. won't quantify over "a" here unless explicitly told to :/
-      -- (it would indeed be shorter to just copy-paste f's def...)
-      f :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
-        => (TargetFormRes a -> Handler Html) -> CalTargetForm a
-        -> (a -> TargetId) -> (TargetId -> Unique a) -> Handler Html
-      f = targetPostHelper cid tt Nothing
+-- | Create the new target of given type from submitted form data.
+postTargetCreateR :: CalendarId -> TargetType -> Handler Html
+postTargetCreateR =
+    -- Actual work is delegated to target-type specific handlers which in
+    -- turn delegate to the general handler.
+    --
+    -- Here we do one thing: quantify over correct type to choose correct
+    -- handler (the magic is in the Nothing constructors; think about its
+    -- type).
+    flip $ \ttype -> case ttype of
+        TargetEvent -> flip targetPostEvent Nothing
+        TargetTodo  -> flip targetPostTodo Nothing
+        TargetNote  -> flip targetPostNote Nothing
 
--- | View a target, or edit when GET param edit is set.
-getTargetThisR :: TargetId -> Handler Html
-getTargetThisR tid = do
-    (t, v) <- queryTarget tid
+-- ** Read
+
+-- | View a target, or update form when GET param edit is set.
+getTargetReadR :: TargetId -> Handler Html
+getTargetReadR tid = do
+    (t, cs, v) <- queryTarget tid
     defaultLayout $ do
         setTitle $ toHtml $ targetName t
         $(widgetFile "viewtarget")
 
--- | Update a target, or delete it.
-postTargetThisR :: TargetId -> Handler Html
-postTargetThisR = undefined
+-- ** Update
+
+getTargetUpdateR :: TargetId -> Handler Html
+getTargetUpdateR tid = do
+        (t, cs, v) <- queryTarget tid
+        case v of
+            T1 (Entity k event) -> undefined
+            T2 (Entity k todo)  -> undefined
+            T3 (Entity k note)  -> undefined
+
+postTargetUpdateR :: TargetId -> Handler Html
+postTargetUpdateR tid = do
+        undefined
+
+-- ** Delete
+
+-- | Delete a target.
+postTargetDeleteR :: TargetId -> Handler Html
+postTargetDeleteR tid = do
+        undefined
+
+-- ** Other
 
 -- | Export a target as text.
 getTargetTextR :: TargetId -> Handler Html
-getTargetTextR = undefined
+getTargetTextR = error "Tulossa pian :)"
 
 -- | Send a target to another user.
 postTargetSendR :: TargetId -> Handler Html
-postTargetSendR = undefined
+postTargetSendR = error "Tulossa pian :)"
 
+-- ** Helpers
+
+targetPostEvent :: CalendarId -> Maybe Event -> Handler Html
+targetPostEvent cid mt = targetPostHelper cid TargetEvent mt formLayoutEvent eventForm eventTarget UniqueEvent
+
+targetPostNote :: CalendarId -> Maybe Note -> Handler Html
+targetPostNote  cid mt = targetPostHelper cid TargetNote mt formLayoutNote noteForm noteTarget UniqueNote
+
+targetPostTodo :: CalendarId -> Maybe Todo -> Handler Html
+targetPostTodo  cid mt = targetPostHelper cid TargetTodo mt formLayoutTodo todoForm todoTarget UniqueTodo
+
+formLayoutNote  :: TargetFormRes Note  -> Handler Html
+formLayoutNote  = formLayout "muistiinpano" "green"
+
+formLayoutEvent :: TargetFormRes Event -> Handler Html
+formLayoutEvent = formLayout "tapahtuma" "blue"
+
+formLayoutTodo  :: TargetFormRes Todo  -> Handler Html
+formLayoutTodo  = formLayout "tehtävä" "yellow"
+
+-- | A standalone widget for a new note.
 noteFormStandalone :: CalendarId -> Widget
 noteFormStandalone cid = do
     ((_,formw), enctype) <- liftHandlerT $ runFormPost . noteForm Nothing =<< requireAuthId
+    -- Just a simple 4-line form; no real reason to put it in its own template file.
     [whamlet|
-<form .forms .forms-basic .forms-90 method=post action=@{TargetR cid TargetNote} enctype=#{enctype}>
+<form .forms .forms-basic .forms-90 method=post action=@{TargetCreateR cid TargetNote} enctype=#{enctype}>
     ^{formw}
     <p>
         <input .btn.btn-green.unit-90 type=submit value="Lisää muistiinpano">
 |]
 
--- ** Helpers
+-- *** Generic
 
+-- | Generic target POST handler. Can be used for creates and updates.
 targetPostHelper :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
                  => CalendarId
                  -> TargetType
@@ -223,7 +272,7 @@ targetPostHelper cid tt initial layout form toTid fromTid = do
     case res of
         FormSuccess s -> handler s >> redirect CalendarR
         FormFailure _ -> layout x
-        FormMissing   -> redirect (TargetR cid tt)
+        FormMissing   -> redirect (TargetCreateR cid tt)
   where
     handler (Left modified) = queryModifyTarget toTid fromTid modified
                               >> setMessage "Kohteen tiedot päivitetty."
@@ -234,18 +283,16 @@ targetPostHelper cid tt initial layout form toTid fromTid = do
 runTargetForm :: Maybe a -> CalTargetForm a -> Handler (TargetFormRes a)
 runTargetForm ival theForm = runFormPost . theForm ival =<< requireAuthId
 
-layoutNote :: TargetFormRes Note -> Handler Html
-layoutEvent :: TargetFormRes Event -> Handler Html
-layoutTodo :: TargetFormRes Todo -> Handler Html
-layoutNote  = targetLayout "muistiinpano" "green"
-layoutEvent = targetLayout "tapahtuma" "blue"
-layoutTodo  = targetLayout "tehtävä" "yellow"
-
-targetLayout :: Html -> Html -> TargetFormRes a -> Handler Html
-targetLayout what col ((res, formw), enctype) = 
+-- | The generic form layout handler.
+formLayout :: Html              -- ^ Display name
+             -> Html            -- ^ Button color name
+             -> TargetFormRes a -- ^ Target form
+             -> Handler Html
+formLayout what col ((res, formw), enctype) = 
     defaultLayout $ do
         setTitle $ "Uusi " <> what
         $(widgetFile "newtarget")
+
 
 -- * Forms
 

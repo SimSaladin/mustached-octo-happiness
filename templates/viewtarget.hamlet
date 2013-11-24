@@ -24,15 +24,15 @@
                <i .label .pull-right>#{show $ todoUrgency todo}
             <hr>
             $if todoDone todo
-               <a .btn .btn-black href="javascript:alert('not implemented, sorry.')">Merkkaa tekemättömäksi
+               <a .btn .btn-black .disabled href="javascript:alert('not implemented, sorry.')">Merkkaa tekemättömäksi
             $else
-               <a .btn .btn-green href="javascript:alert('not implemented, sorry.')">Merkkaa tehdyksi
+               <a .btn .btn-green .disabled href="javascript:alert('not implemented, sorry.')">Merkkaa tehdyksi
          $of T3 (Entity _ note)
             <h1 .subheader>Muistiinpano
             <p>#{noteContent note}
             <hr>
-      <a .btn .btn-orange .pull-right href="javascript:alert('not implemented, sorry.')">Poista
-      <a .btn .btn href="javascript:alert('not implemented, sorry.')">Muokkaa
-      <a .btn .btn href="javascript:alert('not implemented, sorry.')">Teksti
-      <a .btn .btn href="javascript:alert('not implemented, sorry.')">Linkki
-      <a .btn .btn href="javascript:alert('not implemented, sorry.')">Lähetä...
+      <a .btn .btn-orange .pull-right href=@{TargetDeleteR tid}>Poista
+      <a .btn .btn href=@{TargetUpdateR tid}>Muokkaa
+      <a .btn .btn href=@{TargetTextR tid}>Teksti
+      <a .btn .btn .disabled href="javascript:alert('not implemented, sorry.')">Linkki
+      <a .btn .btn href=@{TargetSendR tid}>Lähetä...

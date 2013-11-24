@@ -7,9 +7,13 @@
 
 / FrontPageR GET POST
 
-/calendar                           CalendarR         GET
-/settings/calendars                 CalendarSettingsR GET POST
-/obj/new/#CalendarId/#TargetType    TargetR           GET POST
-/obj/view/#TargetId                 TargetThisR       GET POST
-/obj/text/#TargetId                 TargetTextR       GET
-/obj/send/#TargetId                 TargetSendR           POST
+/calendar CalendarR GET
+
+/settings CalendarSettingsR GET POST
+
+/o/c/#CalendarId/#TargetType TargetCreateR GET POST
+/o/r/#TargetId TargetReadR GET
+/o/u/#TargetId TargetUpdateR GET POST
+/o/d/#TargetId TargetDeleteR POST
+/o/t/#TargetId TargetTextR GET
+/o/s/#TargetId TargetSendR POST

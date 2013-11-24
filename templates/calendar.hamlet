@@ -8,7 +8,7 @@ $maybe cal <- mcal
             <i>Tyhjä! Voit luoda muistiinpanon alla.
          $of xs
           $forall (Entity k t, Entity _ note) <- xs
-            <a href=@{TargetThisR k}> #{targetName t}
+            <a href=@{TargetReadR k}> #{targetName t}
             <p>#{noteContent note}
        <hr>
        ^{noteFormStandalone cal}
@@ -18,7 +18,7 @@ $maybe cal <- mcal
        <ul>
           $forall (Entity k t, todo) <- todos
             <li>
-               <a href=@{TargetThisR k}>#{targetName t}
+               <a href=@{TargetReadR k}>#{targetName t}
 
  <section .events>
   <table>
@@ -33,12 +33,12 @@ $maybe cal <- mcal
         <th #h-#{hour}>#{hour}
         $forall (day, cells) <- hourViews
           <td>
-            <a href=@?{(TargetR cal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
-            <a href=@?{(TargetR cal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-red>T
+            <a href=@?{(TargetCreateR cal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
+            <a href=@?{(TargetCreateR cal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-red>T
 
             $forall ((start,end), (Entity k t, cell)) <- cells
              <div .tt.#{getType cell}>
-              <a href=@{TargetThisR k}>
+              <a href=@{TargetReadR k}>
                  <span .timestart>#{cellTimeFormat start}
                  <span .title>#{targetName t}
                  $case cell
@@ -55,9 +55,9 @@ $maybe cal <- mcal
       <i>Näytetään #{numOfObjects} kalenteriobjektia.
    <p>
       <span .btn-group>
-           <a.btn.btn-blue   href=@{TargetR cal TargetEvent}>Tapahtuma
-           <a.btn.btn-yellow href=@{TargetR cal TargetTodo}>Tehtävä
-           <a.btn.btn-green  href=@{TargetR cal TargetNote}>Muistiinpano
+           <a.btn.btn-blue   href=@{TargetCreateR cal TargetEvent}>Tapahtuma
+           <a.btn.btn-yellow href=@{TargetCreateR cal TargetTodo}>Tehtävä
+           <a.btn.btn-green  href=@{TargetCreateR cal TargetNote}>Muistiinpano
       <span .btn-group>
          <a .btn .disabled>Viikko N-1
          <a .btn .disabled>Viikko N+1

@@ -2,7 +2,11 @@ module Utils where
 
 import Prelude
 import Data.Text (Text)
+import qualified Data.Text as T
 import Yesod
+
+read' :: Read a => Text -> a
+read' = read . T.unpack
 
 renderKube :: Monad master => FormRender master a
 renderKube aform fragment = do
