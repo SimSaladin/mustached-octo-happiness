@@ -1,23 +1,32 @@
 <div .units-row>
  <div .unit-centered.unit-70>
    <p style="margin-top:2em">
-      <a .btn .btn-red href=@{CalendarR}>Takaisin
+      <a .btn .btn-red href=@{CalendarR}>Kalenteriin
    <div>
       <h1>#{targetName t}
       $case v
          $of T1 (Entity _ event)
             <h1 .subheader>Tapahtuma #
                <i .label .pull-right>#{show $ eventUrgency event}
-            $maybe place <- eventPlace event
-               <p>Paikka #{place}
-            <h4>Osallistujat: #
-            $forall attendee <- eventAttendees event
-               <span>#{attendee}
-            <h4>Seuraavat instanssit
+
+            $forall (start, end) <- getRepeats (eventBegin event) (eventEnd event) (eventRepeat event)
+               <p>#{formatTimeFrame start end}
+
             <h4>Hälytykset
             $maybe comment <- eventComment event
                <h4>Kommentti
                <textarea>#{comment}
+
+            $maybe place <- eventPlace event
+               <h4>Paikka
+               #{place}
+
+            $case eventAttendees event
+             $of []
+             $of xs
+               <h4>Osallistujat
+               $forall x <- xs
+                  <span .attendee>#{x}
             <hr>
          $of T2 (Entity _ todo)
             <h1 .subheader>Tehtävä #
@@ -31,7 +40,8 @@
             <h1 .subheader>Muistiinpano
             <p>#{noteContent note}
             <hr>
-      <a .btn .btn-orange .pull-right href=@{TargetDeleteR tid}>Poista
+      <form .pull-right action=@{TargetDeleteR tid} method=post>
+         <input type=submit .btn .btn-orange value="Poista">
       <a .btn .btn href=@{TargetUpdateR tid}>Muokkaa
       <a .btn .btn href=@{TargetTextR tid}>Teksti
       <a .btn .btn .disabled href="javascript:alert('not implemented, sorry.')">Linkki
