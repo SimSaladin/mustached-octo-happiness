@@ -1,0 +1,10 @@
+<div .units-row>
+ <div .unit-centered.unit-70>
+   <p style="margin-top:2em">
+      <a .btn .btn-red href=@{CalendarR}>Takaisin
+   <form .forms.forms-columnar.forms-90 method=post enctype=#{enctype}>
+      <fieldset>
+         <legend>Muokkaa: #{what}
+         ^{formw}
+         <p>
+            <input .btn .btn-big .btn-blue type=submit value="Tallenna">

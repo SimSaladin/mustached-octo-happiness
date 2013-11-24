@@ -13,8 +13,12 @@ $maybe cal <- mcal
        <hr>
        ^{noteFormStandalone cal}
 
-    <h2>Tehtävät
+    <h2>Tulevat tehtävät
     <section .todos>
+     $case todos
+      $of []
+       <i>Ei tehtäviä
+      $of _
        <ul>
           $forall (Entity k t, todo) <- todos
             <li>

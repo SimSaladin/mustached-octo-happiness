@@ -49,9 +49,10 @@ aside {
 .toright {
    width:20em;
    float:right;
-   background:rgba(215, 199, 236, 0.7);
-   box-shadow:8px -8px 8px #C1AFD8 inset;
+   background:rgba(209, 199, 235, 0.64); // rgba(215, 199, 236, 0.7);
+   // box-shadow:8px -8px 8px rgb(215,199,236) inset;
    padding-top:1em;
+   padding-bottom:2em;
 }
 .toright > * {
    padding-left:1em;
