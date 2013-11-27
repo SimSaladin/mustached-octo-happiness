@@ -3,6 +3,10 @@
    <p style="margin-top:2em">
       <a .btn .btn-red href=@{CalendarR}>Kalenteriin
    <form .forms.forms-columnar.forms-90 method=post enctype=#{enctype}>
+      $case res
+       $of FormFailure _
+         <p .error>Virheitä, ole hyvä ja korjaa.
+       $of _
       <fieldset>
          <legend>Uusi #{what}
          ^{formw}

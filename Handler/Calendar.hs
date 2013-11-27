@@ -217,7 +217,7 @@ getTargetUpdateR tid = do
 
 postTargetUpdateR :: TargetId -> Handler Html
 postTargetUpdateR tid = do
-        -- TODO modify calendars?
+        -- TODO modify target's calendars?
         (t, _cs, v) <- queryTarget tid
         case v of
             T1 (Entity _ event) -> targetPostEvent undefined (Just event)
@@ -297,9 +297,11 @@ targetPostHelper cid tt initial layout form toTid fromTid = do
     case res of
         FormSuccess s -> handler s >> redirect CalendarR
         FormFailure _ -> layout x
-        FormMissing   -> redirect $ case initial of
-                             Just v  -> TargetUpdateR (toTid v)
-                             Nothing -> TargetCreateR cid tt
+        FormMissing   -> do
+            setMessage "Tyhjä lomake!"
+            redirect $ case initial of
+                           Just v  -> TargetUpdateR (toTid v)
+                           Nothing -> TargetCreateR cid tt
   where
     handler (Left modified) = queryModifyTarget toTid fromTid modified
                               >> setMessage "Kohteen tiedot päivitetty."
@@ -450,7 +452,7 @@ repeatForm info = formToAForm $ do
 ^{fvInput sv} - ^{fvInput ev}
 |] }
     -- TODO implement weekday repeat?
-    return (Repeat <$> wr <*> sr <*> er, [ {- wv, -} myView])
+    return (Repeat <$> wr <*> sr <*> er, [wv, myView])
 
 colorField :: Field Handler Text
 colorField = radioFieldList
