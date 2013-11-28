@@ -2,7 +2,10 @@
  <div .unit-centered.unit-80>
    <h1>Kalenteriasetukset
    <div .units-row>
+
     <div .unit-50>
       <h1.subheader>Muokkaa
-      (TODO)
-    <div .unit-50>^{newCalendarWidget}
+      ^{calendarListing}
+
+    <div .unit-50>
+      ^{newCalendarWidget}

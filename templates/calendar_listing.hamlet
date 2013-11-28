@@ -1,0 +1,16 @@
+<table>
+   <thead>
+      <tr>
+         <th>Nimi
+         <td>Toiminnot
+   <tbody>
+      $forall (Entity k c, _act, _num) <- unCalendarInfo cinfo
+         <tr>
+            <th>
+               <b .color-#{calendarColor c}>&gt;
+               #{calendarName c}
+            <td>
+               <form method=post action=@{CalendarDeleteR k}>
+                  <span .btn-group>
+                     <a .btn href=@{CalendarUpdateR k}>Muokkaa
+                     <input .btn .btn-orange type=submit value="Poista">

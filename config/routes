@@ -6,14 +6,16 @@
 /robots.txt RobotsR GET
 
 / FrontPageR GET POST
+/settings CalendarSettingsR GET
 
-/calendar CalendarR GET
-
-/settings CalendarSettingsR GET POST
+/c/c                  CalendarCreateR       POST
+/c                    CalendarR         GET
+/c/u/#CalendarId      CalendarUpdateR   GET POST
+/c/d/#CalendarId      CalendarDeleteR       POST
 
 /o/c/#CalendarId/#TargetType TargetCreateR GET POST
-/o/r/#TargetId TargetReadR GET
+/o/r/#TargetId TargetReadR   GET
 /o/u/#TargetId TargetUpdateR GET POST
-/o/d/#TargetId TargetDeleteR POST
-/o/t/#TargetId TargetTextR GET
-/o/s/#TargetId TargetSendR POST
+/o/d/#TargetId TargetDeleteR     POST
+/o/t/#TargetId TargetTextR   GET
+/o/s/#TargetId TargetSendR       POST

@@ -8,4 +8,4 @@
       <legend>Uusi kalenteri
       ^{w}
       <p>
-         <input .btn type=submit value="Luo">
+         <input .btn.unit-90 type=submit value="Luo">

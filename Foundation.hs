@@ -157,4 +157,4 @@ calendars = do
     CalendarInfo cals <- liftHandlerT queryCalendarInfo
     let activate   k = [("activate", toPathPiece k)]
         deactivate k = [("deactivate", toPathPiece k)]
-    $(widgetFile "calendarlisting")
+    $(widgetFile "calendar_nav")

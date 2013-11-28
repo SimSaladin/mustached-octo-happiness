@@ -14,6 +14,8 @@ import Yesod.Persist.Core   (YesodPersist, YesodPersistBackend)
 import qualified Data.Text as T
 import Model
 
+-- * Types
+
 -- | We do not have "App" in scope here, but have to convince the type
 -- system that we can do database and auth operations.
 type QueryHandler a =
@@ -26,13 +28,12 @@ type QueryHandler a =
 -- this sum type.
 data TW = T1 (Entity Event) | T2 (Entity Todo) | T3 (Entity Note)
 
+
 -- * Calendar
 
-insertCalendar :: Calendar -> QueryHandler () -- HandlerT site IO ()
-insertCalendar cal = runDB (insert cal)
-    >>= setActiveCalendar >> updateViewCalendars >> return ()
+-- ** Select
 
--- ** Info
+-- *** Info
 
 -- | Calendar info wrapper. Memoized.
 newtype CalendarInfo = CalendarInfo
@@ -47,21 +48,30 @@ queryCalendarInfo = do
 
     cached . runDB . fmap (CalendarInfo . map f) . select . from $
         \(c `LeftOuterJoin` mt) -> do
-            on      $ just (c ^. CalendarId) ==. (mt ?. CalTargetCalendar)
-            groupBy $ c ^. CalendarId
-            where_  $ c ^. CalendarOwner ==. val uid
+            on      (just (c ^. CalendarId) ==. mt ?. CalTargetCalendar)
+            groupBy (c ^. CalendarId)
+            where_  (c ^. CalendarOwner ==. val uid)
             orderBy [asc $ c ^. CalendarName]
             return (c, count $ mt ?. CalTargetId)
+
+-- *** Individual
+
+-- | Documentation for 'queryCalendar'
+queryCalendar :: CalendarId -> QueryHandler Calendar
+-- XXX: use above cached calendarinfo?
+queryCalendar cid = runDB $ get404 cid
+
+-- *** Viewed
 
 getViewCalendars :: QueryHandler [CalendarId]
 getViewCalendars = do
         mcals <- lookupSession "active_calendars"
         case mcals of
             Just cals -> return $ read $ T.unpack cals
-            Nothing   -> updateViewCalendars
+            Nothing   -> updateViewSession
 
-updateViewCalendars :: QueryHandler [CalendarId]
-updateViewCalendars = do
+updateViewSession :: QueryHandler [CalendarId]
+updateViewSession = do
     uid <- requireAuthId
     cals <- liftM (map unValue) . runDB . select . from $ \c -> do
         where_ $ c ^. CalendarOwner ==. val uid
@@ -71,7 +81,7 @@ updateViewCalendars = do
     setSession "active_calendars" (T.pack $ show cals)
     return cals
 
--- ** Active one
+-- *** Active
 
 -- | Lookup active calendar. In most cases only looks up the session key
 -- "calendar". Result is Nothing if user has no calendars
@@ -92,7 +102,44 @@ activeCalendar =
 
 setActiveCalendar :: CalendarId -> QueryHandler ()
 setActiveCalendar = setSession "calendar" . T.pack . show
-    
+
+-- ** Insert
+
+queryInsertCalendar :: Calendar -> QueryHandler ()
+queryInsertCalendar cal = runDB (insert cal)
+    >>= setActiveCalendar >> updateViewSession >> return ()
+
+-- ** Delete
+
+-- | delete a calendar by id, along with its target associations following
+-- with orphan calendar targets.
+queryDeleteCalendar :: CalendarId -> QueryHandler ()
+queryDeleteCalendar cid = do
+        runDB $ do
+            -- caltarget relations
+            delete $ from $ \ct -> where_ (ct ^. CalTargetCalendar ==. val cid)
+
+            -- find orphan targets' ids.
+            let orphansQ = subList_select . from $ \target -> do
+                    where_ . notExists .  from
+                        $ \ct -> where_ (ct ^. CalTargetTarget ==. target ^. TargetId)
+                    return (target ^. TargetId)
+
+            -- orphan specializations
+            delete $ from $ \event -> where_ (event ^. EventTarget `in_` orphansQ)
+            delete $ from $ \todo  -> where_ (todo ^. TodoTarget   `in_` orphansQ)
+            delete $ from $ \note  -> where_ (note ^. NoteTarget   `in_` orphansQ)
+
+            -- orphan targets
+            delete $ from $ \target -> where_ (target ^. TargetId `in_` orphansQ)
+
+            -- the calendar
+            deleteKey cid
+
+-- | Update a calendar's settings.
+queryUpdateCalendar :: CalendarId -> Calendar -> QueryHandler ()
+queryUpdateCalendar cid = runDB . replace cid
+
 
 -- * Target
 
@@ -217,11 +264,14 @@ queryDeleteTarget tid = do
           >> del NoteTarget >> del TodoTarget >> del EventTarget
           >> del TargetId
     where
+        -- | Delete where given targetId tid matches to field and table
+        -- defined by argument.
         del = delete . from . (at . ) . flip (^.)
-        at  = where_ . (==. val tid)
 
-        -- combinators <3, haskell's monomorphism </3; above won't work without this general sig.
+        -- combinators <3, haskell's monomorphism </3; above won't work
+        -- without this general sig in this function.
         at :: Esqueleto query expr back => expr (Value TargetId) -> query ()
+        at  = where_ . (==. val tid)
 
 
 -- * Helpers
