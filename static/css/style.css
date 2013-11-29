@@ -43,22 +43,13 @@ aside {
    color:#F2B0FF;
    font-size:1.2em;
 }
-/*
-#navigation ul {
-   list-style:none;
-}
-#navigation {
-   background:#222;
-   color:#EEE;
-}
-*/
 
 .events {
    position:fixed;
    height:100%;
    right:20em;
    left:12em;
-   overflow-y:scroll;
+   overflow-y:auto;
    z-index:-1;
 }
 .toright {
@@ -135,7 +126,9 @@ input[type="password"] {
    padding-right:15px;
    z-index:1;
 }
-.events .days tr { display:block }
+.events .days tr {
+   display:block;
+}
 .events .days th {
    width:14%;
    float:left;
@@ -145,6 +138,9 @@ input[type="password"] {
    font-weight:bold;
    border:none;
    color:#5F5F5F;
+}
+.events th[scope="col"] {
+   text-align:right;
 }
 .events {
    background:#D7C7EC;
@@ -179,14 +175,14 @@ input[type="password"] {
 /* cell buttons */
 .cact {
    float:right;
-   opacity:0.09;
    font-weight:bolder;
+   top:0.2em;
+   right:0.2em;
+   opacity:0.09;
 }
 .cact-example { opacity:1; }
-td:hover .cact { opacity:1; }
-.cact { top:0.2em; }
-.cact { right:0.2em; }
-.cact:nth-child(n+2) { right:3em; }
+td:hover .cact { opacity:0.3; }
+.cact:hover { opacity:1 !important }
 
 
 /* content */

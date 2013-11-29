@@ -34,11 +34,11 @@ $maybe cal <- mcal
    <tbody>
      $forall (hour, hourViews) <- objectWeeks
        <tr>
-        <th #h-#{hour}>#{hour}
+        <th #h-#{hour} scope=col>#{hour}.00
         $forall (day, cells) <- hourViews
           <td>
             <a href=@?{(TargetCreateR cal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
-            <a href=@?{(TargetCreateR cal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-red>T
+            <a href=@?{(TargetCreateR cal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-yellow>T
 
             $forall ((start,end), (Entity k t, cell)) <- cells
              <div .tt.#{getType cell}>

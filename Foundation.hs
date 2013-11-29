@@ -143,7 +143,11 @@ authHashDB' = (authHashDB $ Just . UniqueUser) { apLogin = \tm -> $(widgetFile "
 
 widgetToPageContent' :: Widget -> Handler (PageContent (Route App))
 widgetToPageContent' w = widgetToPageContent $ do
-    $(combineStylesheets 'StaticR [ css_kube_min_css, css_style_css])
+    $(combineStylesheets 'StaticR
+        [ css_kube_min_css
+        , css_glyphicons_css
+        , css_style_css
+        ])
     w
 
 -- | Get the 'Extra' value, used to hold data from the settings.yml file.

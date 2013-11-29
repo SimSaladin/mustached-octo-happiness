@@ -9,17 +9,10 @@
 
 <aside>
  <small>
-  <i .cal-action .color-orange>-
-  Piilota kalenterin kohteet
-
+  <i .cal-action .icon-white.icon-eye-close>
+  Näytetään
   <br>
-  <i .cal-action .color-green>+
-  Näytä kalenterin kohteet
-
+  <i .cal-action .icon-white.icon-eye-close>
+  Piilossa
   <br>
-  <i .cal-action .color-blue>!
-  Oletusarvoinen
-
-  <br>
-  <i .cal-action .color-black>!
-  Aseta oletusarvoiseksi
+  <span .color-blue>Oletusarvoinen

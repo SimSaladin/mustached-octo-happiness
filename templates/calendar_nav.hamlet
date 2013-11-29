@@ -5,18 +5,14 @@ $else
   <ul>
     $forall (Entity k c, act, n) <- cals
       <li>
-         $if (==) mcal (Just k)
-          <i .cal-action .color-blue>
-            !
-         $else
-          <a .cal-action .color-black href=@{CalendarActiveR k}>
-            !
-
          $if act
-          <a .cal-action .color-orange href=@{CalendarViewR k "unview"}>
-            &ndash;
+          <a .cal-action .icon-white.icon-eye-open href=@{CalendarViewR k "unview"}>
          $else
-          <a .cal-action .color-green href=@{CalendarViewR k "view"}>
-            +
-         <b>#{calendarName c}
+          <a .cal-action .icon-white.icon-eye-close href=@{CalendarViewR k "view"}>
+
+         $if (==) mcal (Just k)
+            <b>#{calendarName c}
+         $else
+            <a .color-blue href=@{CalendarActiveR k}>
+               <b>#{calendarName c}
          <sup .label .label-#{calendarColor c}>#{show n}
