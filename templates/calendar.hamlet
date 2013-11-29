@@ -46,9 +46,8 @@ $maybe cal <- mcal
                  <span .timestart>#{cellTimeFormat start}
                  <span .title>#{targetName t}
                  $case cell
-                    $of Left event
-                    $of Right todo
-                       todo
+                    $of Left _event
+                    $of Right _todo
   <div .bottom>
    <span .pull-right>
       Uusi tapahtuma

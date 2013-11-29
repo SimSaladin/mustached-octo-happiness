@@ -19,6 +19,14 @@ import System.Locale
 -- starting that hour (on that day).
 type Cell = (TimeRange, (Entity Target, Either Event Todo))
 
+-- TODO replace Cell with this Cell'
+data Cell' = Cell
+           { cellRange    :: TimeRange
+           , cellTarget   :: Entity Target
+           , cellCalColor :: Text
+           , cellContent  :: Either Event Todo
+           }
+
 -- | Every hour (a row) is a collection of cells associated with a day.
 type HourView = [ (Day, [Cell]) ]
 
@@ -30,17 +38,6 @@ type Hour = Int
 type TimeRange = (LocalTime, LocalTime)
 -- type Unfold a b = a -> Maybe (b, a)
 type Unfold g = (g, [(g, Cell)]) -> Maybe ( (g, [Cell]), (g, [(g, Cell)]) )
-
--- ** Calendar construction
-
-groupHours :: Unfold Hour
-groupHours (24, _) = Nothing
-groupHours (h, xs) = Just $ (h, ) . map snd *** (h + 1, ) $ L.span ((== h) . fst) xs
-
-groupDays :: Day -> Unfold Day
-groupDays toDay (d, xs)
-    | d > toDay = Nothing
-    | otherwise = Just $ (d,) . map snd *** (addDays 1 d,) $ L.span ((== d) . fst) xs
 
 -- ** CRUD
 
@@ -68,19 +65,16 @@ getCalendarR = do
             (second $ sepDays . sortBy (comparing fst) . map getDay)
                     . sepHours . sortBy (comparing fst) . map getHour
                     $ go eventRF Left events ++ go todoRF Right todos
-        --
         go :: (b -> [TimeRange]) -> (b -> Either Event Todo) -> [(Entity Target, b)] -> [Cell]
         go rs vs = concatMap $ zip <$> rs . snd <*> repeat . second vs
         eventRF  = nextRepeatsAt dayRange <$> eventBegin <*> eventEnd <*> eventRepeat
         todoRF   = nextRepeatsAt dayRange <$> todoBegin <*> todoEnd <*> todoRepeat
-        --
         sepHours xs = L.unfoldr groupHours (0, xs)
         sepDays  xs = L.unfoldr (groupDays toDay) (fromDay, xs)
-        --
         getHour x@((t,_),_) = (todHour $ localTimeOfDay t, x)
         getDay  x@((t,_),_) = (localDay t, x)
         --
-    let targetParams :: Day -> Hour -> [(Text, Text)]
+        targetParams :: Day -> Hour -> [(Text, Text)]
         targetParams day hour = let
             zonedtime = ZonedTime (LocalTime day $ TimeOfDay hour 0 0) timezone
             in [("at", T.pack $ show zonedtime)]
@@ -171,6 +165,17 @@ newCalendarWidget = do
     ((res, w), enctype) <- liftHandlerT $ runFormPost $ calendarForm Nothing
     $(widgetFile "calendar_form")
 
+-- ** Calendar construction
+
+groupHours :: Unfold Hour
+groupHours (24, _) = Nothing
+groupHours (h, xs) = Just $ (h, ) . map snd *** (h + 1, ) $ L.span ((== h) . fst) xs
+
+groupDays :: Day -> Unfold Day
+groupDays toDay (d, xs)
+    | d > toDay = Nothing
+    | otherwise = Just $ (d,) . map snd *** (addDays 1 d,) $ L.span ((== d) . fst) xs
+
 
 -- * Targets
 
@@ -195,7 +200,8 @@ type CalTargetAt a = (Target, Either a (TargetId -> a))
 -- CalendarId is used as a dummy here: POST form posts by default to the
 -- origin url which already contains the id.
 getTargetCreateR :: CalendarId -> TargetType -> Handler Html
-getTargetCreateR cid tt = case tt of
+-- XXX: use cid?
+getTargetCreateR _cid tt = case tt of
     TargetNote  -> go (getTargetForm :: CalTargetForm Note)
     TargetEvent -> go (getTargetForm :: CalTargetForm Event)
     TargetTodo  -> go (getTargetForm :: CalTargetForm Todo)
@@ -366,8 +372,9 @@ targetFormLayout what col modifyThis ((res, formw), enctype) =
 -- | Construct a target form given a function from initial value to a form
 -- whose result constructs the target given a targetid.
 calTargetForm :: GetTarget a => (Maybe a -> AForm Handler (TargetId -> a)) -> CalTargetForm a
-calTargetForm specForm mt ma uid = renderKube $ (\t -> second f . (,) t) <$> targetForm mt
-                                                                         <*> specForm ma
+-- XXX use uid?
+calTargetForm specForm mt ma _uid = renderKube $ (\t -> second f . (,) t) <$> targetForm mt
+                                                                          <*> specForm ma
     where f spec = maybe (Right spec) (Left . spec . getTarget) ma
 
 -- | Take calendar target form to its result.

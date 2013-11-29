@@ -12,7 +12,10 @@
             $forall (start, end) <- getRepeats (eventBegin event) (eventEnd event) (eventRepeat event)
                <p>#{formatTimeFrame start end}
 
-            <h4>Hälytykset
+            $maybe alarms <- eventAlarm event
+               <h4>Hälytykset
+               #{show alarms}
+
             $maybe comment <- eventComment event
                <h4>Kommentti
                <textarea>#{comment}
@@ -22,15 +25,23 @@
                #{place}
 
             $case eventAttendees event
-             $of []
-             $of xs
-               <h4>Osallistujat
-               $forall x <- xs
-                  <span .attendee>#{x}
+               $of []
+               $of xs
+                  <h4>Osallistujat
+                  $forall x <- xs
+                     <span .attendee>#{x}
             <hr>
          $of T2 (Entity _ todo)
             <h1 .subheader>Tehtävä #
                <i .label .pull-right>#{show $ todoUrgency todo}
+
+            $forall (start, end) <- getRepeats (todoBegin todo) (todoEnd todo) (todoRepeat todo)
+               <p>#{formatTimeFrame start end}
+
+            $maybe alarms <- todoAlarm todo
+               <h4>Hälytykset
+               #{show alarms}
+
             <hr>
             $if todoDone todo
                <a .btn .btn-black .disabled href="javascript:alert('not implemented, sorry.')">Merkkaa tekemättömäksi

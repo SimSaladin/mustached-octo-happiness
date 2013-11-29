@@ -202,8 +202,8 @@ td:hover .cact { opacity:1; }
    -ms-transform:scale(1,1.5); /* IE 9 */
    -o-transform:scale(1,1.5); /* Opera */
 }
-.event .timestart { color:#0A185F; }
-.todo .timestart { color:#A02312; }
+.event .timestart, .event .title { color:#0A185F; }
+.todo  .timestart, .todo .title { color:#A02312; }
 
 /* }}} */
 
