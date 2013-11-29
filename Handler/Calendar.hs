@@ -28,7 +28,19 @@ type WeekView = [ (Hour, HourView) ]
 
 type Hour = Int
 type TimeRange = (LocalTime, LocalTime)
-type Unfold a b = a -> Maybe (b, a)
+-- type Unfold a b = a -> Maybe (b, a)
+type Unfold g = (g, [(g, Cell)]) -> Maybe ( (g, [Cell]), (g, [(g, Cell)]) )
+
+-- ** Calendar construction
+
+groupHours :: Unfold Hour
+groupHours (24, _) = Nothing
+groupHours (h, xs) = Just $ (h, ) . map snd *** (h + 1, ) $ L.span ((== h) . fst) xs
+
+groupDays :: Day -> Unfold Day
+groupDays toDay (d, xs)
+    | d > toDay = Nothing
+    | otherwise = Just $ (d,) . map snd *** (addDays 1 d,) $ L.span ((== d) . fst) xs
 
 -- ** CRUD
 
@@ -47,34 +59,27 @@ getCalendarR = do
 
     let dayRange     = [fromDay..toDay]
         numOfObjects = length events + length todos
-        --
+        -- Huh? 
+        -- 1. take todos and events, map their hours, sort by and group by
+        --    hours 0..23.
+        -- 2. again map days, sort and group by days for every hour.
         objectWeeks :: WeekView
-        objectWeeks = map (second sepDays) $ sepHours $ sortBy (comparing fst)
-            $ (go eventRF Left events ++ go todoRF Right todos)
-            where
-                go :: (b -> [TimeRange]) -> (b -> Either Event Todo) -> [(Entity Target, b)] -> [Cell]
-                go rs vs = concatMap $ zip <$> rs . snd <*> repeat . second vs
-                eventRF  = nextRepeatsAt dayRange <$> eventBegin <*> eventEnd <*> eventRepeat
-                todoRF   = nextRepeatsAt dayRange <$> todoBegin <*> todoEnd <*> todoRepeat
-
-        -- TODO do something for these spaghetti monsters...
+        objectWeeks = map
+            (second $ sepDays . sortBy (comparing fst) . map getDay)
+                    . sepHours . sortBy (comparing fst) . map getHour
+                    $ go eventRF Left events ++ go todoRF Right todos
         --
-        sepHours :: [Cell] -> [(Hour, [Cell])]
-        sepDays :: [Cell] -> [(Day, [Cell])]
-        sepHours xs = L.unfoldr f (0, map getHour xs)
-        sepDays  xs = L.unfoldr g (fromDay, map getDay xs)
+        go :: (b -> [TimeRange]) -> (b -> Either Event Todo) -> [(Entity Target, b)] -> [Cell]
+        go rs vs = concatMap $ zip <$> rs . snd <*> repeat . second vs
+        eventRF  = nextRepeatsAt dayRange <$> eventBegin <*> eventEnd <*> eventRepeat
+        todoRF   = nextRepeatsAt dayRange <$> todoBegin <*> todoEnd <*> todoRepeat
         --
-        f :: Unfold (Hour, [(Hour, Cell)]) (Hour, [Cell])
-        g :: Unfold (Day, [(Day, Cell)]) (Day, [Cell])
-        f (24, _)       = Nothing
-        f (h, xs)       = Just $ (h,) . map snd *** (h + 1,) $ L.span ((== h) . fst) xs
-        g (d, xs)
-            | d > toDay = Nothing
-            | otherwise = Just $ (d,) . map snd *** (addDays 1 d,) $ L.span ((== d) . fst) xs
+        sepHours xs = L.unfoldr groupHours (0, xs)
+        sepDays  xs = L.unfoldr (groupDays toDay) (fromDay, xs)
         --
         getHour x@((t,_),_) = (todHour $ localTimeOfDay t, x)
         getDay  x@((t,_),_) = (localDay t, x)
-    --
+        --
     let targetParams :: Day -> Hour -> [(Text, Text)]
         targetParams day hour = let
             zonedtime = ZonedTime (LocalTime day $ TimeOfDay hour 0 0) timezone
@@ -133,6 +138,18 @@ postCalendarDeleteR cid = do
         setMessage "Kalenteri poistettu"
         redirect CalendarR
 
+-- ** View settings
+
+getCalendarViewR :: CalendarId -> String -> Handler Html
+getCalendarViewR cid act = do
+    ($ cid) $ case act of
+        "view" -> addViewCalendar
+        _      -> deleteViewCalendar
+    redirect CalendarR
+
+getCalendarActiveR :: CalendarId -> Handler Html
+getCalendarActiveR cid = setActiveCalendar cid >> redirect CalendarR
+
 -- ** Pieces
 
 calendarForm :: Maybe Calendar -> Form Calendar
@@ -161,15 +178,15 @@ newCalendarWidget = do
 
 -- | Calendar target forms take possible initial value and userid as
 -- paramaters.
-type CalTargetForm a = Maybe a -> UserId -> Form (CalTargetAt a)
+type CalTargetForm a = Maybe Target -> Maybe a -> UserId -> Form (CalTargetAt a)
 
 -- | Result from running a calendar target form.
 type TargetFormRes a = ((FormResult (CalTargetAt a), Widget), Enctype)
 
--- | Calendar target form result is either the updated value of a existing
--- target (if the initial value was provided) or the target and a function
--- which takes targetid to a target specialization.
-type CalTargetAt a = Either a (Target, TargetId -> a)
+-- | Calendar target form result is either the updated value of an existing
+-- target and specialization (if the initial value was provided), or
+-- a target and a function which takes targetid to the specialization.
+type CalTargetAt a = (Target, Either a (TargetId -> a))
 
 -- ** CRUD
 
@@ -183,7 +200,7 @@ getTargetCreateR cid tt = case tt of
     TargetEvent -> go (getTargetForm :: CalTargetForm Event)
     TargetTodo  -> go (getTargetForm :: CalTargetForm Todo)
     where
-        go a = runTargetForm Nothing a >>= getTargetFormLayout Nothing
+        go a = runTargetForm Nothing Nothing a >>= getTargetFormLayout Nothing
 
 -- | View a target, or update form when GET param edit is set.
 getTargetReadR :: TargetId -> Handler Html
@@ -203,7 +220,7 @@ getTargetUpdateR tid = do
 
     let -- don't remove sig, ghc specializes otherwise
         go :: GetTarget a => a -> Handler Html
-        go a = runTargetForm (Just a) getTargetForm >>= getTargetFormLayout (Just $ targetName t)
+        go a = runTargetForm (Just t) (Just a) getTargetForm >>= getTargetFormLayout (Just $ targetName t)
 
     case v of
         T1 (Entity _ event) -> go event
@@ -262,7 +279,7 @@ postTargetSendR = error "Tulossa pian :)"
 -- | A standalone widget for a new note.
 noteFormStandalone :: CalendarId -> Widget
 noteFormStandalone cid = do
-    ((_,formw), enctype) <- liftHandlerT $ runFormPost . (getTargetForm :: CalTargetForm Note) Nothing =<< requireAuthId
+    ((_,formw), enctype) <- liftHandlerT $ runFormPost . (getTargetForm :: CalTargetForm Note) Nothing Nothing =<< requireAuthId
     -- Just a simple 4-line form; no real reason to put it in its own template file.
     [whamlet|
 <form .forms .forms-basic .forms-90 method=post action=@{TargetCreateR cid TargetNote} enctype=#{enctype}>
@@ -320,7 +337,7 @@ instance GetTarget Note where
 -- (in updates calendarId may be just bottom, it is not used.)
 targetPostHelper :: GetTarget a => CalendarId -> TargetType -> Maybe (Target, a) -> Handler Html
 targetPostHelper cid tt initial = do
-    x@((res,_),_) <- runTargetForm (snd <$> initial) getTargetForm
+    x@((res,_),_) <- runTargetForm (fst <$> initial) (snd <$> initial) getTargetForm
     case res of
         FormSuccess s -> handler s >> redirect CalendarR
         FormFailure _ -> getTargetFormLayout (targetName . fst <$> initial) x
@@ -330,9 +347,9 @@ targetPostHelper cid tt initial = do
                            Just (_, v) -> TargetUpdateR (getTarget v)
                            Nothing     -> TargetCreateR cid tt
   where
-    handler (Left modified) = queryModifyTarget getTarget getTargetUnique modified
-                              >> setMessage "Kohteen tiedot päivitetty."
-    handler (Right tinfo)   = queryAddTarget cid tinfo
+    handler (target, Left modified) = queryModifyTarget getTarget getTargetUnique target modified
+                                    >> setMessage "Kohteen tiedot päivitetty."
+    handler (target, Right f) = queryAddTarget cid target f
                               >> setMessage "Kohde onnistuneesti lisätty."
 
 -- | The generic form layout handler.
@@ -348,20 +365,21 @@ targetFormLayout what col modifyThis ((res, formw), enctype) =
 
 -- | Construct a target form given a function from initial value to a form
 -- whose result constructs the target given a targetid.
-calTargetForm :: GetTarget t => (Maybe t -> AForm Handler (TargetId -> t)) -> CalTargetForm t
-calTargetForm ctform Nothing uid = renderKube $ ((Right .) . (,)             ) <$> targetForm uid <*> ctform Nothing
-calTargetForm ctform (Just ct) _ = renderKube $ ( Left     . ($ getTarget ct)) <$> ctform (Just ct)
+calTargetForm :: GetTarget a => (Maybe a -> AForm Handler (TargetId -> a)) -> CalTargetForm a
+calTargetForm specForm mt ma uid = renderKube $ (\t -> second f . (,) t) <$> targetForm mt
+                                                                         <*> specForm ma
+    where f spec = maybe (Right spec) (Left . spec . getTarget) ma
 
 -- | Take calendar target form to its result.
-runTargetForm :: Maybe a -> CalTargetForm a -> Handler (TargetFormRes a)
+runTargetForm :: Maybe Target -> Maybe a -> CalTargetForm a -> Handler (TargetFormRes a)
 -- XXX: editing others' targets is possible!?
-runTargetForm initial calForm = runFormPost . calForm initial =<< requireAuthId
+runTargetForm mt initial calForm = runFormPost . calForm mt initial =<< requireAuthId
 
 -- | This is a form part embedded to (the beginning of) every specialization.
-targetForm :: UserId -> AForm Handler Target
-targetForm uid = Target
-    <$> pure uid
-    <*> areq textField "Nimike" Nothing
+targetForm :: Maybe Target -> AForm Handler Target
+targetForm mtarget = Target
+    <$> maybe (lift requireAuthId) (pure . targetOwner) mtarget
+    <*> areq textField "Nimike" (targetName <$> mtarget)
 
 
 -- * Time helpers
@@ -441,8 +459,10 @@ weekDaysField = checkMMap (return . f) unWeekly $ multiSelectFieldList $ zip day
 
 myDayField :: FieldSettings App -> Maybe (Maybe Day) -> AForm Handler (Maybe Day)
 myDayField opts mday = formToAForm $ do
-    day <- lift $ dayDefault (join mday)
-    (r, v) <- mopt dayField opts . Just $ Just day
+    theDay <- case mday of
+                  Nothing -> liftHandlerT $ liftM Just $ dayDefault Nothing
+                  Just md -> return md
+    (r, v) <- mopt dayField opts (Just theDay)
     return (r, [v])
 
 myDayFieldReq :: FieldSettings App -> Maybe Day -> AForm Handler Day

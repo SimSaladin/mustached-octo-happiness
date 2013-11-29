@@ -34,6 +34,7 @@ type DayOfWeek = Int
 data RepeatTime = Weekly [DayOfWeek]
         deriving (Show, Read)
 
+unWeekly :: RepeatTime -> [DayOfWeek]
 unWeekly (Weekly x) = x
 
 data Repeat = Repeat

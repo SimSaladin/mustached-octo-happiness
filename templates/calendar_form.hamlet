@@ -1,4 +1,4 @@
-<form .forms .forms-columnar method=post action=@{CalendarSettingsR} enctype=#{enctype}>
+<form .forms .forms-columnar method=post action=@{CalendarCreateR} enctype=#{enctype}>
    <fieldset>
       $case res
          $of FormFailure _
@@ -8,4 +8,4 @@
       <legend>Uusi kalenteri
       ^{w}
       <p>
-         <input .btn.unit-90 type=submit value="Luo">
+         <input .btn.unit-100.btn-green type=submit value="Luo kalenteri">

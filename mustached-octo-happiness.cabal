@@ -83,6 +83,7 @@ library
                  , heroku
                  , aeson
                  , unordered-containers
+                 , containers
                  , time
                  , old-locale
 

@@ -13,6 +13,9 @@
 /c/u/#CalendarId      CalendarUpdateR   GET POST
 /c/d/#CalendarId      CalendarDeleteR       POST
 
+/c/v/#CalendarId/#String CalendarViewR GET
+/c/a/#CalendarId         CalendarActiveR GET
+
 /o/c/#CalendarId/#TargetType TargetCreateR GET POST
 /o/r/#TargetId TargetReadR   GET
 /o/u/#TargetId TargetUpdateR GET POST

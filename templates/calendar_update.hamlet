@@ -1,8 +1,8 @@
 <div .units-row>
    <div .unit-centered.unit-80>
       <form .forms .forms-columnar method=post action=@{CalendarUpdateR cid} enctype=#{enctype}>
-         <legend>Muokataan kalenterin asetuksia
          <fieldset>
+            <legend>Muokataan kalenterin asetuksia
             ^{formw}
             <p>
                <input .btn .btn-green .unit-90 type=submit value="Tallenna">

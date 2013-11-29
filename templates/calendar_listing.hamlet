@@ -2,13 +2,24 @@
    <thead>
       <tr>
          <th>Nimi
-         <td>Toiminnot
+         <th>Julk./Muok.
+         <th>Toiminnot
    <tbody>
       $forall (Entity k c, _act, _num) <- unCalendarInfo cinfo
          <tr>
             <th>
                <b .color-#{calendarColor c}>&gt;
                #{calendarName c}
+            <td>
+               $if calendarPublic c
+                  <span .color-green>Kyllä
+               $else
+                  <span .color-red>Ei
+               <span.color-gray>/
+               $if calendarPublicedit c
+                  <span .color-green>Kyllä
+               $else
+                  <span .color-red>Ei
             <td>
                <form method=post action=@{CalendarDeleteR k}>
                   <span .btn-group>

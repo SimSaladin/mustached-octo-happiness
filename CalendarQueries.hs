@@ -8,10 +8,13 @@ import Control.Applicative
 import Data.Time
 import Data.Typeable        (Typeable)
 import Database.Esqueleto
-import Yesod                (HandlerT, runDB, cached, lookupSession, setSession, get404, getBy404, notFound, permissionDenied)
+import Yesod  ( HandlerT, runDB, cached, get404, getBy404
+              , lookupSession, setSession, deleteSession
+              , notFound, permissionDenied)
 import Yesod.Auth           (requireAuthId, YesodAuth, AuthId)
 import Yesod.Persist.Core   (YesodPersist, YesodPersistBackend)
 import qualified Data.Text as T
+import qualified Data.Set as S
 import Model
 
 -- * Types
@@ -67,19 +70,27 @@ getViewCalendars :: QueryHandler [CalendarId]
 getViewCalendars = do
         mcals <- lookupSession "active_calendars"
         case mcals of
-            Just cals -> return $ read $ T.unpack cals
-            Nothing   -> updateViewSession
+            Just cals -> return . read $ T.unpack cals
+            Nothing   -> fetchAllCalendars >>= (>>) <$> setViewCalendars <*> return
 
-updateViewSession :: QueryHandler [CalendarId]
-updateViewSession = do
+setViewCalendars :: [CalendarId] -> QueryHandler ()
+setViewCalendars = setSession "active_calendars" . T.pack . show
+
+addViewCalendar :: CalendarId -> QueryHandler ()
+addViewCalendar cid =
+        setViewCalendars . S.toList . S.insert cid . S.fromList =<< getViewCalendars
+
+deleteViewCalendar :: CalendarId  -> QueryHandler ()
+deleteViewCalendar cid = 
+        setViewCalendars . S.toList . S.delete cid . S.fromList =<< getViewCalendars
+
+fetchAllCalendars :: QueryHandler [CalendarId]
+fetchAllCalendars = do
     uid <- requireAuthId
-    cals <- liftM (map unValue) . runDB . select . from $ \c -> do
+    liftM (map unValue) . runDB . select . from $ \c -> do
         where_ $ c ^. CalendarOwner ==. val uid
         orderBy [ asc $ c ^. CalendarId ]
         return $ c ^. CalendarId
-
-    setSession "active_calendars" (T.pack $ show cals)
-    return cals
 
 -- *** Active
 
@@ -100,14 +111,18 @@ activeCalendar =
                 (Value x : _) -> setActiveCalendar x >> return (Just x)
                 _             -> return Nothing
 
+clearActiveCalendar :: QueryHandler ()
+clearActiveCalendar = deleteSession "calendar"
+
 setActiveCalendar :: CalendarId -> QueryHandler ()
+-- XXX check owner status?
 setActiveCalendar = setSession "calendar" . T.pack . show
 
 -- ** Insert
 
 queryInsertCalendar :: Calendar -> QueryHandler ()
 queryInsertCalendar cal = runDB (insert cal)
-    >>= setActiveCalendar >> updateViewSession >> return ()
+    >>= (>>) <$> setActiveCalendar <*> addViewCalendar
 
 -- ** Delete
 
@@ -136,6 +151,10 @@ queryDeleteCalendar cid = do
             -- the calendar
             deleteKey cid
 
+        -- clear active calendar if we just removed it
+        act <- activeCalendar
+        if act == Just cid then clearActiveCalendar else return ()
+
 -- | Update a calendar's settings.
 queryUpdateCalendar :: CalendarId -> Calendar -> QueryHandler ()
 queryUpdateCalendar cid = runDB . replace cid
@@ -153,35 +172,27 @@ queryCalendarObjects calendars begin end =
         runDB $ liftM2 (,) queryEvents queryTodos
     where
         queryEvents = select $ from $ \(ct `InnerJoin` target `InnerJoin` event) -> do
-
             let onTid = on . (==. target ^. TargetId)
             onTid (event ^. EventTarget)
             onTid (ct    ^. CalTargetTarget)
-
-            where_ $ ct ^. CalTargetCalendar `in_` valList calendars
-            where_ $ event ^. EventBegin >=. val begin      -- event-specific
-            where_ $ event ^. EventEnd   <=. just (val end)
+            where_ (ct ^. CalTargetCalendar `in_` valList calendars)
+            where_ (event ^. EventBegin <=. val end ||. event ^. EventEnd >=. just (val begin))
             return (target, event)
 
         queryTodos = select $ from $ \(ct `InnerJoin` target `InnerJoin` todo) -> do
-
             let onTid = on . (==. target ^. TargetId)
             onTid (todo ^. TodoTarget)
             onTid (ct   ^. CalTargetTarget)
-
             where_ $ ct ^. CalTargetCalendar `in_` valList calendars
-            where_ $ todo ^. TodoBegin >=. val begin        -- todo-specific
-            where_ $ todo ^. TodoEnd   <=. just (val end)
+            where_ (todo ^. TodoBegin <=. val end ||. todo ^. TodoEnd >=. just (val begin))
             return (target, todo)
 
 queryCalendarNotes :: [CalendarId] -> QueryHandler [ (Entity Target, Entity Note) ]
 queryCalendarNotes calendars = runDB $
     select $ from $ \(ct `InnerJoin` target `InnerJoin` note) -> do
-
         let onTid = on . (==. target ^. TargetId)
         onTid  (note ^. NoteTarget)
         onTid  (ct   ^. CalTargetTarget)
-
         where_ (ct   ^. CalTargetCalendar `in_` valList calendars)
         orderBy [ asc $ note ^. NoteTarget ]
         return (target, note)
@@ -235,9 +246,10 @@ queryTarget' tid = runDB $ do
 -- | Create a new target given values.
 queryAddTarget :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
                => CalendarId
-               -> (Target, TargetId -> a)
+               -> Target
+               -> (TargetId -> a)
                -> QueryHandler CalTargetId
-queryAddTarget cid (t,f) = runDB $
+queryAddTarget cid t f = runDB $
     -- insert target, then specialization, finally associate to the calendar
     insert t >>= liftA2 (>>) (insert . f) (insert . CalTarget cid)
 
@@ -247,12 +259,15 @@ queryAddTarget cid (t,f) = runDB $
 queryModifyTarget :: (PersistEntity a, PersistEntityBackend a ~ SqlBackend)
                   => (a -> TargetId)
                   -> (TargetId -> Unique a)
+                  -> Target
                   -> a
                   -> QueryHandler ()
-queryModifyTarget toTid uniq new = let
+queryModifyTarget toTid uniq newTarget new = let
     tid = toTid new
     in do runDB (get404 tid) >>= guardTarget "Ei oikeutta muokata toisen kohdetta."
-          runDB $ getBy404 (uniq tid) >>= flip replace new . entityKey
+          runDB $ do
+              replace tid newTarget
+              getBy404 (uniq tid) >>= flip replace new . entityKey
 
 -- ** Delete
 

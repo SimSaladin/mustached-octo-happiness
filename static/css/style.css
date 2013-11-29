@@ -23,7 +23,8 @@ aside {
    bottom:0;
    overflow:auto;
    z-index:1;
-
+}
+#nav-main ul{
    font-variant:small-caps;
    font-weight:bold;
    color:#FFF;
@@ -250,4 +251,9 @@ label.required:after {
 }
 ::-webkit-scrollbar-thumb:window-inactive {
    background: rgba(186, 130, 194, 0.9); 
+}
+
+.cal-action {
+   padding:0 !important;
+   font-size:150%;
 }

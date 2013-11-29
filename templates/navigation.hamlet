@@ -6,3 +6,20 @@
       <a href=@{CalendarSettingsR}>Asetukset
    <li>
       <a href=@{AuthR LogoutR}>Kirjaudu ulos
+
+<aside>
+ <small>
+  <i .cal-action .color-orange>-
+  Piilota kalenterin kohteet
+
+  <br>
+  <i .cal-action .color-green>+
+  Näytä kalenterin kohteet
+
+  <br>
+  <i .cal-action .color-blue>!
+  Oletusarvoinen
+
+  <br>
+  <i .cal-action .color-black>!
+  Aseta oletusarvoiseksi

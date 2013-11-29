@@ -6,18 +6,22 @@ import Yesod.Auth.HashDB (setPassword)
 
 getFrontPageR :: Handler Html
 getFrontPageR = do
-    master <- getYesod
-    mmsg <- getMessage
+    muid <- maybeAuthId
+    case muid of
+        Just _ -> redirect CalendarR
+        Nothing -> do
+            master <- getYesod
+            mmsg <- getMessage
 
-    -- auth
-    ((res, rw), _) <- runFormPost registerForm
-    let [persona, google, hashdb]  = authPlugins master
-        aRender                    = flip apLogin AuthR
+            -- auth
+            ((res, rw), _) <- runFormPost registerForm
+            let [persona, google, hashdb]  = authPlugins master
+                aRender                    = flip apLogin AuthR
 
-    pc <- widgetToPageContent' $ do
-        setTitle "Mustached Octo Happiness"
-        $(widgetFile "frontpage")
-    giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
+            pc <- widgetToPageContent' $ do
+                setTitle "Mustached Octo Happiness"
+                $(widgetFile "frontpage")
+            giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
 postFrontPageR :: Handler Html
 postFrontPageR = do
@@ -27,14 +31,15 @@ postFrontPageR = do
         FormSuccess (ident, pw) -> do
             mu <- runDB $ getBy $ UniqueUser ident
             setMessage . toHtml =<< case mu of
+                Just _  -> return $ "Käyttäjänimi " <> ident <> " on valitettavasti jo käytössä."
                 Nothing -> do
-                    _ <- runDB . insert =<< setPassword pw (User ident Nothing Nothing) -- insert into "user" values (...)
+                    -- insert into "user" values (...)
+                    _ <- runDB . insert =<< setPassword pw (User ident Nothing Nothing)
                     return $ "Tervetuloa, " <> ident <> ". Voit nyt kirjautua sisään."
-                Just _ -> return $ "Käyttäjänimi " <> ident <> " on valitettavasti jo käytössä."
             redirect FrontPageR
 
         -- failure
-        FormMissing -> redirect FrontPageR
+        FormMissing -> setMessage "Tyhjä lomake." >> redirect FrontPageR
         _           -> getFrontPageR
 
 registerForm :: Form (Text, Text)

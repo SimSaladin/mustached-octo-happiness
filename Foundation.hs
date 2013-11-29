@@ -145,6 +145,7 @@ widgetToPageContent' :: Widget -> Handler (PageContent (Route App))
 widgetToPageContent' w = widgetToPageContent $ do
     $(combineStylesheets 'StaticR [ css_kube_min_css, css_style_css])
     w
+
 -- | Get the 'Extra' value, used to hold data from the settings.yml file.
 getExtra :: Handler Extra
 getExtra = fmap (appExtra . settings) getYesod
@@ -155,6 +156,5 @@ navigation = $(widgetFile "navigation")
 calendars :: Widget
 calendars = do
     CalendarInfo cals <- liftHandlerT queryCalendarInfo
-    let activate   k = [("activate", toPathPiece k)]
-        deactivate k = [("deactivate", toPathPiece k)]
+    mcal <- liftHandlerT activeCalendar
     $(widgetFile "calendar_nav")
