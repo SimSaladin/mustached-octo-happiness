@@ -119,7 +119,6 @@ input[type="password"] {
 .events th, .events td { width:14%; }
 .events th:first-child { width:2%; }
 .events td, .events th {
-   position:relative;
    padding:0 .2em .1em .2em;
 }
 @media screen and (max-height: 200px) {
@@ -179,9 +178,8 @@ input[type="password"] {
 
 /* cell buttons */
 .cact {
-   position:absolute;
-   right:0;
-   opacity:0.01;
+   float:right;
+   opacity:0.09;
    font-weight:bolder;
 }
 .cact-example { opacity:1; }
