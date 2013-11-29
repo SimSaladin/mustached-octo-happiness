@@ -6,13 +6,13 @@ $else
     $forall (Entity k c, act, n) <- cals
       <li>
          $if act
-          <a .cal-action .icon-white.icon-eye-open href=@{CalendarViewR k "unview"}>
+          <a .cal-action .icon-white.icon-eye-open title="Piilota" href=@{CalendarViewR k "unview"}>
          $else
-          <a .cal-action .icon-white.icon-eye-close href=@{CalendarViewR k "view"}>
+          <a .cal-action .icon-white.icon-eye-close title="Näytä" href=@{CalendarViewR k "view"}>
 
-         $if (==) mcal (Just k)
+         $if (mcal == Just k)
             <b>#{calendarName c}
          $else
-            <a .color-blue href=@{CalendarActiveR k}>
+            <a .color-blue title="Aseta oletusarvoiseksi" href=@{CalendarActiveR k}>
                <b>#{calendarName c}
          <sup .label .label-#{calendarColor c}>#{show n}

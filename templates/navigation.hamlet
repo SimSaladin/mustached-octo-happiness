@@ -9,10 +9,10 @@
 
 <aside>
  <small>
-  <i .cal-action .icon-white.icon-eye-close>
+  <i .cal-action .icon-white.icon-eye-open>
   Näytetään
   <br>
   <i .cal-action .icon-white.icon-eye-close>
   Piilossa
   <br>
-  <span .color-blue>Oletusarvoinen
+  <span .color-blue>Aseta oletusarvoiseksi
