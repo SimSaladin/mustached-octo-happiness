@@ -3,9 +3,9 @@
 cabal clean \
    && cabal configure -fproduction \
    && cabal build \
-   && scp -r static/combined \
+   && rsync -r static/ \
              functor:/srv/sites/mustached-octo-happiness/static \
-   && scp dist/build/mustached-octo-happiness/mustached-octo-happiness \
+   && scp -C dist/build/mustached-octo-happiness/mustached-octo-happiness \
           functor:/srv/sites/mustached-octo-happiness/binary.new \
    && ssh -t functor 'bash -c "sudo systemctl stop mustached-octo-happiness \
    && mv /srv/sites/mustached-octo-happiness/{binary,binary.old} \
