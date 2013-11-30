@@ -1,9 +1,10 @@
 <body .bannered .color-secondary>
  <main .color-main .box-wrapped>
-    <h1>Mustached Octo Happiness
-    <h1 .subheader>Kalenterijärjestelmä
+    <img src=@{StaticR img_logo_wide_png}>
+    <h1 .subheader style="float:right; padding-right:3em">Kalenterijärjestelmä
+
     <aside>
-       Kirjaudu sisään Personan tai GMailin kautta, tai luo dedikoitu tunnus.
+      <p>Kirjaudu sisään Personan tai GMailin kautta, tai luo dedikoitu tunnus.
  
     $maybe msg <- mmsg
        <div .message>#{msg}
@@ -11,12 +12,12 @@
     <section>
       <div .units-row #front-auth>
        <div .unit-30>
-          <h2 .subheader>Mozilla Persona
+          <h3>Mozilla Persona
           ^{aRender persona}
-          <h3 .subheader>Gmail
+          <h3>Gmail
           ^{aRender google}
        <div .unit-70>
-          <h2 .subheader>Oma tunnus
+          <h3>Oma tunnus
           ^{aRender hashdb}
           <form .forms .forms-columnar action=@{FrontPageR} method=post>
              <fieldset>

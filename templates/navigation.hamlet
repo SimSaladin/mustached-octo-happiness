@@ -16,3 +16,4 @@
   Piilossa
   <br>
   <span .color-blue>Aseta oletusarvoiseksi
+  <img .small-logo src=@{StaticR img_logo_png}>

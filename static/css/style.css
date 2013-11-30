@@ -251,3 +251,7 @@ label.required:after {
    padding:0 !important;
    font-size:150%;
 }
+.small-logo {
+   width:12em;
+   padding-top:5em;
+}
