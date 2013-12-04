@@ -493,52 +493,48 @@ git clone http://github.com/SimSaladin/mustached-octo-happiness
 cd mustached-octo-happiness
 \end{verbatim}
 
-\textbf{Huom.} Varmista, että \~/.cabal/bin (tai .cabal-sandbox/bin, jos loit
-hiekkalaatikon) on PATH:issa.
+\textbf{Huom.} Varmista, että \~/.cabal/bin (tai .cabal-sandbox/bin, jos
+työskentelet hiekkalaatikossa) on PATH:issa.
 
 \subsection{Tietokanta}
-
-Asenna ja konfiguroi PostgreSQL.
-\\
-Luo järjestelmälle käyttäjä ja tietokanta.
-\\
-Aseta tietokantaparametrit tiedostoon \texttt{config/postgresql.yml}.
+\begin{enumerate}
+   \item Asenna ja konfiguroi PostgreSQL. Järjestelmä luo taulut itse, mutta ei
+      tietokantaa. Järjestelmän tietokanta-asetukset löytyvät \texttt{tiedostosta
+      config/postgresql.yml}.
+   \item Luo järjestelmälle käyttäjä ja tietokanta.
+   \item Aseta tietokantaparametrit tiedostoon \texttt{config/postgresql.yml}.
+\end{enumerate}
 
 \subsection{Kehityspalvelin}
-
 Ensimmäinen asennus kestää pitkään useiden riippuvuuksien vuoksi (nopealla
 koneella 15min, hitaammalla vielä kauemmin):
 \begin{verbatim}
 cabal install
 \end{verbatim}
 
-\textit{XXX: Binäärit pitänee asentaa käsin ennen ylempää, puhtaalla systeemilla?
-(alex, happy)}
+\textit{Binäärit pitänee asentaa käsin ennen ylempää asennettaessa puhtaalla
+systeemilla (alex?, happy?). Nämä tulee kuitenkin selkeästi esille riippuvuuksia
+asennettaessa ylemmällä.}
 
 \subsection{Kehitysympäristö}
-
 Kehityspalvelimen käynnistys:
 \begin{verbatim}
-cabal install # ei ole tarpeen, jos ajoit jo aiemmin
 yesod devel
 \end{verbatim}
-
 Nyt järjestelmä kuuntelee osoitteessa \texttt{http://localhost:3000}, jos kaikki
 meni oikein.
 
-\textbf{Huom.} Nopean katsausta järjestelmän toiminnasta kaipaaville
+\textbf{Huom.} Nopeaa katsausta järjestelmän koodikannasta kaipaaville
 haddock-dokkarit löytyvät osoitteesta
 \texttt{http://animu.paivola.fi/dump/mustached-octo-happiness}.
 
 \subsection{Tuotantoasennus}
-
 Tuotantoasennusta varten voi tutustua skriptiin \texttt{script/deploy.sh}.
 Lyhyesti, käännetään cabal-paketti production-lipalla ja kopioidaan binääri ja
 staattiset tiedostot tuotantopalvelimelle.
 
-\section{Käynnistys- / käyttöohje}
-
-Tekijän instanssi järjestelmästä löytyy toistaiseksi osoitteesta
+\section{Käyttöohje}
+Allekirjoittaneen julkinen instanssi järjestelmästä löytyy toistaiseksi osoitteesta
 \\\texttt{http://mustached-octo-happiness.functor.paivola.fi}. Sitä voi käyttää
 vapaasti; rekisteröityminen tapahtuu suoraan käyttäjätunnus/salasana-parilla,
 tai jollain sivulla näkyvillä muilla metodeilla.
@@ -551,14 +547,23 @@ yleisnäkymään, josta näet ja voit operoida kalentereitasi.
 \chapter{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat}
 
 \section*{Autentikoinnista ja autorisoinnista}
-
 Autentikaoidessa BrowserId, Gmail jne. failaavat, jos hashdb:llä joku on
 rekisteröinyt saman spostin nimimerkiksi.
 
 \section*{Tietokantakyselyistä}
+Kaikissa tietokantaoperaatioissa ei taideta tarkastaa kyselijän oikeutta
+operaatioon. Jotkin operaatiot kalentereihin ja kohteisiin saattavat olla
+mahdollista käyttäjille, jotka eivät olisi niihin oikeutettuja.
 
 \section*{Ideoita}
-% jatko: ryhmiä, icalendar,
+\begin{itemize}
+      \item Ryhmähallinta
+      \item Erilaiset tuonti- vienti- ja synkronointimahdollisudet: .ics,
+         caldav, google calendar\dots
+      \item Erilaiset näkymät, kuten kuukausi-, päivä- ja kohdenäkymät.
+      \item CSS-tyylit ja kotinäkymän markup vaativat uudelleenkatsauksen,
+         jos järjestelmän visuaalista ilmettä lähtisi kehittämään.
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliography{refs.bib}
