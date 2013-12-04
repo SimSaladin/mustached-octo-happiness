@@ -3,8 +3,9 @@ Mustached-Octo-Happiness
 
 Mustached Octo Happiness (moh), a basic calendar system.
 
-Instance: (http://mustached-octo-happiness.functor.paivola.fi/)
-Haddock: (http://animu.paivola.fi/dump/mustached-octo-happiness/)
+Instance: http://mustached-octo-happiness.functor.paivola.fi/
+
+Haddock: http://animu.paivola.fi/dump/mustached-octo-happiness/
 
 see
 ---
