@@ -2,7 +2,9 @@ body {
    min-width:77em; // nav 12em + events 45em + right bar 20em
 }
 body.bannered {
-   width:800px;
+   position:relative;
+   min-width:500px;
+   max-width:700px;
    margin:5em auto;
 }
 aside {

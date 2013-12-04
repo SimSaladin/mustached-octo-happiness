@@ -1,7 +1,8 @@
 <body .bannered .color-secondary>
  <main .color-main .box-wrapped>
-    <img src=@{StaticR img_logo_wide_png}>
-    <h1 .subheader style="float:right; padding-right:3em">Kalenterijärjestelmä
+    <img style="float:left;clear:both" src=@{StaticR img_logo_wide_png}>
+    <h1 .subheader style="float:right; padding-right:3em">
+      Kalenterijärjestelmä
 
     <aside>
       <p>Kirjaudu sisään Personan tai GMailin kautta, tai luo dedikoitu tunnus.
@@ -9,7 +10,7 @@
     $maybe msg <- mmsg
        <div .message>#{msg}
  
-    <section>
+    <section style="margin-top:1em">
       <div .units-row #front-auth>
        <div .unit-30>
           <h3>Mozilla Persona
@@ -29,3 +30,6 @@
                 ^{rw}
                 <p>
                    <input .btn type="submit" value="Rekisteröidy">
+    <footer>
+ <a href="https://github.com/SimSaladin/mustached-octo-happiness">
+  <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub">
