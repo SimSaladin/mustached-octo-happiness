@@ -1,6 +1,21 @@
+Mustached-Octo-Happiness
+===============
+
+Mustached Octo Happiness (moh), a basic calendar system.
+
+Instance: (http://mustached-octo-happiness.functor.paivola.fi/)
+Haddock: (http://animu.paivola.fi/dump/mustached-octo-happiness/)
+
+see
+---
+
 - calTargetForm @Handler.Calendar
 
-Features
+
+
+---
+
+OLD
 ========
 
 ## Calendar
@@ -26,9 +41,4 @@ Features
 
 
 RFC4791 (CalDAV): http://tools.ietf.org/html/rfc4791#section-3
-
-
-Database?
-=========
-
 
