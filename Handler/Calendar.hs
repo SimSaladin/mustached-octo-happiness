@@ -149,19 +149,21 @@ getCalendarActiveR cid = setActiveCalendar cid >> redirect CalendarR
 calendarForm :: Maybe Calendar -> Form Calendar
 calendarForm mcal = renderKube $ Calendar
     <$> maybe (lift requireAuthId) (pure . calendarOwner) mcal
-    <*> areq (checkM calendarIsUnique textField) "Nimi"           (calendarName <$> mcal)
+    <*> areq nameField "Nimi"           (calendarName <$> mcal)
     <*> aopt textField "Kuvaus"         (calendarDesc <$> mcal)
     <*> areq colorField "Väri"          (Just $ maybe "green" calendarColor mcal)
     <*> areq checkBoxField "Julkinen"   (calendarPublic <$> mcal)
     <*> areq checkBoxField "Julkisesti muokattava" (calendarPublicedit <$> mcal)
+    where
+        nameField = checkM (calendarIsUnique $ calendarName <$> mcal) textField
 
-calendarIsUnique :: Text -> Handler (Either Text Text)
-calendarIsUnique cname = do
+calendarIsUnique :: Maybe Text -> Text -> Handler (Either Text Text)
+calendarIsUnique mold new = do
         uid <- requireAuthId
-        mc <- runDB $ getBy $ UniqueCalendar uid cname
-        return $ case mc of
-            Just _  -> Left "Samanniminen kalenteri on jo olemassa"
-            Nothing -> Right cname
+        mdb <- runDB . getBy $ UniqueCalendar uid new
+        return $ if isJust mdb && maybe True (new /=) mold
+            then Left "Samanniminen kalenteri on jo olemassa."
+            else Right new
 
 calendarListing :: Widget
 calendarListing = do
