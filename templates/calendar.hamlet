@@ -49,21 +49,29 @@ $maybe cal <- mcal
                     $of Left _event
                     $of Right _todo
   <div .bottom>
-   <span .pull-right>
-      Uusi tapahtuma
-      <sup .cact-example .label.label-small.label-blue>E
-      Uusi tehtävä
-      <sup .cact-example .label.label-small.label-red>T
-      <br>
-      <i>Näytetään #{numOfObjects} kalenteriobjektia.
+   <span .btn-group .pull-right>
+      <a .btn href="?weekstart=#{show prevWeek}">
+         <i.icon-chevron-left>
+         Edellinen (Vko #{formatWeekNumber prevWeek})
+      <a .btn href=@{CalendarR}>
+         <i.icon-calendar>
+         Tänään
+      <a .btn href="?weekstart=#{show nextWeek}">
+         Seuraava (Vko #{formatWeekNumber nextWeek})
+         <i.icon-chevron-right>
    <p>
       <span .btn-group>
            <a.btn.btn-blue   href=@{TargetCreateR cal TargetEvent}>Tapahtuma
            <a.btn.btn-yellow href=@{TargetCreateR cal TargetTodo}>Tehtävä
            <a.btn.btn-green  href=@{TargetCreateR cal TargetNote}>Muistiinpano
-      <span .btn-group>
-         <a .btn href="?weekstart=#{show prevWeek}">Viikko N-1
-         <a .btn href="?weekstart=#{show nextWeek}">Viikko N+1
+      <br>
+      <div>
+         Uusi tapahtuma
+         <sup .cact-example .label.label-small.label-blue>E
+         Uusi tehtävä
+         <sup .cact-example .label.label-small.label-red>T
+         <br>
+         <i>Näytetään #{numOfObjects} kalenteriobjektia.
 
 $nothing
    <div .units-row>

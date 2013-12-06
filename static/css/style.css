@@ -115,6 +115,9 @@ input[type="password"] {
 .events td, .events th {
    padding:0 .2em .1em .2em;
 }
+.events td:nth-child(2), .events th:nth-child(2) {
+   background: #DABDDA !important;
+}
 @media screen and (max-height: 200px) {
    .events td { min-height:3em; }
 }

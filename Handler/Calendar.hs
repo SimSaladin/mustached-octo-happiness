@@ -55,7 +55,7 @@ getCalendarR = do
     timezone <- liftIO getCurrentTimeZone -- TODO user supplied?
 
     let dayRange     = [fromDay..toDay]
-        prev_week    = addDays (-7) fromDay
+        prevWeek     = addDays (-7) fromDay
         nextWeek     = addDays 1 toDay
         numOfObjects = length events + length todos
         --
@@ -457,6 +457,8 @@ formatTimeFrame :: FormatTime t => t -> t -> String
 formatTimeFrame b e = formatTime myLocale "%d.%m klo. %H:%M - " b <>
                       formatTime myLocale "%H:%M" e
 
+formatWeekNumber :: FormatTime t => t -> String
+formatWeekNumber = formatTime myLocale "%V"
 
 -- * Fields
 
