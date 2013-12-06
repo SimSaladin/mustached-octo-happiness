@@ -136,7 +136,7 @@ visaalisiin lohkoihin.
 \subsection{Kalenterit}\label{oma_kalenteri}
 Käyttäjällä voi olla usea kalenteri järjestelmässä.  Käyttäjän luomaa kalenteria
 kutsutaan \emph{käyttäjän omistamaksi} kalenteriksi.  Olemassaolevan kalenterin
-omistajaa ei voi vaihtaa.  Omaan kalenteriin liittyvät toiminnot:
+omistajaa ei voi vaihtaa.  Kalenteritoiminnot:
 \begin{description}
    \item[Luonti] \hfill\\
       Kalenterin luominen on ensimmäinen asia jonka uusi
@@ -157,7 +157,9 @@ omistajaa ei voi vaihtaa.  Omaan kalenteriin liittyvät toiminnot:
          Jos aikaa riittää niin näytettävä sisältö on paremmin säädettävissä
          (kuukausi, päivä, tai muita näkymiä).
       }  Näkyvää viikkoa voi vaihtaa seuraavaan, edelliseen, senhetkiseen
-      viikkoon tai johonkin tiettyyn viikkoon.
+      viikkoon tai johonkin tiettyyn viikkoon.\footnote{Tiettyyn viikkoon vain
+         menemällä useasti eteen tai taakse, mitään viikkosyötettä eii
+      (GET-parametria lukuunottamatta voi (kurssin versiossa) antaa.}
 
       Näkymässä näkyvät kalenterit voi valita.
 
@@ -203,7 +205,7 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
       ulkopuolelta.
 
    \item[Tarkastelu]\hfill\\
-      Kalenterikohteita tarkastellaan kalenterinäkymässä, ja kohteiden
+      Kalenterikohteita tarkastellaan kalenterinäkymässä ja kohteita sekä niiden
       yksityiskohtia valitsemalla kohteen kalenterinäkymässä.
 
    \item[Muokkaus]\hfill\\
@@ -212,16 +214,9 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
       Kaikista kohteista muokattavat attribuutit:
       \begin{description}
          \item[Kuvaus]  Tärkein attribuutti on kuvaus kohteesta.
-         \item[Paikka]  Kohteeseen liittyvä maantieteellinen sijainti.
-         \item[Kommentti]  Sivuhuomautus kohteesta.
-         \item[Osallistujat] Henkilöt, joita kohde koskee.
-         \item[Tärkeys]  Kuinka tärkeä kohde on (jollain asteikolla).
-         \item[Hälytysajat]  Kun kohteesta halutaan muistutus. Esimerkiksi
-            tietty aika ennen tapahtuman alkamisajankohtaa tai tehtävän
-            deadlinea.
       \end{description}
-
-      Kohteiden metadata (luodaan implisiittisesti):
+      Kohteiden metadata (luodaan implisiittisesti):\footnote{Huomaa, että nämä
+      puuttuvat implementaatiosta ainakin toistaiseksi (alhainen prioriteetti).}
       \begin{description}
          \item[Luontipäivämäärä]  Jotta voidaan tarkistaa koska kohde lisättiin
             kalenteriin.
@@ -239,6 +234,12 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
                \item[Kesto]  Kauanko tapahtuma kestää?
                \item[Toistuvuus] Kuinka usein ja milloin tapahtuma toistuu (jos
                   toistuu)?
+               \item[Hälytysajat]  Kun tapahtumasta halutaan muistutus. Esimerkiksi
+                  tietty aika ennen tapahtuman alkamisajankohtaa.
+               \item[Kommentti]  Sivuhuomautus tapahtumasta.
+               \item[Tärkeys]  Kuinka tärkeä tapahtuma on (jollain asteikolla).
+               \item[Paikka]  Tapahtumaan liittyvä maantieteellinen sijainti.
+               \item[Osallistujat] Henkilöt, joita tapahtuma koskee.
             \end{description}
 
          \item[Muistiinpano (Note)] \hfill\\
@@ -255,6 +256,9 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
             \begin{description}
                \item[Valmis] Onko \texttt{todo} valmistunut?
                \item[Toistuvuus] Toistuuko tehtävä säännöllisesti, milloin?
+               \item[Hälytysajat]  Kun tehtävästä halutaan muistutus. Esimerkiksi
+                  tietty aika ennen tehtävän deadlinea.
+               \item[Tärkeys]  Kuinka tärkeä tehtävä on (jollain asteikolla).
             \end{description}
       \end{description}
 
@@ -268,7 +272,8 @@ Yleiseen kalenterikohteeseen liittyvät käyttötapaukset:
       kysytään aina varmistus.  Toistuvien kohteiden kohdalla kysytään,
       halutaanko poistaa kaikki toistot vai ainoastaan valittu toisto.
 
-   \item[Jako]\hfill\\
+   \item[Jako\footnote{Näistä ainakin käyttäjäkohdistuva taitaa jäädä
+      toteuttamatta}]\hfill\\
       Yksittäisiä kohteita voi jakaa sellaisenaan muille järjestelmän
       käyttäjille, ja myös viedä tekstimuotoon esimerkiksi liitettäväksi
       sähköpostiin.  Jakamiseen edetään yksityiskohtaisesta näkymästä. 
@@ -399,7 +404,8 @@ ja mahdollisesti myös kuinka useasti (päivittäin, viikoittain, kuukausittain,
 
 \section{Relaatiotietokanta}
 Järjestelmän tietokannan taulut ja niiden pää- ja vierasavaimet on kuvattu
-kaaviossa~\ref{graph_database}. Taulukossa~\ref{graph_columns} on lueteltu
+kaaviossa~\ref{graph_database}.\footnote{Lieköhän pilkulleen tarkka uusimman määrittelyn kanssa?}
+Taulukossa~\ref{graph_columns} on lueteltu
 taulujen sarakkeet ja niiden tyypit kannassa. Todellisuudessa kanta on luotu ja
 käytetään jarjestelmässä \texttt{persistent}-kirjaston avulla, ks. tiedosto
 \texttt{config/models}.
@@ -499,8 +505,7 @@ työskentelet hiekkalaatikossa) on PATH:issa.
 \subsection{Tietokanta}
 \begin{enumerate}
    \item Asenna ja konfiguroi PostgreSQL. Järjestelmä luo taulut itse, mutta ei
-      tietokantaa. Järjestelmän tietokanta-asetukset löytyvät \texttt{tiedostosta
-      config/postgresql.yml}.
+      tietokantaa.
    \item Luo järjestelmälle käyttäjä ja tietokanta.
    \item Aseta tietokantaparametrit tiedostoon \texttt{config/postgresql.yml}.
 \end{enumerate}
@@ -512,9 +517,9 @@ koneella 15min, hitaammalla vielä kauemmin):
 cabal install
 \end{verbatim}
 
-\textit{Binäärit pitänee asentaa käsin ennen ylempää asennettaessa puhtaalla
-systeemilla (alex?, happy?). Nämä tulee kuitenkin selkeästi esille riippuvuuksia
-asennettaessa ylemmällä.}
+\textit{Tietyt binäärit pitänee asentaa käsin ennen ylempää asennettaessa
+puhtaalla systeemilla (alex?, happy?) ja ikääntyneemmällä cabalilla. Nämä tulee
+kuitenkin selkeästi esille riippuvuuksia asennettaessa ylemmällä.}
 
 \subsection{Kehitysympäristö}
 Kehityspalvelimen käynnistys:
@@ -528,10 +533,15 @@ meni oikein.
 haddock-dokkarit löytyvät osoitteesta
 \texttt{http://animu.paivola.fi/dump/mustached-octo-happiness}.
 
+\textbf{Huom.} tiedostossa \texttt{config/settings.yml} voi asettaa applikaation
+yleisiä asetuksia, esimerkiksi vaihtaa kuuntelevaa porttia.
+
 \subsection{Tuotantoasennus}
 Tuotantoasennusta varten voi tutustua skriptiin \texttt{script/deploy.sh}.
 Lyhyesti, käännetään cabal-paketti production-lipalla ja kopioidaan binääri ja
-staattiset tiedostot tuotantopalvelimelle.
+staattiset tiedostot tuotantopalvelimelle. Suosittu tapa ajaa tällaisia
+applikaatioita tuotannossa on käänteisvälityspalvelimen (reverse proxy) avulla
+esimerkiksi Nginx-instanssilta.
 
 \section{Käyttöohje}
 Allekirjoittaneen julkinen instanssi järjestelmästä löytyy toistaiseksi osoitteesta
@@ -549,11 +559,45 @@ yleisnäkymään, josta näet ja voit operoida kalentereitasi.
 \section*{Autentikoinnista ja autorisoinnista}
 Autentikaoidessa BrowserId, Gmail jne. failaavat, jos hashdb:llä joku on
 rekisteröinyt saman spostin nimimerkiksi.
+Myöskään kyseisiä vaihtokirjautumisia ei ole testattu; ne on konfiguroitu
+aikaisemman kokemuksen ja näppituntuman avulla.
 
 \section*{Tietokantakyselyistä}
 Kaikissa tietokantaoperaatioissa ei taideta tarkastaa kyselijän oikeutta
 operaatioon. Jotkin operaatiot kalentereihin ja kohteisiin saattavat olla
-mahdollista käyttäjille, jotka eivät olisi niihin oikeutettuja.
+mahdollista käyttäjille, jotka eivät tarkasti ottaen olisi niihin oikeutettuja.
+Esimerkiksi joitain poisto-operaatioita ei merkata, joten jos käyttäjä arvaa
+jonkin kalenterin tai kohteen tunnisteen, voi hän poistaa sen triviaalilla
+POST-kyselyllä oikeaan URL:iin.
+
+\section*{Kosmetiikka}
+Viikkonäkymässä ensimmäinen päivä korostetaan taka-ajatuksena merkata
+tämänhetkistä päivää. Ensimmäinen päivä viikkonäkymässä ei kuitenkaan ole
+senhetkinen päivä, jos katsotaan tulevia tai menneitä tapahtumia.
+
+Kalenterilistauksessa on listataan kaikkien kohteiden lukumäärä kalentereista.
+Pitäisikö menneet kohteet vain unohtaa tästä?
+
+\section*{Yleistä testauksesta}
+Applikaatiota ei ole ollut aikaa testata ohjelmallisesti. Kuitenkin, syötteet,
+tietokantakyselyt ja -mallit, reititys jne. on toteutettu laajasti testatuilla
+ja katastrofaalisen toiminnan estävillä työkaluilla, joten applikaation voi
+teorioiltaan mieltää suurimmilta osin oikein toimivaksi.
+
+Testattavaa ja korjattavaa pitäisi lisätä ainakin seuraaviin:
+\begin{description}
+   \item[Lomakkeiden arvojen järjellisyys] Esimerkiksi tekstikentät voivat olla
+      lähes äärettömän monta merkkiä pitkiä.
+   \item[CSS] ei liene yhteensopiva kovinkaan monen selaimen kanssa. Lisäksi
+      käyttöliittymän toiminnassa on ei-toivottoja ominaisuuksia, kuten
+      kalenterin skrollaaminen pienellä näytöllä sivuittain, mikä ei toimi.
+   \item[SQL] Kyselyissä käytännössä ainoa testauskohde on kyselyiden haluttu
+      haluttu toiminta eikä kyselyn toimiminen. Esimerkiksi usean taulun
+      liitosten oikeellisuus tilanteeseen pitäisi varmistaa.
+   \item[GET-Parametrit] Vaikka kaikki reititys onkin kunnossa, niin
+      GET-parametrien toiminta pitäisi varmistaa esimerkiksi
+      viikkonavigaatiossa.
+\end{description}
 
 \section*{Ideoita}
 \begin{itemize}
@@ -563,6 +607,10 @@ mahdollista käyttäjille, jotka eivät olisi niihin oikeutettuja.
       \item Erilaiset näkymät, kuten kuukausi-, päivä- ja kohdenäkymät.
       \item CSS-tyylit ja kotinäkymän markup vaativat uudelleenkatsauksen,
          jos järjestelmän visuaalista ilmettä lähtisi kehittämään.
+      \item Kohteiden alikäytetyille kentille (tärkeys, hälytys, osallistujat
+         jne.) voisi keksiä jotain käteviä käyttötapauksia.
+      \item Kohteille metadata, joka unohtui lisätä heti alussa
+       \item Tuki kryptatulle sisällölle (CryptJS)
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
