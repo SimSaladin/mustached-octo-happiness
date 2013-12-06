@@ -62,8 +62,8 @@ $maybe cal <- mcal
            <a.btn.btn-yellow href=@{TargetCreateR cal TargetTodo}>Tehtävä
            <a.btn.btn-green  href=@{TargetCreateR cal TargetNote}>Muistiinpano
       <span .btn-group>
-         <a .btn .disabled>Viikko N-1
-         <a .btn .disabled>Viikko N+1
+         <a .btn href="?weekstart=#{show prevWeek}">Viikko N-1
+         <a .btn href="?weekstart=#{show nextWeek}">Viikko N+1
 
 $nothing
    <div .units-row>

@@ -55,7 +55,10 @@ getCalendarR = do
     timezone <- liftIO getCurrentTimeZone -- TODO user supplied?
 
     let dayRange     = [fromDay..toDay]
+        prev_week    = addDays (-7) fromDay
+        nextWeek     = addDays 1 toDay
         numOfObjects = length events + length todos
+        --
         -- Huh? 
         -- 1. take todos and events, map their hours, sort by and group by
         --    hours 0..23.
@@ -65,12 +68,16 @@ getCalendarR = do
             (second $ sepDays . sortBy (comparing fst) . map getDay)
                     . sepHours . sortBy (comparing fst) . map getHour
                     $ go eventRF Left events ++ go todoRF Right todos
+        --
         go :: (b -> [TimeRange]) -> (b -> Either Event Todo) -> [(Entity Target, b)] -> [Cell]
         go rs vs = concatMap $ zip <$> rs . snd <*> repeat . second vs
+        --
         eventRF  = nextRepeatsAt dayRange <$> eventBegin <*> eventEnd <*> eventRepeat
         todoRF   = nextRepeatsAt dayRange <$> todoBegin <*> todoEnd <*> todoRepeat
+        --
         sepHours xs = L.unfoldr groupHours (0, xs)
         sepDays  xs = L.unfoldr (groupDays toDay) (fromDay, xs)
+        --
         getHour x@((t,_),_) = (todHour $ localTimeOfDay t, x)
         getDay  x@((t,_),_) = (localDay t, x)
         --
@@ -428,8 +435,11 @@ lookupTimeAt = do
         Just t  -> return $ read' t
 
 getViewTimeframe :: Handler (Day, Day)
-getViewTimeframe = liftM (liftA2 (,) id (addDays 6) . utctDay) $
-    liftIO getCurrentTime
+getViewTimeframe = liftM (liftA2 (,) id (addDays 6)) $
+    do mbegin <- liftM (read . T.unpack <$>) $ lookupGetParam "weekstart"
+       case mbegin of
+           Just begin -> return begin
+           Nothing    -> liftM utctDay $ liftIO getCurrentTime
 
 days :: [Text]
 days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ]

@@ -3,9 +3,9 @@ body {
 }
 body.bannered {
    position:relative;
-   min-width:500px;
-   max-width:700px;
    margin:5em auto;
+   min-width:35em;
+   max-width:926px; // TODO
 }
 aside {
    font-style:oblique;
@@ -94,6 +94,7 @@ a:hover, a:active {
 }
 .box-wrapped {
    box-shadow:-8px 8px 0 #9a40a5;
+   min-width:20em;
    padding:2em;
 }
 /*}}}*/
