@@ -8,7 +8,9 @@
       <p>Kirjaudu sisään Personan tai GMailin kautta, tai luo dedikoitu tunnus.
  
     $maybe msg <- mmsg
-       <div .message>#{msg}
+       <div .message>
+         #{msg}
+         <a style="float:right" .icon-white .icon-remove href="">
  
     <section style="margin-top:1em">
       <div .units-row #front-auth>

@@ -3,4 +3,6 @@
       <nav #nav-main .color-secondary>^{navigation}
       <main>^{widget}
    $maybe msg <- mmsg
-      <div .message>#{msg}
+      <div .message>
+         #{msg}
+         <a style="float:right" .icon-white .icon-remove href="">
