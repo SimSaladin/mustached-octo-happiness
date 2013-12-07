@@ -1,0 +1,6 @@
+<div .units-row>
+   <div .unit-centered.unit-70>
+      <h1 style="margin-top:2em;">Varmasti poista kohde?
+      <form action=@{TargetDeleteR tid} method=post>
+         <input .btn .btn-big .btn-orange type=submit value="Poista">
+         <a .btn .btn-big href=@{TargetReadR tid}>Peruuta

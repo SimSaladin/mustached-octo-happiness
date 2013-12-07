@@ -282,12 +282,17 @@ postTargetUpdateR tid = do
         T2 (Entity _ todo)  -> go TargetTodo  todo
         T3 (Entity _ note)  -> go TargetNote  note
 
+getTargetDeleteR :: TargetId -> Handler Html
+getTargetDeleteR tid = do
+    defaultLayout $ do
+        $(widgetFile "target_delete_confirm")
+
 -- | Delete a target.
 postTargetDeleteR :: TargetId -> Handler Html
 postTargetDeleteR tid = do
-        queryDeleteTarget tid
-        setMessage "Kohde poistettu."
-        redirect CalendarR
+    queryDeleteTarget tid
+    setMessage "Kohde poistettu."
+    redirect CalendarR
 
 -- ** Other
 

@@ -11,7 +11,7 @@ import Database.Esqueleto
 import Yesod  ( HandlerT, runDB, cached, get404, getBy404
               , lookupSession, setSession, deleteSession
               , notFound, permissionDenied)
-import Yesod.Auth           (requireAuthId, YesodAuth, AuthId)
+import Yesod.Auth           (maybeAuthId, requireAuthId, YesodAuth, AuthId)
 import Yesod.Persist.Core   (YesodPersist, YesodPersistBackend)
 import qualified Data.Text as T
 import qualified Data.Set as S
@@ -56,6 +56,11 @@ queryCalendarInfo = do
             where_  (c ^. CalendarOwner ==. val uid)
             orderBy [asc $ c ^. CalendarName]
             return (c, count $ mt ?. CalTargetId)
+
+queryPublicCalendars :: QueryHandler [(Entity Calendar, Bool, Int)]
+queryPublicCalendars = do
+    muid <- maybeAuthId
+    return [] -- TODO
 
 -- *** Individual
 

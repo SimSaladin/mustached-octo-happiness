@@ -1,6 +1,6 @@
 <body .bannered .color-secondary>
  <main .color-main .box-wrapped>
-    <img style="float:left;clear:both" src=@{StaticR img_logo_wide_png}>
+    <img style="float:left;clear:both" src=@{StaticR img_moh_wt_svg}>
     <h1 .subheader style="float:right; padding-right:3em">
       Kalenterijärjestelmä
 
@@ -10,7 +10,7 @@
     $maybe msg <- mmsg
        <div .message>
          #{msg}
-         <a style="float:right" .icon-white .icon-remove href="">
+         <a style="float:right" .icon-remove href="">
  
     <section style="margin-top:1em">
       <div .units-row #front-auth>

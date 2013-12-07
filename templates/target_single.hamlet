@@ -51,9 +51,9 @@
             <h1 .subheader>Muistiinpano
             <p>#{noteContent note}
             <hr>
-      <form .pull-right action=@{TargetDeleteR tid} method=post>
-         <input .btn .btn-orange type=submit value="Poista">
-      <a .btn .btn href=@{TargetUpdateR tid}>Muokkaa
-      <a .btn .btn href=@{TargetTextR tid}>Teksti
-      <a .btn .btn .disabled href="javascript:alert('not implemented, sorry.')">Linkki
-      <a .btn .btn href=@{TargetSendR tid}>Lähetä...
+      <a .btn href=@{TargetUpdateR tid}>Muokkaa
+      <a .btn href=@{TargetTextR tid}>Teksti
+      \<!--<a .btn .disabled href="javascript:alert('not implemented, sorry.')">Linkki
+      \-->
+      <a .btn href=@{TargetSendR tid}>Lähetä...
+      <a .btn .btn-orange .pull-right href=@{TargetDeleteR tid}>Poista

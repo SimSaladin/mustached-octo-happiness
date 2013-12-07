@@ -1,9 +1,11 @@
-XXX: logot svg:ksi
-XXX: julkisen vieraskalenterin tarkastelu
-XXX: julkiseen kalenteriin kohteen lisääminen
+
+DONE: logot svg:ksi
+DONE: Kohteen poiston varmistus
+WONTFIX: Mahdollisuus poistaa vain valittu toistopäivä
+
 XXX: kalenteripoistossa kohteiden poiston varmistus, jos epätyhjä
 XXX: Kohteiden kopionti (muokkausvalikosta uutena tallentaminen)
-XXX: Kohteiden poiston varmistus
-XXX: Mahdollisuus poistaa valittu toisto
-XXX: Kohteiden jakaminen tekstinä
-XXX: Kohteiden jakaminen käyttäjälle
+XXX: Kohteen jakaminen tekstinä
+XXX: Kohteen jakaminen käyttäjälle
+XXX: julkisen vieraskalenterin tarkastelu
+XXX: julkiseen kalenteriin kohteen lisääminen

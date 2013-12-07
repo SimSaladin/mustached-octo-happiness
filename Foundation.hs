@@ -162,3 +162,9 @@ calendars = do
     CalendarInfo cals <- liftHandlerT queryCalendarInfo
     mcal <- liftHandlerT activeCalendar
     $(widgetFile "calendar_nav")
+
+publicCalendars :: Widget
+publicCalendars = do
+    cals <- liftHandlerT queryPublicCalendars
+    mcal <- liftHandlerT activeCalendar
+    $(widgetFile "calendar_nav")

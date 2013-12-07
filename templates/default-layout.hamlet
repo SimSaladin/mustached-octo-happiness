@@ -5,4 +5,4 @@
    $maybe msg <- mmsg
       <div .message>
          #{msg}
-         <a style="float:right" .icon-white .icon-remove href="">
+         <a style="float:right" .icon-remove href="">

@@ -2,10 +2,13 @@
    <li>
       <a href=@{CalendarR}>Kalenterit
       ^{calendars}
+      <hr>
+      ^{publicCalendars}
    <li>
       <a href=@{CalendarSettingsR}>Asetukset
    <li>
       <a href=@{AuthR LogoutR}>Kirjaudu ulos
+   
 
 <aside>
  <small>
@@ -16,4 +19,4 @@
   Piilossa
   <br>
   <span .color-blue>Aseta oletusarvoiseksi
-  <img .small-logo src=@{StaticR img_logo_png}>
+  <img .small-logo src=@{StaticR img_moh_plain_svg}>

@@ -19,6 +19,6 @@
 /o/c/#CalendarId/#TargetType TargetCreateR GET POST
 /o/r/#TargetId TargetReadR   GET
 /o/u/#TargetId TargetUpdateR GET POST
-/o/d/#TargetId TargetDeleteR     POST
+/o/d/#TargetId TargetDeleteR GET POST
 /o/t/#TargetId TargetTextR   GET
 /o/s/#TargetId TargetSendR       POST
