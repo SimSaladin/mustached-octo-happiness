@@ -1,6 +1,6 @@
 <body .bannered .color-secondary>
  <main .color-main .box-wrapped>
-    <img style="float:left;clear:both" src=@{StaticR img_moh_wt_svg}>
+    <img style="width:100%" src=@{StaticR img_moh_wt_svg}>
     <h1 .subheader style="float:right; padding-right:3em">
       Kalenterijärjestelmä
 
