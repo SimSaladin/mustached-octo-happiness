@@ -4,6 +4,7 @@
       ^{calendars}
       <hr>
       ^{publicCalendars}
+      <i>Oli sitten liian laaja ominaisuus, että jäi uupumaan.
    <li>
       <a href=@{CalendarSettingsR}>Asetukset
    <li>

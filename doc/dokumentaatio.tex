@@ -25,6 +25,21 @@
 \usepackage{tabu}
 \DeclareGraphicsRule{*}{mps}{*}{} % meta-uml
 
+\newenvironment{tietokohde}
+{
+   \medskip\noindent
+   \begin{tabu}to\linewidth%
+   {|X[-1,l]|X[-1,l]|X[-1,l]<{\strut}|}
+   \hline
+   \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\
+   \hline
+}
+{\end{tabu}\medskip}
+
+\newenvironment{descfiles}
+   {\begin{description}[style=multiline,leftmargin=3cm,font=\ttfamily]}
+   {\end{description}}
+
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 \title{%
    \vspace{3cm}
@@ -317,15 +332,6 @@ koska viimeksi muokattu) tallennetaan.
    \label{graph_class}
 \end{figure}
 
-\newenvironment{tietokohde}
-   {\medskip\noindent\begin{tabu}to\linewidth%
-         {|X[-1,l]|X[-1,l]|X[-1,l]<{\strut}|}
-         \hline
-         \rowfont{\bfseries} Attribuutti & Arvojoukko & Kuvailu \\
-         \hline
-   }
-   {\end{tabu}\medskip}
-
 \subsection{Tietokohde: Kalenteri}
 
 \begin{tietokohde}
@@ -407,7 +413,7 @@ Järjestelmän tietokannan taulut ja niiden pää- ja vierasavaimet on kuvattu
 kaaviossa~\ref{graph_database}.\footnote{Lieköhän pilkulleen tarkka uusimman määrittelyn kanssa?}
 Taulukossa~\ref{graph_columns} on lueteltu
 taulujen sarakkeet ja niiden tyypit kannassa. Todellisuudessa kanta on luotu ja
-käytetään jarjestelmässä \texttt{persistent}-kirjaston avulla, ks. tiedosto
+käytetään jarjestelmässä \texttt{persistent}-kirjaston avulla, ks.~tiedosto
 \texttt{config/models}.
 \begin{figure}[hb]
    \centering\input{relationships.tex}
@@ -425,10 +431,6 @@ käytetään jarjestelmässä \texttt{persistent}-kirjaston avulla, ks. tiedosto
 
 \section{Järjestelmän yleisrakenne}
 Järjestelmän pääkomponentit on sijoiteltu hakemistoihin seuraavasti.
-
-\newenvironment{descfiles}
-   {\begin{description}[style=multiline,leftmargin=3cm,font=\ttfamily]}
-   {\end{description}}
 
 \begin{descfiles}
    \item[config/]
@@ -463,7 +465,7 @@ Järjestelmän pääkomponentit on sijoiteltu hakemistoihin seuraavasti.
    \item[CalendarQueries.hs] \hfill\\
       Järjestelmän tärkeimmät tietokantakyselyt sekä liittyvä autentikointi.
    \item[Foundation.hs] \hfill\\
-      Järjestelmän keskus. Sisältää mm. autentikointinnin ja navigaatiota.
+      Järjestelmän keskus. Sisältää mm.\ autentikointinnin ja navigaatiota.
    \item[mustached-octo-happiness.cabal] \hfill\\
       Asennusohjetiedosto \textit{Cabalille}.
 \end{description}
@@ -499,12 +501,13 @@ git clone http://github.com/SimSaladin/mustached-octo-happiness
 cd mustached-octo-happiness
 \end{verbatim}
 
-\textbf{Huom.} Varmista, että \~/.cabal/bin (tai .cabal-sandbox/bin, jos
-työskentelet hiekkalaatikossa) on PATH:issa.
+\textbf{Huom.} Varmista, että \texttt{\~/.cabal/bin}
+(tai \texttt{.cabal-sandbox/bin}), jos työskentelet hiekkalaatikossa) on
+PATH:issa.
 
 \subsection{Tietokanta}
 \begin{enumerate}
-   \item Asenna ja konfiguroi PostgreSQL. Järjestelmä luo taulut itse, mutta ei
+   \item Asenna ja konfiguroi PostgreSQL\@. Järjestelmä luo taulut itse, mutta ei
       tietokantaa.
    \item Luo järjestelmälle käyttäjä ja tietokanta.
    \item Aseta tietokantaparametrit tiedostoon \texttt{config/postgresql.yml}.
@@ -554,10 +557,12 @@ ensimmäinen kalenteri. Ensimmäisen kalenterin luomisen jälkeen pääset
 yleisnäkymään, josta näet ja voit operoida kalentereitasi.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat}
+\chapter{Päätökset}
+
+%\section{Testaus, tunnetut bugit ja puutteet \& jatkokehitysideat}
 
 \section*{Autentikoinnista ja autorisoinnista}
-Autentikaoidessa BrowserId, Gmail jne. failaavat, jos hashdb:llä joku on
+Autentikaoidessa BrowserId, Gmail jne.\ failaavat, jos hashdb:llä joku on
 rekisteröinyt saman spostin nimimerkiksi.
 Myöskään kyseisiä vaihtokirjautumisia ei ole testattu; ne on konfiguroitu
 aikaisemman kokemuksen ja näppituntuman avulla.
@@ -580,12 +585,12 @@ Pitäisikö menneet kohteet vain unohtaa tästä?
 
 \section*{Yleistä testauksesta}
 Applikaatiota ei ole ollut aikaa testata ohjelmallisesti. Kuitenkin, syötteet,
-tietokantakyselyt ja -mallit, reititys jne. on toteutettu laajasti testatuilla
+tietokantakyselyt ja -mallit, reititys jne.\ on toteutettu laajasti testatuilla
 ja katastrofaalisen toiminnan estävillä työkaluilla, joten applikaation voi
 teorioiltaan mieltää suurimmilta osin oikein toimivaksi. Toisaalta applikaatiota
-on testattu paitsi kehittäjän puolesta, myös keskivertoa uutta käyttäjää
-simuloiva on jakanut mielipiteitä ja huomioita.
-Testattavaa ja korjattavaa pitäisi lisätä ainakin seuraaviin:
+on testattu paitsi kehittäjän puolesta, myös keskivertona uutena käyttäjänä
+toimiva on ollut mukana jakamassa mielipiteitä ja tekemässä huomioita.
+Testattavaa ja korjattavaa löytyy ainakin seuraavista:
 \begin{description}
    \item[Lomakkeiden arvojen järjellisyys] Esimerkiksi tekstikentät voivat olla
       lähes äärettömän monta merkkiä pitkiä.
@@ -600,11 +605,22 @@ Testattavaa ja korjattavaa pitäisi lisätä ainakin seuraaviin:
       viikkonavigaatiossa.
 \end{description}
 
+\section*{Toteutuksen puutteet}
+Lopulta erikoisemmat ominaisuudet jäivät pois implementaatiosta:
+\begin{itemize}
+      \item Julkiset kalenterit
+      \item Kohteen tallennus uutena, jakaminen
+      \item Kalenteripoiston varmistus
+      \item Tarkempi toistojen määrittely
+\end{itemize}
+Puutteet eivät kuitenkaan juurikaan koske tietokantapuolta, vaan käytettävyyttä
+ja ominaisuuksia järjestelmän sisäisessä logiikassa.
+
 \section*{Ideoita}
 \begin{itemize}
       \item Ryhmähallinta
-      \item Erilaiset tuonti- vienti- ja synkronointimahdollisudet: .ics,
-         caldav, google calendar\dots
+      \item Erilaiset tuonti- vienti- ja synkronointimahdollisudet: iCalendar,
+         CalDAV, Google Calendar\dots
       \item Erilaiset näkymät, kuten kuukausi-, päivä- ja kohdenäkymät.
       \item CSS-tyylit ja kotinäkymän markup vaativat uudelleenkatsauksen,
          jos järjestelmän visuaalista ilmettä lähtisi kehittämään.
@@ -613,6 +629,22 @@ Testattavaa ja korjattavaa pitäisi lisätä ainakin seuraaviin:
       \item Kohteille metadata, joka unohtui lisätä heti alussa
        \item Tuki kryptatulle sisällölle (CryptJS)
 \end{itemize}
+
+\section*{Omat kokemukset}
+Järjestelmän teossa vaativin osuus oli koko suurehkon kokonaisuuden
+toteuttaminen. Aikaa ei hurjasti ollut käytettävissä, ja pari yllättävää muuta
+tekijää ei panostusmahdollisuuksia lisännyt. Kuitenkin aika valmista tuli,
+muutamaa puutetta lukuun ottamatta. Järjestelmän parissa työskentely oli aivan
+mukavaa.  Erityisesti monen taulun SQL-kyselyiden tekeminen on nyt paljon
+itsevarmempaa.  Tutulla alustalla pystyi keskittymään kyselyihin, vaikka
+kalenterinäkymä ja kohteiden lomakkeisiin menikin hieman liikaa aikaa omasta
+mielestä.
+
+Bonuksena saatan laajentaa järjestelmää niin, että voisin sitä oikeasti
+hyödyntää käyttötarkoituksessaan. Pieni UI-kohostus sekä sen mobiiliskaalaus
+saattaisi jo riittää; tällä hetkellä oma kalenterointi on pahasti
+fragmentoitunut puhelimeen, tabletin Google-kalenteriin, seinän ilmoitustauluun
+ja ``kyllä tämän muistaa''-ajatuksiin.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliography{refs.bib}

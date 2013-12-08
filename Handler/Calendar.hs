@@ -107,6 +107,10 @@ getCalendarUpdateR cid = do
         setTitle "Muokataan kalenteria"
         $(widgetFile "calendar_update")
 
+getCalendarDeleteR :: CalendarId -> Handler Html
+getCalendarDeleteR cid = do
+    undefined
+
 -- *** POST
 
 postCalendarCreateR :: Handler Html
