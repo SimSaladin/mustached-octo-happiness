@@ -414,61 +414,6 @@ targetForm mtarget = Target
     <$> maybe (lift requireAuthId) (pure . targetOwner) mtarget
     <*> areq textField "Nimike" (targetName <$> mtarget)
 
-
--- * Time helpers
-
--- | Calculate next occurances of a Repeat at given days. Just don't call
--- it with infinite days and finite range; it won't return when evaluated.
-nextRepeatsAt :: [Day] -> Day -> Maybe Day -> Repeat -> [(LocalTime, LocalTime)]
-nextRepeatsAt xs lower upper rep = concatMap f xs
-    where
-        f d | cond d    = [toframe d]
-            | otherwise = []
-        cond = case upper of Nothing -> (>= lower)
-                             Just u  -> liftA2 (&&) (>= lower) (<= u)
-        toframe = (,) <$> flip LocalTime (repeatStart rep)
-                      <*> flip LocalTime (repeatEnd rep)
-
-dayDefault :: Maybe Day -> Handler Day
-dayDefault mday = case mday of
-        Just day -> return day
-        Nothing  -> liftM (localDay . zonedTimeToLocalTime) lookupTimeAt
-
-lookupTimeAt :: Handler ZonedTime
-lookupTimeAt = do
-    mt <- lookupGetParam "at"
-    case mt of
-        Nothing -> 
-            -- XXX: user specified time zone?
-            liftIO $ liftM2 utcToZonedTime getCurrentTimeZone getCurrentTime
-        Just t  -> return $ read' t
-
-getViewTimeframe :: Handler (Day, Day)
-getViewTimeframe = liftM (liftA2 (,) id (addDays 6)) $
-    do mbegin <- liftM (read . T.unpack <$>) $ lookupGetParam "weekstart"
-       case mbegin of
-           Just begin -> return begin
-           Nothing    -> liftM utctDay $ liftIO getCurrentTime
-
-days :: [Text]
-days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ]
-
-myLocale :: TimeLocale
-myLocale = defaultTimeLocale -- TODO finnish hacks
-
-formatWeekday :: FormatTime t => t -> String
-formatWeekday = formatTime myLocale "%d.%m %a"
-
-cellTimeFormat :: FormatTime t => t -> String
-cellTimeFormat = formatTime myLocale "%H:%M"
-
-formatTimeFrame :: FormatTime t => t -> t -> String
-formatTimeFrame b e = formatTime myLocale "%d.%m klo. %H:%M - " b <>
-                      formatTime myLocale "%H:%M" e
-
-formatWeekNumber :: FormatTime t => t -> String
-formatWeekNumber = formatTime myLocale "%V"
-
 -- * Fields
 
 alarmField :: Field Handler Alarm
@@ -492,6 +437,7 @@ urgencyField = radioFieldList
 weekDaysField :: Field Handler RepeatTime
 weekDaysField = checkMMap (return . f) unWeekly $ multiSelectFieldList $ zip days [1..]
     where
+        -- type inferer won't default the Left type
         f :: [Int] -> Either Text RepeatTime
         f = Right . Weekly
 

@@ -19,8 +19,8 @@ import Settings.StaticFiles
 import Settings (widgetFile, Extra (..))
 import Model
 import Text.Hamlet (hamletFile)
+import Yesod.Core.Types (Logger)
 --import Yesod.Fay
-import System.Log.FastLogger (Logger)
 
 import CalendarTypes
 import CalendarQueries
@@ -56,19 +56,10 @@ instance Yesod App where
         pc <- widgetToPageContent' $(widgetFile "default-layout")
         giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
-    -- This is done to provide an optimization for serving static files from
-    -- a separate domain. Please see the staticRoot setting in Settings.hs
     urlRenderOverride y (StaticR s) =
         Just $ uncurry (joinPath y (Settings.staticRoot $ settings y)) $ renderRoute s
     urlRenderOverride _ _ = Nothing
 
-    -- The page to be redirected to when authentication is required.
-    authRoute _ = Just $ AuthR LoginR
-
-    -- This function creates static content files in the static folder
-    -- and names them based on a hash of their content. This allows
-    -- expiration dates to be set far in the future without worry of
-    -- users receiving stale content.
     addStaticContent =
         addStaticContentExternal Right genFileName Settings.staticDir (StaticR . flip StaticRoute [])
       where
@@ -80,8 +71,6 @@ instance Yesod App where
     -- Place Javascript at bottom of the body tag so the rest of the page loads first
     jsLoader _ = BottomOfBody
 
-    -- What messages should be logged. The following includes all messages when
-    -- in development, and warnings and errors in production.
     shouldLog _ _source level =
         development || level == LevelWarn || level == LevelError
 

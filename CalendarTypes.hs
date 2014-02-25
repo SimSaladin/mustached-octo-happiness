@@ -3,12 +3,19 @@
 module CalendarTypes where
 
 import Prelude
-import Yesod
+import qualified Data.Text as T
 import Data.Text (Text)
 import Data.Time
+import Data.Time.Calendar.WeekDate
 import Database.Persist.Sql
+import Utils
+import Data.Monoid ((<>))
+import Control.Monad
+import Control.Applicative
+import System.Locale
+import Yesod
 
--- * In routing
+-- * Application routes
 
 -- FIXME should be an UUID for partability
 type TargetUID = Int
@@ -27,7 +34,7 @@ instance PathPiece TargetType where
         fromPathPiece "note"  = Just TargetNote
         fromPathPiece     _   = Nothing
 
--- * In db
+-- * Calendar objects
 
 type DayOfWeek = Int
 
@@ -51,9 +58,65 @@ instance PersistFieldSql Repeat where
 newtype Alarm = Alarm Text      deriving (Eq, PersistField, PersistFieldSql, Show)
 newtype Urgency = Urgency Int   deriving (Eq, PersistField, PersistFieldSql, Show)
 
--- instance PersistField DiffTime where
---         toPersistValue dt  = toPersistValue (floor dt :: Int64)
---         fromPersistValue v = fmap fromIntegral ( fromPersistValue v :: Either Text Int64 )
--- 
--- instance PersistFieldSql DiffTime where
---         sqlType _ = SqlInt64
+-- * Functions
+
+-- | Calculate next occurances of a Repeat at given days. Just don't call
+-- it with infinite days and finite range; it won't return when evaluated.
+nextRepeatsAt :: [Day] -> Day -> Maybe Day -> Repeat -> [(LocalTime, LocalTime)]
+nextRepeatsAt xs lower upper rep = concatMap f xs
+    where
+        f d | dayLimits d && weekDayLimits d = [toframe d]
+            | otherwise                      = []
+
+        dayLimits = case upper of Nothing -> (>= lower)
+                                  Just u  -> liftA2 (&&) (>= lower) (<= u)
+
+        toframe = (,) <$> flip LocalTime (repeatStart rep)
+                      <*> flip LocalTime (repeatEnd rep)
+
+        weekDayLimits d = let (_,_,d') = toWeekDate d in d' `elem` weekDays
+        weekDays        = unWeekly $ repeatWhen rep
+
+dayDefault :: Maybe Day -> HandlerT m IO Day
+dayDefault mday = case mday of
+        Just day -> return day
+        Nothing  -> liftM (localDay . zonedTimeToLocalTime) lookupTimeAt
+
+-- | Lookup "at" get param, or current (server) time
+lookupTimeAt :: HandlerT m IO ZonedTime
+lookupTimeAt = do
+    mt <- lookupGetParam "at"
+    case mt of
+        Nothing -> 
+            -- XXX: user specified time zone instead of server time zone?
+            liftIO $ liftM2 utcToZonedTime getCurrentTimeZone getCurrentTime
+        Just t  -> return $ read' t
+
+-- | Lookup the weekstart get parameter and use that as first day in view.
+-- Otherwise use the current day and next 6 days.
+getViewTimeframe :: HandlerT m IO (Day, Day)
+getViewTimeframe = liftM (liftA2 (,) id (addDays 6)) $
+    do mbegin <- liftM (read . T.unpack <$>) $ lookupGetParam "weekstart"
+       case mbegin of
+           Just begin -> return begin
+           Nothing    -> liftM utctDay $ liftIO getCurrentTime
+
+-- | Week day names
+days :: [Text]
+days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ]
+
+myLocale :: TimeLocale
+myLocale = defaultTimeLocale -- TODO finnish hacks
+
+formatWeekday :: FormatTime t => t -> String
+formatWeekday = formatTime myLocale "%d.%m %a"
+
+cellTimeFormat :: FormatTime t => t -> String
+cellTimeFormat = formatTime myLocale "%H:%M"
+
+formatTimeFrame :: FormatTime t => t -> t -> String
+formatTimeFrame b e = formatTime myLocale "%d.%m klo. %H:%M - " b <>
+                      formatTime myLocale "%H:%M" e
+
+formatWeekNumber :: FormatTime t => t -> String
+formatWeekNumber = formatTime myLocale "%V"
