@@ -399,8 +399,9 @@ targetFormLayout what col modifyThis ((res, formw), enctype) =
 -- whose result constructs the target given a targetid.
 calTargetForm :: GetTarget a => (Maybe a -> AForm Handler (TargetId -> a)) -> CalTargetForm a
 -- XXX use uid?
-calTargetForm specForm mt ma _uid = renderKube $ (\t -> second f . (,) t) <$> targetForm mt
-                                                                          <*> specForm ma
+calTargetForm specForm mt ma _uid = renderKube $ (\t -> (,) t . f)
+    <$> targetForm mt
+    <*> specForm ma
     where f spec = maybe (Right spec) (Left . spec . getTarget) ma
 
 -- | Take calendar target form to its result.
