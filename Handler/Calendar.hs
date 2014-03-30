@@ -48,6 +48,8 @@ instance IsCell Todo where
 -- construction.
 type Unfold a b = (a, [(a, b)]) -> Maybe ((a, [b]), (a, [(a, b)]))
 
+fromRight (Right a) = a
+
 -- * Views
 
 calendarView :: Handler Html

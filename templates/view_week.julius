@@ -1,0 +1,17 @@
+
+$(function(){
+   var lowest = Infinity;
+   var earliest = null;
+   var elems = document.getElementsByClassName('cell');
+   for (var i = 0; i < elems.length; i++) {
+      var elem = elems[i];
+      var hour_loc = parseInt(elem.style.top);
+      if (hour_loc < lowest) {
+         lowest = hour_loc;
+         earliest = elem;
+      }
+   }
+   if (earliest) {
+      earliest.scrollIntoView();
+   }
+});

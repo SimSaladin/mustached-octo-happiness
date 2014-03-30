@@ -1,11 +1,4 @@
 <div #weekly-wrapper>
- <div #weekly-legend>
-    $forall hour <- hours
-       <div .weekly-hour>
-         $forall (day, _) <- cellsByDay
-            <div .weekly-column .hour-#{hour}>
-               <a href=@?{(TargetCreateR viewActiveCal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
-               <a href=@?{(TargetCreateR viewActiveCal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-yellow>T
  <div #weekly-targets>
     $forall (day, dviews) <- cellsByDay
      <div .weekly-column>
@@ -13,15 +6,28 @@
         $forall cell <- dviews
           $with (start, end) <- _cellRange cell
  
-           <div .cell .#{getType $ _cellContent cell} style="#{cellStyle cell}">
+           <div .cell .#{getType $ _cellContent cell}
+               #target-#{fromRight $ fromPersistValueText $ unKey $ entityKey $ _cellTarget cell}
+               style="#{cellStyle cell}">
             <div .inner>
               <a href=@{TargetReadR $ entityKey $ _cellTarget cell}>
-                 <span .timestart>
+                 <span .timestamp>
                     #{cellTimeFormat start} - #{cellTimeFormat end}
                  <span .title>#{targetName $ entityVal $ _cellTarget cell}
                  $case _cellContent cell
                     $of Left _event
                     $of Right _todo
+ <div #weekly-legend>
+    $forall hour <- hours
+       <div .weekly-hour>
+         $forall (day, _) <- cellsByDay
+            <div .weekly-column>
+               <div .hour-cell .h-#{hour}>
+                  <a .todo href=@?{(TargetCreateR viewActiveCal TargetTodo, targetParams day hour)}>
+                     <div .hour-cell-button>
+                  <a .event href=@?{(TargetCreateR viewActiveCal TargetEvent, targetParams day hour)}>
+                     <div .hour-cell-button>
+                  <span .hour-label .timestamp>#{hour}:00
 
 <div #weekly-daylegend>
    $forall (day, dviews) <- cellsByDay

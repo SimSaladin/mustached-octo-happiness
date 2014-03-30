@@ -20,7 +20,7 @@ import Settings (widgetFile, Extra (..))
 import Model
 import Text.Hamlet (hamletFile)
 import Yesod.Core.Types (Logger)
---import Yesod.Fay
+import Yesod.Fay
 
 import CalendarTypes
 import CalendarQueries
@@ -76,7 +76,8 @@ instance Yesod App where
 
     makeLogger = return . appLogger
 
---instance YesodJquery App
+instance YesodJquery App
+
 --instance YesodFay App where
 --
 --    fayRoute = FaySiteR
@@ -132,6 +133,7 @@ authHashDB' = (authHashDB $ Just . UniqueUser) { apLogin = \tm -> $(widgetFile "
 
 widgetToPageContent' :: Widget -> Handler (PageContent (Route App))
 widgetToPageContent' w = widgetToPageContent $ do
+    getYesod >>= addScriptEither . urlJqueryJs
     $(combineStylesheets 'StaticR
         [ css_kube_min_css
         , css_glyphicons_css
