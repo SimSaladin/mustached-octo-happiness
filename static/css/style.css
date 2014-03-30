@@ -11,7 +11,7 @@ a:hover, a:active {
    color:#E40002;
 }
 .color-main {
-   background:#D7C7EC;
+   background:#F9F4FF;
    color:#353535;
 }
 .color-secondary {
@@ -152,7 +152,7 @@ input[type="password"] {
    margin-top:1.5em;
    position:relative;
    height:48em;
-   margin-bottom:2em;
+   margin-bottom:3em;
 }
 #weekly-legend {
    position:absolute;
@@ -165,8 +165,17 @@ input[type="password"] {
    height:2em;
 }
 .weekday {
-   background:pink;
-   border-bottom: 1px solid red;
+   background:rgb(255,192,192);
+   color:rgb(87,76,76);
+   border-bottom: 1px solid rgb(231,0,0);
+   text-align:center;
+   font-weight:bold;
+   font-size:85%;
+   white-space:nowrap;
+}
+.weekday.today {
+   background:rgb(236,123,123);
+   color:rgb(129,0,0);
 }
 .weekly-column, .weekday {
    width:14.285%;
@@ -187,6 +196,7 @@ input[type="password"] {
 /* {{{ labels and buttons */
 #weekly-daylegend {
    position:fixed;
+   min-width:35em; /* not affected by body's setting */
    height:1.5em;
    top:0;
    width:100%;
@@ -220,6 +230,7 @@ input[type="password"] {
 }
 .hour-label {
    vertical-align:middle;
+   color:rgba(91,91,92,0.83);
 }
 .timestamp {
    font-size:0.7em;
@@ -242,6 +253,9 @@ input[type="password"] {
    background:#2BAEC0;
    color:#F0F0F0;
 }
+.endofweek {
+   border-right:1px solid red;
+}
 /* }}} */
 
 /* {{{ Cells */
@@ -259,6 +273,22 @@ input[type="password"] {
    border-left-width:4px;
    padding:0 0.2em;
    color:#303030;
+   overflow:hidden; /* Prevent flickering before jquery ellipsis kicks in */
+   text-align:right;
+}
+.cell .inner:hover {
+   opacity:0.8;
+}
+.cell .inner .timestamp {
+   float:left;
+   height:1.75em;
+   color:rgb(168,22,22);
+}
+.cell .title {
+   margin:0;
+   font-size:90%;
+   vertical-align:middle;
+   font-style:italic;
 }
 .cell .inner * {
    color:inherit;
@@ -278,9 +308,15 @@ input[type="password"] {
    position:fixed;
    bottom:0;
    width:100%;
-   height:2em;
-   padding:0.2em 0;
-   background:#8c1a65;
+   height:3em;
+   padding:0.2em 0.5em;
+   background:rgba(96, 100,187,0.6);
 }
+
+#weekly-controls .btn {
+   margin-left:auto;
+   margin-right:auto;
+}
+
 /* }}} */
 /* }}} */

@@ -92,16 +92,6 @@ lookupTimeAt = do
             liftIO $ liftM2 utcToZonedTime getCurrentTimeZone getCurrentTime
         Just t  -> return $ read' t
 
--- | Lookup the weekstart get parameter and use that as first day in view.
--- Otherwise use the current day and next 6 days.
-getViewTimeframe :: HandlerT m IO (Day, Day)
-getViewTimeframe = liftM (liftA2 (,) id (addDays 6)) $ do
-    mbegin <- lookupGetParam "weekstart"
-    case mbegin of
-        Just begin ->
-            maybe (invalidArgs []) return $ readMay begin
-        Nothing    -> liftM utctDay $ liftIO getCurrentTime
-
 -- | Week day names
 days :: [Text]
 days = [ "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" ]

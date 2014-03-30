@@ -1,5 +1,7 @@
 
 $(function(){
+
+   // scroll to earliest cell
    var lowest = Infinity;
    var earliest = null;
    var elems = document.getElementsByClassName('cell');
@@ -14,4 +16,23 @@ $(function(){
    if (earliest) {
       earliest.scrollIntoView();
    }
+
+   // ellipsify
+   $('.ellipsify').each(function(_, e) {
+      ellipsify(e);
+   });
+
 });
+
+
+function ellipsify(container){
+   var divh = $(container).height();
+   var p    = $(container).find('p');
+   while ($(p).outerHeight() > divh) {
+       $(p).text(
+         function (index, text) {
+            return text.replace(/\W*\s(\S)*$/, '...');
+         }
+      );
+   }
+}

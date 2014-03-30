@@ -17,6 +17,7 @@ type TimeRange = (LocalTime, LocalTime)
 data ViewSettings = ViewWeekRange
                   { viewStartDay  :: Day
                   , viewEndDay    :: Day
+                  , viewThisDay   :: Day
                   , viewActiveCal :: CalendarId
                   , viewCalendars :: [CalendarId]
                   }
@@ -91,10 +92,7 @@ renderView ViewWeekRange{..} = do
         prevWeek = addDays (-7) viewStartDay
         nextWeek = addDays 1 viewEndDay
 
-        -- old
-        objectWeeks = constructWeekView viewStartDay viewEndDay events todos
-        getType (Left _)  = "event" :: Html
-        getType (Right _) = "todo"
+        endofWeek = (== "0") . formatTime myLocale "%w"
 
     $(widgetFile "view_week")
 
@@ -135,11 +133,24 @@ constructWeekView fromDay toDay c d =
 getViewSettings :: Handler (Maybe ViewSettings)
 getViewSettings = do
     mcal <- activeCalendar
+    today <- getCurrentDay
     flip (maybe $ return Nothing) mcal $ \cal -> do
         (fromDay, toDay) <- liftHandlerT getViewTimeframe
         viewCals <- getViewCalendars
 
-        return $ Just $ ViewWeekRange fromDay toDay cal viewCals
+        return $ Just $ ViewWeekRange fromDay toDay today cal viewCals
+
+-- | Lookup the weekstart get parameter and use that as first day in view.
+-- Otherwise use the current day and next 6 days.
+getViewTimeframe :: HandlerT m IO (Day, Day)
+getViewTimeframe = liftM (liftA2 (,) id (addDays 6)) $
+    lookupGetParam "weekstart"
+    >>= maybe getCurrentDay readWeekStart
+  where
+    readWeekStart = maybe (invalidArgs []) return . readMay
+
+getCurrentDay :: HandlerT m IO Day
+getCurrentDay = liftM utctDay $ liftIO getCurrentTime
 
 getTargetRouteParams :: Handler (Day -> Hour -> [(Text, Text)])
 getTargetRouteParams = do
@@ -164,6 +175,9 @@ cellStyle cell = "top:" <> tshow top <> "em;height:" <> tshow height <> "em"
         (start, stop) = over both (todHour . localTimeOfDay) $ _cellRange cell
         top     = start * 2
         height  = (stop - start) * 2
+
+contentClass :: Cell -> Html
+contentClass = either (const "event") (const "todo") . _cellContent
 
 groupByDay :: Day -> Day -> [Cell] -> [(Day, [Cell])]
 groupByDay fromDay toDay = groupUnfold (unfoldDay toDay) fromDay cellDay
