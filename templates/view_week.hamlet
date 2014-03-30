@@ -1,23 +1,24 @@
 <div #weekly-wrapper>
  <div #weekly-legend>
     $forall hour <- hours
-       <div .weekly-content .weekly-hour>
+       <div .weekly-hour>
          $forall (day, _) <- cellsByDay
-            <div .weekly-column>
+            <div .weekly-column .hour-#{hour}>
                <a href=@?{(TargetCreateR viewActiveCal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
                <a href=@?{(TargetCreateR viewActiveCal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-yellow>T
- <div #weekly-targets .weekly-content>
+ <div #weekly-targets>
     $forall (day, dviews) <- cellsByDay
      <div .weekly-column>
         &nbsp;
         $forall cell <- dviews
           $with (start, end) <- _cellRange cell
  
-           <div .cell .#{getType $ _cellContent cell}
-              style="#{cellStyle cell}">
+           <div .cell .#{getType $ _cellContent cell} style="#{cellStyle cell}">
+            <div .inner>
               <a href=@{TargetReadR $ entityKey $ _cellTarget cell}>
-                 <span .timestart>#{cellTimeFormat start}
-                 <span .title    >#{targetName $ entityVal $ _cellTarget cell}
+                 <span .timestart>
+                    #{cellTimeFormat start} - #{cellTimeFormat end}
+                 <span .title>#{targetName $ entityVal $ _cellTarget cell}
                  $case _cellContent cell
                     $of Left _event
                     $of Right _todo
@@ -27,7 +28,7 @@
       <div .weekday>#{formatWeekday day}
 
 <div #weekly-controls>
- <span .btn-group>
+   <span .btn-group>
       <a .btn href="?weekstart=#{show prevWeek}">
          <i.icon-chevron-left>
          Edellinen (Vko #{formatWeekNumber prevWeek})
@@ -39,8 +40,7 @@
       <a .btn href="?weekstart=#{show nextWeek}">
          Seuraava (Vko #{formatWeekNumber nextWeek})
          <i.icon-chevron-right>
- <p>
-    <span .btn-group>
+   <span .btn-group>
          <a.btn.btn-blue   href=@{TargetCreateR viewActiveCal TargetEvent}>Tapahtuma
          <a.btn.btn-yellow href=@{TargetCreateR viewActiveCal TargetTodo}>Tehtävä
          <a.btn.btn-green  href=@{TargetCreateR viewActiveCal TargetNote}>Muistiinpano
