@@ -1,6 +1,7 @@
 <body .color-main>
    <div #wrap-main>
-      <nav #nav-main .color-secondary>^{navigation}
+      <!-- <nav #nav-main .color-secondary>^{navigation}
+         -->
       <main>^{widget}
    $maybe msg <- mmsg
       <div .message>

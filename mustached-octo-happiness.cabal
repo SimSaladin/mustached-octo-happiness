@@ -27,6 +27,7 @@ library
                      Handler.Fay
                      Handler.FrontPage
                      Handler.Calendar
+                     Handler.Target
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -87,6 +88,8 @@ library
                  , containers
                  , time
                  , old-locale
+                 , classy-prelude
+                 , lens
 
 executable         mustached-octo-happiness
     if flag(library-only)

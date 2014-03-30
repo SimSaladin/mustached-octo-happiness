@@ -1,5 +1,5 @@
 body {
-   min-width:77em; // nav 12em + events 45em + right bar 20em
+   min-width:40em; // nav 12em + events 45em + right bar 20em
 }
 body.bannered {
    position:relative;
@@ -12,10 +12,6 @@ aside {
    padding:0.2em 0.5em;
 }
 .pull-right {float:right;}
-#wrap-main {
-   position:relative;
-   padding-left:12em;
-}
 #nav-main {
    width:12em;
    margin-left:-12em;
@@ -156,7 +152,7 @@ input[type="password"] {
    margin-top:3em;
 }
 .events, .events thead {
-   min-width:45em;
+   min-width:40em;
 }
 .events tbody td:nth-child(even) { background:#CCB7DF; }
 .events tbody td:nth-child(odd) { background:#AA98C9; }
@@ -260,4 +256,56 @@ label.required:after {
 .small-logo {
    width:12em;
    padding-top:5em;
+}
+
+/* {{{ Weekly view */
+
+#weekly-wrapper {
+   margin-top:1.5em;
+   position:relative;
+}
+#weekly-daylegend {
+   position:fixed;
+   height:1.5em;
+   top:0;
+   width:100%;
+}
+#weekly-legend {
+   position:absolute;
+   width:100%;
+}
+#weekly-controls {
+   position:fixed;
+   bottom:0;
+   width:100%;
+}
+.weekly-hour {
+   position:relative;
+}
+.weekly-hour .weekly-column {
+   height:2em;
+}
+.weekday {
+   background:pink;
+   border-bottom: 1px solid red;
+}
+.weekly-column, .weekday {
+   width:14.285%;
+   box-sizing:border-box; /* we don't care of oldie browsers */
+   float:left;
+   position:relative;
+}
+#weekly-targets .weekly-column:nth-child(even) {
+   background:pink;
+}
+#weekly-legend .weekly-hour:nth-child(2n) .weekly-column {
+   background:rgba(0,0,0,0.1);
+}
+#weekly-legend .weekly-hour:nth-child(2n+1) .weekly-column {
+   background:rgba(0,0,0,0.15);
+}
+.weekly-column .cell {
+   position:absolute;
+   margin-top:1em;
+   background:white;
 }

@@ -2,23 +2,31 @@
 /auth        AuthR    Auth    getAuth
 -- /fay-command FaySiteR FaySite getFaySite
 
-/favicon.ico FaviconR GET
-/robots.txt RobotsR GET
+/favicon.ico         FaviconR          GET
+/robots.txt          RobotsR           GET
 
-/ FrontPageR GET POST
-/settings CalendarSettingsR GET
+/                    FrontPageR        GET POST
+/newhome             DefaultViewR      GET
+/home                CalendarR         GET
+/settings            CalendarSettingsR GET
 
-/c/c                  CalendarCreateR       POST
-/c                    CalendarR         GET
-/c/u/#CalendarId      CalendarUpdateR   GET POST
-/c/d/#CalendarId      CalendarDeleteR       POST
+-- Calendars
+/cal/view/#CalendarId/#String       CalendarViewR     GET
+/cal/create                         CalendarCreateR       POST
+/cal/modify/#CalendarId             CalendarUpdateR   GET POST
+/cal/delete/#CalendarId             CalendarDeleteR       POST
 
-/c/v/#CalendarId/#String CalendarViewR GET
-/c/a/#CalendarId         CalendarActiveR GET
+-- Settings
+/c/a/#CalendarId                    CalendarActiveR   GET
 
-/o/c/#CalendarId/#TargetType TargetCreateR GET POST
-/o/r/#TargetId TargetReadR   GET
-/o/u/#TargetId TargetUpdateR GET POST
-/o/d/#TargetId TargetDeleteR GET POST
-/o/t/#TargetId TargetTextR   GET
-/o/s/#TargetId TargetSendR       POST
+-- Targets
+/t/view/#TargetId                   TargetReadR       GET
+/t/create/#CalendarId/#TargetType   TargetCreateR     GET POST
+/t/modify/#TargetId                 TargetUpdateR     GET POST
+/t/delete/#TargetId                 TargetDeleteR     GET POST
+
+
+-- ---------------------------------------
+-- ** tobemoved **
+/t/text/#TargetId TargetTextR   GET
+/t/send/#TargetId TargetSendR       POST

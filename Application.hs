@@ -27,6 +27,7 @@ import Yesod.Core.Types (loggerSet, Logger (Logger))
 
 --import Handler.Fay
 import Handler.FrontPage
+import Handler.Target
 import Handler.Calendar
 
 mkYesodDispatch "App" resourcesApp

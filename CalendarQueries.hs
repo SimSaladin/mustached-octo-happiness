@@ -2,19 +2,19 @@
 -- helpers.
 module CalendarQueries where
 
-import Prelude
-import Control.Monad
-import Control.Applicative
-import Data.Time
-import Data.Typeable        (Typeable)
+import           Prelude
+import           Control.Monad
+import           Control.Applicative
+import           Data.Time
+import           Data.Typeable        (Typeable)
+import qualified Data.Text as T
+import qualified Data.Set  as S
 import Database.Esqueleto
-import Yesod  ( HandlerT, runDB, cached, get404, getBy404
-              , lookupSession, setSession, deleteSession
-              , notFound, permissionDenied)
+import Yesod                ( HandlerT, runDB, cached, get404, getBy404
+                            , lookupSession, setSession, deleteSession
+                            , notFound, permissionDenied)
 import Yesod.Auth           (maybeAuthId, requireAuthId, YesodAuth, AuthId)
 import Yesod.Persist.Core   (YesodPersist, YesodPersistBackend)
-import qualified Data.Text as T
-import qualified Data.Set as S
 import Model
 
 -- * Types
@@ -29,7 +29,9 @@ type QueryHandler a =
 
 -- | Target query reply has to quantify over different target types, hence
 -- this sum type.
-data TW = T1 (Entity Event) | T2 (Entity Todo) | T3 (Entity Note)
+data TW = T1 (Entity Event)
+        | T2 (Entity Todo)
+        | T3 (Entity Note)
 
 
 -- * Calendar
@@ -38,11 +40,12 @@ data TW = T1 (Entity Event) | T2 (Entity Todo) | T3 (Entity Note)
 
 -- *** Info
 
--- | Calendar info wrapper. Memoized.
+-- | Calendar info wrapper. Memoized per request.
 newtype CalendarInfo = CalendarInfo
                        { unCalendarInfo :: [(Entity Calendar, Bool, Int)] -- ^ Calendar, is active, num of entries
                        } deriving (Typeable)
 
+-- | Get the calendarinfo for current user. Requires auth.
 queryCalendarInfo :: QueryHandler CalendarInfo
 queryCalendarInfo = do
     uid <- requireAuthId
@@ -50,26 +53,42 @@ queryCalendarInfo = do
     let f (ent, Value n) = (ent, entityKey ent `elem` xs, n)
 
     cached . runDB . fmap (CalendarInfo . map f) . select . from $
-        \(c `LeftOuterJoin` mt) -> do
-            on      (just (c ^. CalendarId) ==. mt ?. CalTargetCalendar)
-            groupBy (c ^. CalendarId)
-            where_  (c ^. CalendarOwner ==. val uid)
-            orderBy [asc $ c ^. CalendarName]
-            return (c, count $ mt ?. CalTargetId)
+        \(calendar `LeftOuterJoin` mtarget) -> do
 
+            on      (just (calendar ^. CalendarId) ==. mtarget ?. CalTargetCalendar)
+            groupBy (calendar ^. CalendarId)
+            where_  (calendar ^. CalendarOwner ==. val uid)
+            orderBy [asc $ calendar ^. CalendarName]
+
+            return (calendar, count $ mtarget ?. CalTargetId)
+
+-- | Get all public calendars owned by someone else. Doesn't require auth.
 queryPublicCalendars :: QueryHandler [(Entity Calendar, Bool, Int)]
 queryPublicCalendars = do
     muid <- maybeAuthId
     return [] -- TODO
 
+-- | Get id's of all owned calendars. Requires auth.
+fetchAllCalendars :: QueryHandler [CalendarId]
+fetchAllCalendars = do
+    uid <- requireAuthId
+    liftM (map unValue) . runDB . select . from $ \c -> do
+        where_ $ c ^. CalendarOwner ==. val uid
+        orderBy [ asc $ c ^. CalendarId ]
+        return $ c ^. CalendarId
+
 -- *** Individual
 
--- | Documentation for 'queryCalendar'
+-- | Query single calendar by its id.
 queryCalendar :: CalendarId -> QueryHandler Calendar
--- XXX: use above cached calendarinfo?
 queryCalendar cid = runDB $ get404 cid
+    -- XXX: use above cached calendarinfo?
 
--- *** Viewed
+-- *** Viewing setting
+--
+-- Here we handle settings on calendars that are viewed in the app. If the
+-- calendar is not viewed (as in, not returned by "getViewCalendars"), its
+-- contents are not fetched in any aggregating view.
 
 getViewCalendars :: QueryHandler [CalendarId]
 getViewCalendars = do
@@ -89,18 +108,12 @@ deleteViewCalendar :: CalendarId  -> QueryHandler ()
 deleteViewCalendar cid = 
         setViewCalendars . S.toList . S.delete cid . S.fromList =<< getViewCalendars
 
-fetchAllCalendars :: QueryHandler [CalendarId]
-fetchAllCalendars = do
-    uid <- requireAuthId
-    liftM (map unValue) . runDB . select . from $ \c -> do
-        where_ $ c ^. CalendarOwner ==. val uid
-        orderBy [ asc $ c ^. CalendarId ]
-        return $ c ^. CalendarId
-
--- *** Active
+-- *** Active setting
 
 -- | Lookup active calendar. In most cases only looks up the session key
--- "calendar". Result is Nothing if user has no calendars
+-- "calendar". Result is Nothing if user has no calendars.
+--
+-- Requires auth.
 activeCalendar :: QueryHandler (Maybe CalendarId)
 activeCalendar =
         lookupSession "calendar" >>= maybe defcal (return . Just . read . T.unpack)
@@ -120,8 +133,8 @@ clearActiveCalendar :: QueryHandler ()
 clearActiveCalendar = deleteSession "calendar"
 
 setActiveCalendar :: CalendarId -> QueryHandler ()
--- XXX check owner status?
 setActiveCalendar = setSession "calendar" . T.pack . show
+    -- XXX check owner status?
 
 -- ** Insert
 
@@ -136,29 +149,27 @@ queryInsertCalendar cal = runDB (insert cal)
 queryDeleteCalendar :: CalendarId -> QueryHandler ()
 queryDeleteCalendar cid = do
         runDB $ do
-            -- caltarget relations
+            -- 1: Delete CalTarget relations
             delete $ from $ \ct -> where_ (ct ^. CalTargetCalendar ==. val cid)
 
-            -- find orphan targets' ids.
-            let orphansQ = subList_select . from $ \target -> do
+            -- 2: Find orphan targets' ids.
+            let orphans = subList_select . from $ \target -> do
                     where_ . notExists .  from
                         $ \ct -> where_ (ct ^. CalTargetTarget ==. target ^. TargetId)
                     return (target ^. TargetId)
 
-            -- orphan specializations
-            delete $ from $ \event -> where_ (event ^. EventTarget `in_` orphansQ)
-            delete $ from $ \todo  -> where_ (todo ^. TodoTarget   `in_` orphansQ)
-            delete $ from $ \note  -> where_ (note ^. NoteTarget   `in_` orphansQ)
+            -- 3: Delete orphan specializations and last the target.
+            delete $ from $ \event -> where_ (event ^. EventTarget `in_` orphans)
+            delete $ from $ \todo  -> where_ (todo  ^. TodoTarget  `in_` orphans)
+            delete $ from $ \note  -> where_ (note  ^. NoteTarget  `in_` orphans)
+            delete $ from $ \target -> where_ (target ^. TargetId `in_` orphans)
 
-            -- orphan targets
-            delete $ from $ \target -> where_ (target ^. TargetId `in_` orphansQ)
-
-            -- the calendar
+            -- 4: Delete the Calendar
             deleteKey cid
 
-        -- clear active calendar if we just removed it
+        -- 5: Clear active calendar setting if we just removed it
         act <- activeCalendar
-        if act == Just cid then clearActiveCalendar else return ()
+        when (act == Just cid) clearActiveCalendar
 
 -- | Update a calendar's settings.
 queryUpdateCalendar :: CalendarId -> Calendar -> QueryHandler ()
@@ -296,11 +307,12 @@ queryDeleteTarget tid = do
 
 -- * Helpers
 
+-- | Permission control on targets. Access is denied unless the requestor
+-- is also the owner.
 guardTarget :: T.Text -> Target -> QueryHandler ()
-guardTarget msg t = do uid <- requireAuthId
-                       if (targetOwner t /= uid)
-                           then permissionDenied msg
-                           else return ()
+guardTarget msg t = do
+    uid <- requireAuthId
+    when (targetOwner t /= uid) $ permissionDenied msg
 
 unValue :: Value a -> a
 unValue (Value x) = x

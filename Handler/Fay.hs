@@ -1,5 +1,6 @@
 module Handler.Fay where
 
+import Prelude ((!!))
 import Import
 import Yesod.Fay
 import Fay.Convert (readFromFay)

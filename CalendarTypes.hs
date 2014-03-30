@@ -1,15 +1,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
+-- | Here we define the foundational types used by rest of the application.
 module CalendarTypes where
 
-import Prelude
-import qualified Data.Text as T
-import Data.Text (Text)
+import ClassyPrelude
 import Data.Time
+import Data.Maybe
 import Data.Time.Calendar.WeekDate
 import Database.Persist.Sql
 import Utils
-import Data.Monoid ((<>))
 import Control.Monad
 import Control.Applicative
 import System.Locale
@@ -17,7 +17,7 @@ import Yesod
 
 -- * Application routes
 
--- FIXME should be an UUID for partability
+-- FIXME should be an UUID for portability
 type TargetUID = Int
 
 data TargetType = TargetTodo
@@ -51,7 +51,7 @@ data Repeat = Repeat
         } deriving (Show, Read)
 instance PersistField Repeat where
         toPersistValue   = toPersistValue . show
-        fromPersistValue = fmap read . fromPersistValue
+        fromPersistValue = fmap (fromJust . readMay :: Text -> Repeat) . fromPersistValue
 instance PersistFieldSql Repeat where
         sqlType _ = SqlString
 
@@ -95,11 +95,12 @@ lookupTimeAt = do
 -- | Lookup the weekstart get parameter and use that as first day in view.
 -- Otherwise use the current day and next 6 days.
 getViewTimeframe :: HandlerT m IO (Day, Day)
-getViewTimeframe = liftM (liftA2 (,) id (addDays 6)) $
-    do mbegin <- liftM (read . T.unpack <$>) $ lookupGetParam "weekstart"
-       case mbegin of
-           Just begin -> return begin
-           Nothing    -> liftM utctDay $ liftIO getCurrentTime
+getViewTimeframe = liftM (liftA2 (,) id (addDays 6)) $ do
+    mbegin <- lookupGetParam "weekstart"
+    case mbegin of
+        Just begin ->
+            maybe (invalidArgs []) return $ readMay begin
+        Nothing    -> liftM utctDay $ liftIO getCurrentTime
 
 -- | Week day names
 days :: [Text]

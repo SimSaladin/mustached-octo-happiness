@@ -1,0 +1,46 @@
+<div #weekly-wrapper>
+ <div #weekly-legend>
+    $forall hour <- hours
+       <div .weekly-content .weekly-hour>
+         $forall (day, _) <- cellsByDay
+            <div .weekly-column>
+               <a href=@?{(TargetCreateR viewActiveCal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
+               <a href=@?{(TargetCreateR viewActiveCal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-yellow>T
+ <div #weekly-targets .weekly-content>
+    $forall (day, dviews) <- cellsByDay
+     <div .weekly-column>
+        &nbsp;
+        $forall cell <- dviews
+          $with (start, end) <- _cellRange cell
+ 
+           <div .cell .#{getType $ _cellContent cell}
+              style="#{cellStyle cell}">
+              <a href=@{TargetReadR $ entityKey $ _cellTarget cell}>
+                 <span .timestart>#{cellTimeFormat start}
+                 <span .title    >#{targetName $ entityVal $ _cellTarget cell}
+                 $case _cellContent cell
+                    $of Left _event
+                    $of Right _todo
+
+<div #weekly-daylegend>
+   $forall (day, dviews) <- cellsByDay
+      <div .weekday>#{formatWeekday day}
+
+<div #weekly-controls>
+ <span .btn-group>
+      <a .btn href="?weekstart=#{show prevWeek}">
+         <i.icon-chevron-left>
+         Edellinen (Vko #{formatWeekNumber prevWeek})
+
+      <a .btn href=@{CalendarR}>
+         <i.icon-calendar>
+         Tänään
+
+      <a .btn href="?weekstart=#{show nextWeek}">
+         Seuraava (Vko #{formatWeekNumber nextWeek})
+         <i.icon-chevron-right>
+ <p>
+    <span .btn-group>
+         <a.btn.btn-blue   href=@{TargetCreateR viewActiveCal TargetEvent}>Tapahtuma
+         <a.btn.btn-yellow href=@{TargetCreateR viewActiveCal TargetTodo}>Tehtävä
+         <a.btn.btn-green  href=@{TargetCreateR viewActiveCal TargetNote}>Muistiinpano

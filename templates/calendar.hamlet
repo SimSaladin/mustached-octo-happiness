@@ -1,83 +1,8 @@
-$maybe cal <- mcal
- <div .toright>
-   <h2>Muistiinpanot
+<!-- <div .toright>
    <section .notes>
-       $case notes
-         $of []
-          <p>
-            <i>Tyhjä! Voit luoda muistiinpanon alla.
-         $of xs
-          $forall (Entity k t, Entity _ note) <- xs
-            <a href=@{TargetReadR k}> #{targetName t}
-            <p>#{noteContent note}
-       <hr>
-       ^{noteFormStandalone cal}
+      <h2>Muistiinpanot
+      ^{renderNotes settings notes}
+      -->
 
-    <h2>Tulevat tehtävät
-    <section .todos>
-     $case todos
-      $of []
-       <i>Ei tehtäviä
-      $of _
-       <ul>
-          $forall (Entity k t, todo) <- todos
-            <li>
-               <a href=@{TargetReadR k}>#{targetName t}
-
- <section .events>
-  <table>
-   <thead .days>
-      <tr>
-         <th>&nbsp;
-         $forall view <- map formatWeekday dayRange
-            <th>#{view}
-   <tbody>
-     $forall (hour, hourViews) <- objectWeeks
-       <tr>
-        <th #h-#{hour} scope=col>#{hour}.00
-        $forall (day, cells) <- hourViews
-          <td>
-            <a href=@?{(TargetCreateR cal TargetEvent, targetParams day hour)} .cact .label.label-small.label-blue>E
-            <a href=@?{(TargetCreateR cal TargetTodo,  targetParams day hour)} .cact .label.label-small.label-yellow>T
-
-            $forall ((start,end), (Entity k t, cell)) <- cells
-             <div .tt.#{getType cell}>
-              <a href=@{TargetReadR k}>
-                 <span .timestart>#{cellTimeFormat start}
-                 <span .title>#{targetName t}
-                 $case cell
-                    $of Left _event
-                    $of Right _todo
-  <div .bottom>
-   <span .btn-group .pull-right>
-      <a .btn href="?weekstart=#{show prevWeek}">
-         <i.icon-chevron-left>
-         Edellinen (Vko #{formatWeekNumber prevWeek})
-      <a .btn href=@{CalendarR}>
-         <i.icon-calendar>
-         Tänään
-      <a .btn href="?weekstart=#{show nextWeek}">
-         Seuraava (Vko #{formatWeekNumber nextWeek})
-         <i.icon-chevron-right>
-   <p>
-      <span .btn-group>
-           <a.btn.btn-blue   href=@{TargetCreateR cal TargetEvent}>Tapahtuma
-           <a.btn.btn-yellow href=@{TargetCreateR cal TargetTodo}>Tehtävä
-           <a.btn.btn-green  href=@{TargetCreateR cal TargetNote}>Muistiinpano
-      <br>
-      <div>
-         Uusi tapahtuma
-         <sup .cact-example .label.label-small.label-blue>E
-         Uusi tehtävä
-         <sup .cact-example .label.label-small.label-red>T
-         <br>
-         <i>Näytetään #{numOfObjects} kalenteriobjektia.
-
-$nothing
-   <div .units-row>
-      <div .unit-centered .unit-60>
-         <h1>Tyhjää!
-         <h1 .subheader>
-            Näyttäisi siltä että sinulla ei ole yhtään kalenteria. #
-            Luo kalenteri alla.
-         ^{newCalendarWidget}
+<section>
+   ^{renderView settings}
