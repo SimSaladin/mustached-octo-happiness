@@ -1,13 +1,11 @@
 $newline never
-<form .forms .forms-columnar method="post" action="@{tm login}">
+<form .forms method=post action=@{tm login}>
  <fieldset>
    <legend>Kirjaudu sisään
+   <label>
+      <input type="text" name="username" placeholder="Käyttäjänimi" id="x" autofocus="" required>
+   <label>
+      <input type="password" name="password" placeholder="Salasana" required>
    <p>
-      <label>Käyttäjänimi
-      <input type="text" id="x" name="username" autofocus="" required>
-   <p>
-      <label>Salasana
-      <input type="password" name="password" required>
-   <p>
-      <input .btn type="submit" value="Kirjaudu">
+      <input .btn .btn-green type="submit" value="Kirjaudu">
 

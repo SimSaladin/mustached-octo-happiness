@@ -1,9 +1,8 @@
 <body .color-main>
-   <div #wrap-main>
-      <!-- <nav #nav-main .color-secondary>^{navigation}
-         -->
-      <main>^{widget}
-   $maybe msg <- mmsg
-      <div .message>
+   ^{widget}
+   <aside #message>
+      $maybe msg <- mmsg
          #{msg}
-         <a style="float:right" .icon-remove href="">
+         <a .right .icon-remove href="">
+   <footer>
+      <a .btn href=@{AuthR LogoutR}>Kirjaudu ulos

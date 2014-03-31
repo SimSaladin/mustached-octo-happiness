@@ -69,7 +69,7 @@ renderNotes settings notes = [whamlet|
 $case notes
     $of []
         <p>
-            <i>Tyhjä! Voit luoda muistiinpanon alla.
+            <i>Ei muistiinpanoja.
     $of xs
         $forall (Entity k t, Entity _ note) <- xs
             <a href=@{TargetReadR k}> #{targetName t}
@@ -148,9 +148,6 @@ getViewTimeframe = liftM (liftA2 (,) id (addDays 6)) $
     >>= maybe getCurrentDay readWeekStart
   where
     readWeekStart = maybe (invalidArgs []) return . readMay
-
-getCurrentDay :: HandlerT m IO Day
-getCurrentDay = liftM utctDay $ liftIO getCurrentTime
 
 getTargetRouteParams :: Handler (Day -> Hour -> [(Text, Text)])
 getTargetRouteParams = do
@@ -283,13 +280,16 @@ getCalendarActiveR cid = setActiveCalendar cid >> redirect CalendarR
 calendarForm :: Maybe Calendar -> Form Calendar
 calendarForm mcal = renderKube $ Calendar
     <$> maybe (lift requireAuthId) (pure . calendarOwner) mcal
-    <*> areq nameField "Nimi"           (calendarName <$> mcal)
-    <*> aopt textField "Kuvaus"         (calendarDesc <$> mcal)
-    <*> areq colorField "Väri"          (Just $ maybe "green" calendarColor mcal)
+    <*> areq nameField     (setfClass "width-100" "Nimi") (calendarName <$> mcal)
+    <*> aopt textField     (setfClass "width-100" "Kuvaus") (calendarDesc <$> mcal)
+    <*> areq colorField    (setfClass "forms-inline-list" "Väri") (Just $ maybe "green" calendarColor mcal)
     <*> areq checkBoxField "Julkinen"   (calendarPublic <$> mcal)
     <*> areq checkBoxField "Julkisesti muokattava" (calendarPublicedit <$> mcal)
     where
         nameField = checkM (calendarIsUnique $ calendarName <$> mcal) textField
+
+setfClass :: Text -> FieldSettings m -> FieldSettings m
+setfClass c s@FieldSettings{fsAttrs = attrs} = s{ fsAttrs = [("class", c)] }
 
 calendarIsUnique :: Maybe Text -> Text -> Handler (Either Text Text)
 calendarIsUnique mold new = do

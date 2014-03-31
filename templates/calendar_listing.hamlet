@@ -1,27 +1,32 @@
-<table>
+<table .width-100>
    <thead>
       <tr>
          <th>Nimi
-         <th>Julk./Muok.
+         <th>Flagit
          <th>Toiminnot
    <tbody>
-      $forall (Entity k c, _act, _num) <- unCalendarInfo cinfo
-         <tr>
-            <th>
-               <b .color-#{calendarColor c}>&gt;
-               #{calendarName c}
-            <td>
-               $if calendarPublic c
-                  <span .color-green>Kyllä
-               $else
-                  <span .color-red>Ei
-               <span.color-gray>/
-               $if calendarPublicedit c
-                  <span .color-green>Kyllä
-               $else
-                  <span .color-red>Ei
-            <td>
-               <form method=post action=@{CalendarDeleteR k}>
-                  <span .btn-group>
-                     <a .btn href=@{CalendarUpdateR k}>Muokkaa
-                     <input .btn .btn-orange type=submit value="Poista">
+     $forall (Entity k c, _act, _num) <- unCalendarInfo cinfo
+        <tr>
+           <th>
+              $with color <- calendarColor c
+                 <b .color-#{color}>&lt;
+                 #{calendarName c}
+                 <b .color-#{color}>
+           <td>
+              $if calendarPublic c
+                 <span .color-green>Julkinen,
+                 $if calendarPublicedit c
+                    <span .color-green>editoitavissa.
+                 $else
+                    <span .color-red>ei editoitavissa.
+              $else
+                 <span .color-red>Yksityinen
+           <td>
+              <form.end method=post action=@{CalendarDeleteR k}>
+                 <a .btn href=@{CalendarUpdateR k}>Muokkaa
+                 <input .btn .btn-red type=submit value="Poista">
+   <tfoot>
+      <tr>
+         <td>#{length (unCalendarInfo cinfo)} Kalenteria, ? objektia
+         <td>
+         <td>

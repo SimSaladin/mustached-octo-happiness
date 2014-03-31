@@ -124,9 +124,9 @@ instance HashDBUser User where
 instance RenderMessage App FormMessage where
     renderMessage _ _ = finnishFormMessage
 
-
 -- * Common views
 
+-- | Specialized login page.
 authHashDB' :: AuthPlugin App
 authHashDB' = (authHashDB $ Just . UniqueUser) { apLogin = \tm -> $(widgetFile "hashdblogin") }
     where login = PluginR "hashdb" ["login"]
@@ -145,9 +145,6 @@ widgetToPageContent' w = widgetToPageContent $ do
 getExtra :: Handler Extra
 getExtra = fmap (appExtra . settings) getYesod
 
-navigation :: Widget
-navigation = $(widgetFile "navigation")
-
 calendars :: Widget
 calendars = do
     CalendarInfo cals <- liftHandlerT queryCalendarInfo
@@ -159,3 +156,8 @@ publicCalendars = do
     cals <- liftHandlerT queryPublicCalendars
     mcal <- liftHandlerT activeCalendar
     $(widgetFile "calendar_nav")
+
+smallLogo :: Widget
+smallLogo = [whamlet|
+<img .small-logo src=@{StaticR img_moh_plain_svg}>
+|]

@@ -11,7 +11,7 @@ a:hover, a:active {
    color:#E40002;
 }
 .color-main {
-   background:#F9F4FF;
+   background:#A6DBEC;
    color:#353535;
 }
 .color-secondary {
@@ -34,6 +34,9 @@ body.bannered {
    margin:5em auto;
    min-width:35em;
    max-width:926px; // TODO
+}
+#wrap-main {
+   margin:4em 2em;
 }
 aside {
    font-style:oblique;
@@ -152,7 +155,6 @@ input[type="password"] {
    margin-top:1.5em;
    position:relative;
    height:48em;
-   margin-bottom:3em;
 }
 #weekly-legend {
    position:absolute;
@@ -269,12 +271,13 @@ input[type="password"] {
 .cell .inner {
    height:100%;
    margin-top:2em;
+   padding:0 0.4em 0 0.2em;
    border-style:solid;
-   border-left-width:4px;
-   padding:0 0.2em;
+   border-left-width:3px;
    color:#303030;
    overflow:hidden; /* Prevent flickering before jquery ellipsis kicks in */
    text-align:right;
+   box-shadow:inset -1px -1px 3px 0 rgba(0,0,0,0.6);
 }
 .cell .inner:hover {
    opacity:0.8;
@@ -294,11 +297,11 @@ input[type="password"] {
    color:inherit;
 }
 .cell.todo .inner {
-   border-color:green;
+   border-left-color:green;
    background:rgb(145,201,189);
 }
 .cell.event .inner {
-   border-color:blue;
+   border-left-color:blue;
    background:rgb(180,210,241);
 }
 /* }}} */
@@ -306,6 +309,7 @@ input[type="password"] {
 /* {{{ controls */
 #weekly-controls {
    position:fixed;
+   z-index:9001;
    bottom:0;
    width:100%;
    height:3em;
@@ -320,3 +324,8 @@ input[type="password"] {
 
 /* }}} */
 /* }}} */
+
+#calendar-tools {
+   box-shadow: inset 0px 15px 20px -10px;
+   padding-top:20px;
+}

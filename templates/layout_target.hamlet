@@ -1,0 +1,20 @@
+<main #wrap-main>
+   <div .units-row>
+      <section .unit-centered .unit-50>
+         <h1>
+            $maybe name <- modifyThis
+               Muokataan "#{name}" (#{what})
+            $nothing
+               Uusi #{what}
+         <form .forms method=post enctype=#{enctype}>
+            $case res
+               $of FormFailure _
+                  <p .error>Virheitä, ole hyvä ja korjaa.
+               $of _
+            ^{formw}
+            <p>
+               <a .btn .btn-red .btn-small href=@{CalendarR}>Takaisin kalenteriin
+               $maybe _ <- modifyThis
+                  <input .btn .btn-big .btn-blue type=submit value="Tallenna">
+               $nothing
+                  <input .btn .btn-big .btn-blue type=submit value="Lisää">

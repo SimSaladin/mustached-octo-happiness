@@ -1,11 +1,11 @@
+<h1>Asetukset
 <div .units-row>
- <div .unit-centered.unit-80>
-   <h1>Kalenteriasetukset
-   <div .units-row>
-
-    <div .unit-50>
-      <h1.subheader>Muokkaa
+   <div .unit-50>
+      <h2 .subheading>Kalenterit
       ^{calendarListing}
-
-    <div .unit-50>
       ^{newCalendarWidget}
+   <div .unit-50>
+      <h2 .subheading>Tiliasetukset
+      <ul>
+         <li>TimeZone?
+         <li>What else?

@@ -77,20 +77,25 @@ nextRepeatsAt xs lower upper rep = concatMap f xs
         weekDayLimits d = let (_,_,d') = toWeekDate d in d' `elem` weekDays
         weekDays        = unWeekly $ repeatWhen rep
 
+-- * Time functions
+
 dayDefault :: Maybe Day -> HandlerT m IO Day
 dayDefault mday = case mday of
         Just day -> return day
         Nothing  -> liftM (localDay . zonedTimeToLocalTime) lookupTimeAt
 
+getCurrentDay :: HandlerT m IO Day
+getCurrentDay = liftIO $ liftM (localDay . zonedTimeToLocalTime) getCurrentZonedTime
+
 -- | Lookup "at" get param, or current (server) time
 lookupTimeAt :: HandlerT m IO ZonedTime
-lookupTimeAt = do
-    mt <- lookupGetParam "at"
-    case mt of
-        Nothing -> 
-            -- XXX: user specified time zone instead of server time zone?
-            liftIO $ liftM2 utcToZonedTime getCurrentTimeZone getCurrentTime
-        Just t  -> return $ read' t
+lookupTimeAt = 
+    maybe (liftIO getCurrentZonedTime) (return . read') =<< lookupGetParam "at"
+
+getCurrentZonedTime :: IO ZonedTime
+getCurrentZonedTime = liftM2 utcToZonedTime getCurrentTimeZone getCurrentTime
+
+-- ** Format
 
 -- | Week day names
 days :: [Text]

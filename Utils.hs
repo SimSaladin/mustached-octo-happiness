@@ -1,30 +1,24 @@
 module Utils where
 
-import Prelude
-import Data.Text (Text)
-import Data.Monoid (mappend)
-import Yesod.Form
-import qualified Data.Text as T
+import ClassyPrelude
 import Yesod
+import Yesod.Form
 
 read' :: Read a => Text -> a
-read' = read . T.unpack
+read' = fromMaybe (error "Could not parse!") . readMay . unpack
 
 renderKube :: Monad master => FormRender master a
 renderKube aform fragment = do
     (res, views') <- aFormToForm aform
-    let views = views' []
-        has (Just _) = True
-        has Nothing  = False
-    -- <p :fvRequired view:.required :not (fvRequired view):.optional :has (fvErrors view):.error>
+    let views   = views' []
+
+    -- <p :fvRequired view:.required :not (fvRequired view):.optional :isJust (fvErrors view):.error>
     let widget = [whamlet|
 $newline never
 \#{fragment}
 $forall view <- views
     <label for=#{fvId view}>
         #{fvLabel view}
-        $if fvRequired view
-            <span .req>*
         $maybe desc <- fvTooltip view
             <span .forms-desc>#{desc}
         $maybe err <- fvErrors view
@@ -33,6 +27,24 @@ $forall view <- views
 |]
     return (res, widget)
 
+renderKubeNoLabel :: Monad master => FormRender master a
+renderKubeNoLabel aform fragment = do
+    (res, views') <- aFormToForm aform
+    let views  = views' []
+        widget = [whamlet|
+$newline never
+\#{fragment}
+$forall view <- views
+    <label for=#{fvId view}>
+        $maybe desc <- fvTooltip view
+            <span .forms-desc>#{desc}
+        $maybe err <- fvErrors view
+            <span .error>#{err}
+        ^{fvInput view}
+|]
+    return (res, widget)
+
+-- | Password and confirmation fields conveniently together as a form.
 passwordConfirmForm :: (MonadHandler m, RenderMessage (HandlerSite m) FormMessage)
                     => AForm m Text
 passwordConfirmForm = formToAForm $ do
@@ -40,6 +52,7 @@ passwordConfirmForm = formToAForm $ do
         (rb, vb) <- mreq (passwordConfirmField ra) "Salasana uudelleen" Nothing
         return (rb, [va, vb])
 
+-- | Password confirmation field given the result from the password field.
 passwordConfirmField :: (MonadHandler m, RenderMessage (HandlerSite m) FormMessage)
                      => FormResult Text -> Field m Text
 passwordConfirmField r = check (f r) passwordField

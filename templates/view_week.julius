@@ -28,6 +28,10 @@ $(function(){
 function ellipsify(container){
    var divh = $(container).height();
    var p    = $(container).find('p');
+   if (! divh > 0) {
+      console.log("warning: divh <= 0, not ellipsifying");
+      return;
+   }
    while ($(p).outerHeight() > divh) {
        $(p).text(
          function (index, text) {

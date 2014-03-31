@@ -1,8 +1,23 @@
-<!-- <div .toright>
-   <section .notes>
-      <h2>Muistiinpanot
-      ^{renderNotes settings notes}
-      -->
+<main>
+   <section #calendar-view>
+      ^{renderView settings}
+   <section #calendar-tools .units-row>
 
-<section>
-   ^{renderView settings}
+      <section .unit-33>
+         <h3 .subheading>Kalenterit
+         ^{calendars}
+         ^{publicCalendars}
+         <small>
+             <i .cal-action .icon-white.icon-eye-open>
+             Näytetään
+             <br>
+             <i .cal-action .icon-white.icon-eye-close>
+             Piilossa
+             <br>
+             <span .color-blue>Aseta oletusarvoiseksi
+
+      <section .unit-33>
+         <h3 .subheading>Muistiinpanot
+         ^{renderNotes settings notes}
+
+      <div .unit-33>
