@@ -21,3 +21,4 @@
          ^{renderNotes settings notes}
 
       <div .unit-33>
+         <div .right>^{smallLogo}
